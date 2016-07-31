@@ -1,0 +1,29 @@
+#branding {
+    height: 110px;
+    background: #001a57 url("/assets/struct/bg-header.jpg") no-repeat 0 0;
+    margin-bottom: 5px;
+    color: #5b5b5b;
+    overflow: hidden;
+}
+#logop {
+    outline: none;
+    width: 138px;
+    height: 64px;
+    float: left;
+    margin: 20px 15px 20px 20px;
+    padding-right: 15px;
+    border-right: 1px
+    solid #ffffff;
+}
+a.white:link{color:#c0fbc0; font-weight: bold; text-decoration: none;}
+a.white:visited{color:#fbc0fb; font-weight: bold; text-decoration: none;}
+#appname {
+    position: relative;
+    font-family: sans-serif;
+    padding-top: 25px; 
+    padding-left: 5px;
+    float: left;
+    max-width: 320px;
+    height: 65px;
+    word-wrap: normal;  
+}

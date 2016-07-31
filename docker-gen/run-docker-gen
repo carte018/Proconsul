@@ -1,0 +1,3 @@
+#!/usr/bin/bash
+
+ADUSER="account-admin-user@your.ad.domain" ADPASS="password" ADDOMAIN='your.ad.domain' ADBASE='OU=WhereProconsulDynamicUsersAreCreated,dc=your,dc=ad,dc=domain' /path/to/docker-gen -config /path/to/proconsul.cfg

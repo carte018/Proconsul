@@ -1,0 +1,341 @@
+-- MySQL dump 10.14  Distrib 5.5.47-MariaDB, for Linux (x86_64)
+--
+-- Host: localhost    Database: proconsul
+-- ------------------------------------------------------
+-- Server version	5.5.37-MariaDB-wsrep
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `access_groups`
+--
+
+DROP TABLE IF EXISTS `access_groups`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `access_groups` (
+  `groupurn` varchar(256) NOT NULL,
+  `ou` varchar(256) DEFAULT NULL,
+  `type` varchar(80) DEFAULT NULL,
+  PRIMARY KEY (`groupurn`),
+  KEY `groupurn` (`groupurn`,`ou`,`type`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `active_domain_admins`
+--
+
+DROP TABLE IF EXISTS `active_domain_admins`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `active_domain_admins` (
+  `samaccountname` varchar(40) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `audit_log`
+--
+
+DROP TABLE IF EXISTS `audit_log`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `audit_log` (
+  `timestamp` datetime DEFAULT NULL,
+  `eppn` varchar(80) DEFAULT NULL,
+  `event` varchar(12) DEFAULT NULL,
+  `targetuser` varchar(80) DEFAULT NULL,
+  `targethost` varchar(120) DEFAULT NULL,
+  `targetgroup` varchar(240) DEFAULT NULL,
+  `clientip` varchar(80) DEFAULT NULL,
+  KEY `eppn` (`eppn`),
+  KEY `targethost` (`targethost`),
+  KEY `targetuser` (`targetuser`),
+  KEY `clientip` (`clientip`),
+  KEY `event` (`event`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `csrf_tokens`
+--
+
+DROP TABLE IF EXISTS `csrf_tokens`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `csrf_tokens` (
+  `sessionId` varchar(256) DEFAULT NULL,
+  `csrfToken` varchar(256) DEFAULT NULL,
+  `lastused` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `delegate_groups`
+--
+
+DROP TABLE IF EXISTS `delegate_groups`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `delegate_groups` (
+  `groupurn` varchar(120) DEFAULT NULL,
+  `ou` varchar(240) DEFAULT NULL,
+  KEY `groupurn` (`groupurn`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `domain_admin_hosts`
+--
+
+DROP TABLE IF EXISTS `domain_admin_hosts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `domain_admin_hosts` (
+  `fqdn` varchar(256) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `entitlement_groups`
+--
+
+DROP TABLE IF EXISTS `entitlement_groups`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `entitlement_groups` (
+  `entitlement` varchar(120) DEFAULT NULL,
+  `groupdn` varchar(240) DEFAULT NULL,
+  KEY `entitlement` (`entitlement`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `entitlement_host`
+--
+
+DROP TABLE IF EXISTS `entitlement_host`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `entitlement_host` (
+  `entitlement` varchar(120) DEFAULT NULL,
+  `fqdn` varchar(120) DEFAULT NULL,
+  `ou` varchar(240) DEFAULT NULL,
+  KEY `entitlement` (`entitlement`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `entitlements`
+--
+
+DROP TABLE IF EXISTS `entitlements`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `entitlements` (
+  `entitlement` varchar(256) NOT NULL,
+  `target` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`entitlement`),
+  KEY `entitlement` (`entitlement`,`target`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `explicit_groups`
+--
+
+DROP TABLE IF EXISTS `explicit_groups`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `explicit_groups` (
+  `eppn` varchar(80) DEFAULT NULL,
+  `groupdn` varchar(240) DEFAULT NULL,
+  KEY `eppn` (`eppn`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `explicit_hosts`
+--
+
+DROP TABLE IF EXISTS `explicit_hosts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `explicit_hosts` (
+  `eppn` varchar(80) DEFAULT NULL,
+  `fqdn` varchar(120) DEFAULT NULL,
+  `ou` varchar(240) DEFAULT NULL,
+  KEY `eppn` (`eppn`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `group_group`
+--
+
+DROP TABLE IF EXISTS `group_group`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `group_group` (
+  `groupurn` varchar(120) DEFAULT NULL,
+  `groupdn` varchar(240) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `group_host`
+--
+
+DROP TABLE IF EXISTS `group_host`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `group_host` (
+  `groupurn` varchar(120) DEFAULT NULL,
+  `fqdn` varchar(120) DEFAULT NULL,
+  `ou` varchar(240) DEFAULT NULL,
+  KEY `groupurn` (`groupurn`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `groupdn`
+--
+
+DROP TABLE IF EXISTS `groupdn`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `groupdn` (
+  `groupdn` varchar(240) DEFAULT NULL,
+  `displayname` varchar(240) DEFAULT NULL,
+  KEY `groupdn` (`groupdn`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `host_access_group`
+--
+
+DROP TABLE IF EXISTS `host_access_group`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `host_access_group` (
+  `fqdn` varchar(120) DEFAULT NULL,
+  `ou` varchar(240) DEFAULT NULL,
+  `groupdn` varchar(240) DEFAULT NULL,
+  KEY `fqdn` (`fqdn`,`ou`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `host_gateway`
+--
+
+DROP TABLE IF EXISTS `host_gateway`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `host_gateway` (
+  `fqdn` varchar(120) DEFAULT NULL,
+  `gateway` varchar(120) DEFAULT NULL,
+  `groupdn` varchar(240) DEFAULT NULL,
+  KEY `fqdn` (`fqdn`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ou_group`
+--
+
+DROP TABLE IF EXISTS `ou_group`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `ou_group` (
+  `ou` varchar(240) NOT NULL,
+  `groupdn` varchar(240) DEFAULT NULL,
+  PRIMARY KEY (`ou`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ports`
+--
+
+DROP TABLE IF EXISTS `ports`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `ports` (
+  `portnum` int(11) NOT NULL,
+  `fqdn` varchar(80) DEFAULT NULL,
+  `user` varchar(80) DEFAULT NULL,
+  `owner` varchar(80) DEFAULT NULL,
+  PRIMARY KEY (`portnum`),
+  KEY `portnum` (`portnum`,`fqdn`,`owner`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `sessions`
+--
+
+DROP TABLE IF EXISTS `sessions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sessions` (
+  `fqdn` varchar(256) DEFAULT NULL,
+  `owner` varchar(80) DEFAULT NULL,
+  `displayname` varchar(256) DEFAULT NULL,
+  `novncport` int(11) DEFAULT NULL,
+  `vncpassword` varchar(256) DEFAULT NULL,
+  `connected` tinyint(1) DEFAULT NULL,
+  `samaccountname` varchar(80) DEFAULT NULL,
+  `running` tinyint(1) DEFAULT NULL,
+  `starttime` varchar(80) DEFAULT NULL,
+  `status` varchar(40) DEFAULT NULL,
+  `type` varchar(40) DEFAULT NULL,
+  `delegatedou` varchar(256) DEFAULT NULL,
+  `delegatedrole` varchar(256) DEFAULT NULL,
+  `gatewayfqdn` varchar(256) DEFAULT NULL,
+  KEY `fqdn` (`fqdn`,`owner`,`novncport`,`samaccountname`),
+  KEY `running` (`running`),
+  KEY `type` (`type`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `user`
+--
+
+DROP TABLE IF EXISTS `user`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user` (
+  `uid` varchar(80) NOT NULL,
+  `givenname` varchar(256) DEFAULT NULL,
+  `sn` varchar(256) DEFAULT NULL,
+  `email` varchar(256) DEFAULT NULL,
+  `homedir` varchar(256) DEFAULT NULL,
+  `status` tinyint(1) DEFAULT NULL,
+  PRIMARY KEY (`uid`),
+  KEY `uid` (`uid`,`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2016-07-21 12:15:06

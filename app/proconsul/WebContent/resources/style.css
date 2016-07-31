@@ -1,0 +1,198 @@
+a{
+  color: #cc3300;
+  text-decoration: none;
+}
+
+a:hover{
+  border-bottom: 1px dotted #ccc;
+}
+
+body{
+  margin: 0;
+  color: #444;
+  font-family: helvetica, sans-serif;
+}
+
+#header{
+  padding: 20px 0;
+  background: -webkit-gradient(radial, 70% 40%, 0, 70% 40%, 100, from(#063996), to(#052768));
+  background: -webkit-radial-gradient(70% 40%, closest-corner, #063996, #052768);
+  background: -moz-radial-gradient(70% 40%, closest-corner, #063996, #052768);
+  background: -ms-radial-gradient(70% 40%, closest-corner, #063996, #052768);
+  background-color: #063996;
+  background-position: 70% 40%;
+  background-repeat: no-repeat; 
+  padding: 40px;
+  color: #fff;
+}
+
+#main{
+  padding: 30px 53px;
+}
+
+#user{
+  float: right;
+}
+
+#user a{
+  color: white;
+}
+HiroPronistsMBP:proconsul rob$ ls
+img		index.html	style.css
+HiroPronistsMBP:proconsul rob$ cat style.css
+a{
+  color: #cc3300;
+  text-decoration: none;
+}
+
+a:hover{
+  border-bottom: 1px dotted #ccc;
+}
+
+body{
+  margin: 0;
+  color: #444;
+  font-family: helvetica, sans-serif;
+}
+
+#header{
+  padding: 20px 0;
+  background: -webkit-gradient(radial, 70% 40%, 0, 70% 40%, 100, from(#063996), to(#052768));
+  background: -webkit-radial-gradient(70% 40%, closest-corner, #063996, #052768);
+  background: -moz-radial-gradient(70% 40%, closest-corner, #063996, #052768);
+  background: -ms-radial-gradient(70% 40%, closest-corner, #063996, #052768);
+  background-color: #063996;
+  background-position: 70% 40%;
+  background-repeat: no-repeat; 
+  padding: 40px;
+  color: #fff;
+}
+
+#main{
+  padding: 30px 53px;
+}
+
+#user{
+  float: right;
+  margin-right: 16px;
+}
+
+#user a{
+  color: white;
+}
+
+table.sessions{
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+}
+
+table.sessions th{
+  font-weight: normal;
+  background: #ddd;
+  padding: 8px 15px;
+  text-align: left;
+  font-size: 0.8em;
+}
+
+table.sessions th.banner{
+  font-size: 1.3em;
+}
+
+table.sessions td{
+  padding: 15px;
+  background: #eee;
+  border-top: 1px solid #ddd;
+  vertical-align: top;
+}
+
+table.sessions tbody{
+  border-bottom: 30px solid #fff;
+  margin-bottom: 30px;
+}
+
+table.sessions label{
+  padding-bottom: 5px;
+  display: block;
+}
+
+.session-option{
+  padding-bottom: 15px;
+}
+
+.session-option input[type=text]{
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  margin: 0 0 0.75em;
+  padding: 0.29em 0;
+  width: auto;
+  height: 2.25em;
+  border: 1px solid #ccc;
+  border-right-color: #eee;
+  border-bottom-color: #eee;
+  font-size: 1em;
+  line-height: 1.5em;
+  -ms-box-sizing: border-box;
+  *height: 1.5em; 
+  padding: 0 5px;
+}
+
+
+select{
+    margin-bottom: 0.75em;
+    padding: 0.25em;
+    height: 2.25em;
+    border: 1px solid #ccc;
+    border-right-color: #eee;
+    border-bottom-color: #eee;
+    font-size: 1em;
+    line-height: 1.5em;
+    background: #fff;
+  }
+  
+option {
+    padding: 0;
+    height: 1.5em;
+    text-indent: 1em;
+    font-size: 1em; 
+}
+
+table.sessions button{
+    display: block;
+    display: inline-block;
+    overflow: visible;
+    background: #dae1f1;
+    padding: 8px 0;
+    border: none;
+    border-bottom: 2px solid #0736a4;
+    color: #0736a4;
+    white-space: nowrap;
+    font-size: 1.1em;
+    cursor: pointer;
+    -x-system-font: none;
+    -webkit-appearance: none;
+    width: 130px;
+}
+
+ul.ou_role{
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+ul.ou_role li{
+  padding: 5px 0;
+}
+
+.hiddendiv {
+	display: none;
+}
+
+input[id^=roleGroup] {
+	float:left;
+	margin-right: 5px;
+}
+label[for^=roleGroup] {
+	padding-top: 1px;
+}
