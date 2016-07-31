@@ -232,7 +232,7 @@ public class ProconsulController {
 			}
 		} else {
 			LOG.info("CSRF token violation -- no token presented");
-			ModelAndView errModel = new ModelAndView("/authzERror");
+			ModelAndView errModel = new ModelAndView("/authzError");
 			errModel.addObject("message","CSRF token violation -- your browser did not present the required token for this operation");
 			return errModel;
 		}
