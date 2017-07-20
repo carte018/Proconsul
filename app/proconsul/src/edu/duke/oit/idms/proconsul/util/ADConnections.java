@@ -41,7 +41,9 @@ public class ADConnections {
 				String searchBase = config.getProperty("ldap.searchbase", true);
 				String localSite = config.getProperty("ldap.siteDN",false);
 				if (localSite != null) {
-					localSite = ".*" + localSite + ".*";
+					//localSite = ".*" + localSite + ".*";
+					// localSite = ".*=" + localSite + ",.*"; // restrict to just the local site - no subsites
+					localSite = ".*=" + localSite + "[-,].*"; // we now have US-RDU-subsite sites to cope with
 				}
 				results = dc.search(searchBase,"(&(objectCategory=computer)(userAccountControl:1.2.840.113556.1.4.803:=8192))",sc);
 				

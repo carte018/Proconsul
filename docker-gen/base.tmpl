@@ -32,18 +32,25 @@ ldapdelete -x -H ldaps://{{$ldapdomain}}:636 -D {{$ldapdn}} -w '{{$ldappw}}' CN=
 #
 # sleep for five seconds to allow the deletion to propagate before modifying the database
 #
-sleep 5
+# unnecessary since we are not deleting from active_domain_admins now
+# If you choose to remove disused domain admin accounts from your active_domain_admins list, you may want to uncomment this
+##sleep 5
 #
-# And then remove any allowances in active_domaind_admins
+# And then remove any allowances in active_domain_admins
+# 
+# Suppressed to prevent spurious notifications from monitors at Duke (we have perpetual scrubbing of our domain admins membership
+# If you don't have a similar environment, you may wish to uncomment this so that disused dynamic DA accounts won't be listed in the 
+# active_domain_admins table in your proconsul database.  If you don't use that table to manage notification of unexpected DA account
+# creation, this is probably irrelevant and you can leave it commented out.
 #
-echo "delete from active_domain_admins where samaccountname = '{{$container.Env.WINUSER}}';" | mysql -u {{$container.Env.MYSQLUSER}} --password={{$container.Env.MYSQLPW}} proconsul
+#echo "delete from active_domain_admins where samaccountname = '{{$container.Env.WINUSER}}';" | mysql -u {{$container.Env.MYSQLUSER}} --password={{$container.Env.MYSQLPW}} proconsul
 else
 # Disconnection -- modify database accordingly
 echo "insert into audit_log values ('$ts',null,'disconnect','{{$container.Env.WINUSER}}','{{$container.Env.RHOSTNAME}}',null,null);" | mysql -u {{$container.Env.MYSQLUSER}} --password={{$container.Env.MYSQLPW}} proconsul
 #
 # Change db values
 #
-echo "update sessions set running = '0',connected = '0' where samaccountname = '{{$container.Env.WINUSER}}';" | mysql -u {{$container.Env.MYSQLUSER}} --password={{$container.Env.MYSQLPW}} proconsul
+echo "update sessions set running = '0',connected = '0',status='disconnected' where samaccountname = '{{$container.Env.WINUSER}}';" | mysql -u {{$container.Env.MYSQLUSER}} --password={{$container.Env.MYSQLPW}} proconsul
 echo "delete from ports where portnum = '{{$container.Env.DISPLAY}}';" | mysql -u {{$container.Env.MYSQLUSER}} --password={{$container.Env.MYSQLPW}} proconsul
 #
 # Modify password
@@ -52,7 +59,7 @@ userdn={{$container.Env.WINUSER}},{{$ldapbase}}
 echo "dn: $userdn" > /tmp/{{$container.ID}}.ldif
 echo "changetype: modify" >> /tmp/{{$container.ID}}.ldif
 echo "replace: unicodePwd" >> /tmp/{{$container.ID}}.ldif
-echo "unicodePwd: $RANDOM$RANDOM$RANDOM$RANDOM$RANDOM$RANDOM" >> /tmp/{{$container.ID}}.ldif
+echo "unicodePwd: blahblah" >> /tmp/{{$container.ID}}.ldif
 ldapmdodify  -x -H ldaps://{{$ldapdomain}}:636 -D {{$ldapdn}} -w '{{$ldappw}}' -f /tmp/{{$container.ID}}.ldif
 fi
 

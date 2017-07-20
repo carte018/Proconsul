@@ -24,6 +24,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import com.sun.istack.internal.logging.Logger;
 
 import edu.duke.oit.idms.proconsul.DisplayFQDN;
+import edu.duke.oit.idms.proconsul.Status;
 import edu.duke.oit.idms.proconsul.cfg.PCConfig;
 
 import java.util.Date;
@@ -41,6 +42,15 @@ public class ProconsulUtils {
 		NamingEnumeration<SearchResult> result = null;
 		try {
 			dc = lac.getConnection();
+			if (dc == null) {
+				LOG.info("DC value is null in isSamaccountnameAvailable");
+			}
+			if (sam == null) {
+				LOG.info("SAM is null in isSamaccountnameAvailable");
+			}
+			if (sam.equals("")) {
+				LOG.info("SAM is empty but not null in isSamaccountnameAvailable");
+			}
 			if (dc == null || sam == null || sam.equals("")) {
 				return true;  //for specific server, "true" is "fail"
 			}
@@ -226,12 +236,14 @@ public class ProconsulUtils {
 				try {
 					if (isSamaccountnameAvailable(u.getsAMAccountName(),lac) && ! userCreated) {
 						lac.getConnection().createSubcontext(dn,ba);
-						LOG.info("Initial account creation completed");
-						userCreated = true;
+						LOG.info("Initial account creation completed on " + lac.getConnection().getEnvironment().get(DirContext.PROVIDER_URL));
+						userCreated = true;  // user should be created everywhere we need eventually -- just propagation to deal with
+						Thread.sleep(4000);  // 4-second delay for propagation to catch up
 					} else {
 							while (isSamaccountnameAvailable(u.getsAMAccountName(),lac)) {
-								LOG.info("Waiting for propagation again...");
+								LOG.info("Waiting for propagation again...user=" + u.getsAMAccountName() + " host=" + lac.getConnection().getEnvironment().get(DirContext.PROVIDER_URL));
 								// blocking loop to wait for propagation
+								Thread.sleep(1000);
 							}
 							LOG.info("Propagation wins!");
 					}
@@ -451,14 +463,57 @@ public class ProconsulUtils {
 	}
 		
 	
+	// TODO:  Authorization is getting much more complicated now
+	// Need to authorize based on type of access as well as user and fqdn
+	// and look for authorization in more than just the URN pattern for group 
+	// name
+	//
+	// This needs to be refactored and possibly turned into multiple
+	// isAuthorizedByXFACTOR() routines for different XFACTOR values
+	//
+	// Given an authuser, an fqdn, and a list of groups, determine if
+	// the authuser is authorized to them.
+	// Initially, only validates hostname (not group name[s])
+	//
+	
+	public static boolean isAuthorized(AuthUser au, String fqdn, ArrayList<String> mem) {
+		if (au == null || fqdn == null || fqdn.equals("")) {
+			// nobody gets nothing
+			return false;
+		}
+		if (! ProconsulUtils.canUseApp(au)) {
+			// if you're not able to use the app, you get nothing
+			return false;
+		}
+		ArrayList<String> amem = au.getMemberships();
+		
+		for (String oldval : amem) {
+			String newval = oldval.toUpperCase();
+			int idx = amem.indexOf(oldval);
+			amem.set(idx,newval);
+		}
+		
+		for (String test : mem) {
+			test = "urn:mace:duke.edu:groups:orgs:" + test + ":ad_admins";
+			if (! amem.contains(test.toUpperCase())) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	// VNC Port Number acquisition.  We arrange to encumber the 
 	// port number in the database before we return it.  
 	// Session data is used to encumber the number
-	
+			
 	public static int getVncPortNumber(ProconsulSession sess) {
 		// Find an (even-numbered) unused port by +2-ing the highest
 		// numbered port in the database and rely on attrition to
 		// eventually free up intervening ports.
+		//
+		// Max out at 5998, in which case we start looking back at 0 again and search until we find an option or 
+		// exceed the limit again.
+		// Addresses port exhaustion problem.
 		
 		int retval = 0;
 		if (sess == null) {
@@ -490,6 +545,28 @@ public class ProconsulUtils {
 				} else {
 					retval = retval + 2;
 				}
+				// Check for wrap around
+				if (retval >= 100) {
+					// wrapped -- perform the more expensive search
+					ResultSet rs3 = null;
+					PreparedStatement ps3 = null;
+					for (int i = 2; i < 100; i+=2) {
+						ps3 = pcdb.prepareStatement("select portnum from proconsul.ports where portnum = ?");
+						ps3.setInt(1,i);
+						rs3 = ps3.executeQuery();
+						if (rs3 == null || ! rs3.next()) {
+							retval = i;
+							rs3.close();
+							ps3.close();
+							break;
+						}
+					}
+				}
+				// And die now if we're actually exhausted
+				if (retval >= 100) {
+					throw new RuntimeException("Port exhaustion");
+				}
+				// Otherwise, use the port we found
 				ps2 = pcdb.prepareStatement("insert into proconsul.ports values(?,?,?,?)");
 				ps2.setInt(1, retval);
 				if (sess.getFqdn() != null) {
@@ -829,6 +906,132 @@ public class ProconsulUtils {
 			}
 		}
 		ProconsulUtils.deletePortFromDB(sess.getNovncPort());
+	}
+	
+	// Add appropriate userWorkstations constraint to the user based on session information
+	public static ADUser addWorkstationsToADUser(ProconsulSession sess, ADUser u) {
+		PCConfig config = PCConfig.getInstance();
+		
+		String orgBase = config.getProperty("ldap.orgbase", true);
+		
+		if (sess == null || u == null) {
+			return u;
+		}
+		
+		// ADConnections adc = new ADConnections();
+		ADConnections adc = ADConnectionsFactory.getInstance();
+		NamingEnumeration<SearchResult> results = null;
+		NamingEnumeration<SearchResult> sr = null;
+		SearchControls sc = new SearchControls();
+		sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
+		DirContext dc = null;
+		DirContext dc2 = null;
+		try {
+			dc = LDAPConnectionFactory.getAdminConnection();
+			if (dc == null) {
+				return u;
+			}
+		} catch (Exception e) {
+			return u;
+		}
+		
+		try {
+			results = dc.search(config.getProperty("ldap.searchbase", true), "samaccountname="+u.getsAMAccountName(),sc);
+			if (results == null || ! results.hasMore()) {
+				return u;
+			}
+			String userDn = results.next().getNameInNamespace();
+
+			// Acquire the SMB name from the AD for the fqdn and gateway fqdn we have
+			String uws = "";
+			try {
+				dc2 = LDAPConnectionFactory.getAdminConnection();
+				SearchControls scon = new SearchControls();
+				scon.setSearchScope(SearchControls.SUBTREE_SCOPE);
+				String basedn = config.getProperty("ldap.searchbase", true);
+				if (sess.getFqdn() != null && ! sess.getFqdn().equals("")) {
+					sr = dc2.search(basedn, "(&(objectcategory=computer)(dnshostname="+sess.getFqdn()+"))",scon);
+					while (sr != null && sr.hasMore()) {
+						// had better be only one box with this DNS name, right?
+						String n = (String) sr.next().getAttributes().get("sAMAccountName").get();
+						uws = n;
+					}
+				}
+				if (sess.getGatewayfqdn() != null && ! sess.getGatewayfqdn().equals("")) {
+					sr = dc.search(basedn, "(&(objectcategory=computer, cons)(dnshostname="+sess.getGatewayfqdn()+"))",scon);
+					while (sr != null && sr.hasMore()) {
+						String n = (String) sr.next().getAttributes().get("sAMAccountName").get();
+						uws += ","+n;
+					}
+				}
+				String myhost=config.getProperty("proconsul.servername", false);
+				if (myhost != null) {
+					uws += ","+myhost;
+				}
+			} catch (Exception e) {
+				// ignore
+			}
+
+			// Add the userWorkstations value to the user if one exists
+			if (uws.equals("")) {
+				LOG.info("no name found for " + sess.getFqdn() + " and/or " + sess.getGatewayfqdn());
+				return u;
+			}
+			
+			ModificationItem[] mods = new ModificationItem[1];
+			mods[0] = new ModificationItem(DirContext.ADD_ATTRIBUTE, new BasicAttribute("userWorkstations",uws));
+
+			
+			for (LDAPAdminConnection lac : adc.connections) {
+				try {
+					lac.getConnection().modifyAttributes(userDn, mods);
+					LOG.info("Added " + uws + " host restriction");
+					writeAuditLog(null,"limitWS",u.getsAMAccountName(),null,uws,null);
+				} catch (Exception ign) {
+					LOG.info("Threw exception " + ign.getMessage() + " on addWsRestriction for " + u.getsAMAccountName() + "," + uws);
+					// ignore
+				}
+			}
+		} catch (Exception e) {
+			return u;
+		} finally {
+			if (results != null) {
+				try {
+					results.close();
+				} catch (Exception e) {
+					//ignore
+				}
+			}
+			if (sr != null) {
+				try {
+					sr.close();
+				} catch (Exception e) {
+					// ignore
+				}
+			}
+			if (adc != null) {
+				try {
+					adc.close();
+				} catch (Exception e) {
+					// ignore
+				}
+			}
+			if (dc != null) {
+				try {
+					dc.close();
+				} catch (Exception e) {
+					// ignore
+				}
+			}
+			if (dc2 != null) {
+				try {
+					dc2.close();
+				} catch (Exception e) {
+					// ignore
+				}
+			}
+		}
+		return u;
 	}
 	
 	// Add a group specified by a URN to a user identified by an ADUser object
@@ -2095,12 +2298,21 @@ public class ProconsulUtils {
 					rs = ps.executeQuery();
 					while (rs != null && rs.next()) {
 						ProconsulSession psess = new ProconsulSession(au,rs.getString("fqdn"),rs.getString("vncpassword"), LDAPUtils.loadAdUser(rs.getString("samaccountname")), rs.getString("displayname"));
+						// Sessions have become more complex, and we need to import the status, the novncport, and the gateway FQDN
+						if (rs.getString("status") != null)
+							psess.setStatus(Status.valueOf(rs.getString("status").toUpperCase()));
+						if (rs.getString("novncport") != null) 
+							psess.setNovncPort(Integer.parseInt(rs.getString("novncport")));
+						if (rs.getString("gatewayfqdn") != null) {
+							psess.setGatewayfqdn(rs.getString("gatewayfqdn"));
+						}
 						retval.add(psess);
 					}
 				}
 			}
 			return retval;
 		} catch (Exception e) {
+			LOG.info("Threw exception: " + e.getMessage());
 			return retval;
 		} finally {
 			if (rs != null) {

@@ -1,6 +1,6 @@
 package edu.duke.oit.idms.proconsul;
 
-import java.io.File;
+import java.io.File; 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -51,6 +51,13 @@ public class ProconsulController {
 		// For now, we only handle reconnect -- terminate must wait until we have a 
 		// means for remotely destroying the user session.
 		//
+		//
+		// We additionally need to address the case in which the client did not disconnect but merely 
+		// terminated its HTTP connection, leaving our Docker container active.  In that case, 
+		// we need to simply redirect to the appropriate URL and re-establish connectivity to the 
+		// VNC session (possibly at the expense of another running session, if the user has actually opened a 
+		// new connection.
+		
 		if (rr == null || rr.getTargetFQDN() == null || rr.getTargetFQDN().equalsIgnoreCase("")) {
 			//invalid request -- return the error page
 			ModelAndView errModel = new ModelAndView("/authzError");
@@ -126,6 +133,16 @@ public class ProconsulController {
 		// Otherwise reconnectSession is our reconnect target
 		// Wire up the session again and redirect to a connection to it.
 		//
+		// Here, we check for possible extand docker container and session
+		// if (reconnectSession.getStatus().equals(Status.CONNECTED) || reconnectSession.getStatus().equals(Status.STARTING)) {
+		if (false) {  // temporarily removed
+			// This is a literal reconnect -- simply redirect
+			String redirectUrl = reconnectSession.getRedirectUrl();
+			return new ModelAndView("redirect:" + redirectUrl);
+			
+		} else {
+			LOG.info("Reconnect starting new container due to session status " + reconnectSession.getStatus().toString());
+		}
 		reconnectSession.setNovncPort(ProconsulUtils.getVncPortNumber(reconnectSession));
 		reconnectSession.setStatus(Status.STARTING);
 		reconnectSession.setStartTime(new Date());
@@ -537,15 +554,31 @@ public class ProconsulController {
 		LOG.info("Verified canUseApp");
 		// Now verify host authorization (cannot be too careful)
 		//
-		//  For now, we let null users do anything (since in test we can't avoid it
-		// TODO:  Remove the null allowance here before production!
 		//
-		if (au.getUid() != null && ! au.getUid().equals("") && ! ProconsulUtils.fqdnsForEppn(au.getUid()).contains(usersession.getTargetFQDN())) {
-			// If the user is not authorized to this FQDN, it's a spoof and we fail
+		if (au.getUid() == null) {
+			// if we don't know who you are, you are persona non grata -- should be impossible, but...
 			ModelAndView errModel = new ModelAndView("/authzError");
-			errModel.addObject("message","You ("+request.getParameter("REMOTE_USER")+") are not authorized to use " + usersession.getTargetFQDN().replaceAll("[^A-Za-z0-9._-]", ""));
+			errModel.addObject("message","Anonymous access is not allowed");
 			return errModel;
 		}
+		if (! au.getUid().equals("") && ! ProconsulUtils.fqdnsForEppn(au.getUid()).contains(usersession.getTargetFQDN())) {
+			// We don't have an explicit allow, but we might have an implicit group allow
+			// Check the user's group URNs for access to the host before failing
+			boolean groupAllow = false;
+			for (String gurn : au.getMemberships()) {
+				if (ProconsulUtils.fqdnsForGroupUrn(gurn).contains(usersession.getTargetFQDN())) {
+					groupAllow = true;
+					break;
+				}
+			}
+			// If the user is not authorized to this FQDN, it's a spoof and we fail
+			if (!groupAllow) {
+				ModelAndView errModel = new ModelAndView("/authzError");
+				errModel.addObject("message","You ("+au.getUid()+") are not authorized to use " + usersession.getTargetFQDN().replaceAll("[^A-Za-z0-9._-]", ""));
+				return errModel;
+			}
+		}
+		// At this point, either the user has explicit authorization or the user has group authorization 
 		LOG.info("Verified host authorization");
 		
 		// CSRF protections
@@ -630,6 +663,12 @@ public class ProconsulController {
 		// and re-write
 		ProconsulUtils.writeSessionToDB(session);
 		LOG.info("Wrote session second time");
+		
+		// Add restrictions on the user to limit logon access to just what is required
+		// Apparently, this may not work with source IPs which are not joined workstations?
+		// Commented out for now...
+		// Also runs into will-not-perform failures from the AD when adding the values...
+		// ProconsulUtils.addWorkstationsToADUser(session,targetUser);
 		
 		// Now we spawn a docker container based on the session
 		DockerContainer container = new DockerContainer(session);
