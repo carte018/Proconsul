@@ -1,214 +1,195 @@
 #include("header.vm")
 
 <div id="access_rules" class="wrapperdiv">
-<div id="heading" class="heading">
-Proconsul Login Rules
-</div>
-<div id="subheading" class="subheading">
-Only users with one or more of the following properties will be allowed to log in to Proconsul
-</div>
-<div id="table" class="tablediv">
+  <div id="heading" class="heading">
+    Proconsul Login Rules
+  </div>
 
-<form name="accessform" id="accessform" method="POST" action="#">
-<input type="hidden" name="accessformsubmitted" value="1"/>
-<table name="displaytable" class="table" >
-<!--<tr>
-<th>Property</th><th>Value</th><th>Options</th>
-</tr>-->
-#set($alternator="light")
-#set($pct=0)
-#foreach($pgrp in $proconsul_groups)
-  <tr class="pgrp-$alternator">
-  <td class="property">Group Membership</td>
-  <td class="value">
-    <!--<input type="hidden" id="pgrp$pct" name="pgrp$pct" value="$pgrp.getGroupurn()" class="pgrp"/>-->
-    <input type="hidden" id="delpgrp$pct" name="delpgrp$pct" value="0"/>
-    <input type="hidden" id="chgpgrp$pct" name="chgpgrp$pct" value="0"/>
-    #set($slen=$pgrp.getGroupurn().length())
-    <input type="text" id="pgrp$pct" name="pgrp$pct" value="$pgrp.getGroupurn()" size="$slen" class="pgrp-$alternator"/>
-    #if($alternator == "light")
-      #set($alternator="dark")
-    #else
-      #set($alternator="light")
-    #end
-  </td>
-  <td>
-    <button id="rbpgrp$pct" name="rbpgrp$pct" class="rbgrpclass">remove</button>
-  </td>
-  </tr>
-  #set($pct=$pct+1)
-#end
-#set($pct=0)
-#foreach($pent in $proconsul_entitlements)
-  <tr class="pgrp-$alternator">
-  <td class="property">eduPersonEntitlement</td>
-  <td class="value">
-    <input type="hidden" id="delpent$pct" name="delpent$pct" value="0"/>
-    <input type="hidden" id="chgpent$pct" name="chgpent$pct" value="0"/>
-    #set($slen=$pent.getEntitlement().length())
-    <input type="text" id="pent$pct" name="pent$pct" value="$pent.getEntitlement()" size="$slen" class="pgrp-$alternator"/>
-    #if($alternator == "light")
-      #set($alternator="dark")
-    #else
-      #set($alternator="light")
-    #end
-  </td>
-  <td>
-    <button id="rbpent$pct" name="rbpent$pct" class="rbpentclass">remove</button>
-  </td>
-  </tr>
-  #set($pct=$pct+1)
-#end
-#set($pct=0)
-#foreach($puser in $proconsul_users)
-  <tr class="pgrp-$alternator">
-  <td class="property">UserName (ePPN)</td>
-  <td class="value">
-    <input type="hidden" id="delpuser$pct" name="delpuser$pct" value="0"/>
-    <input type="hidden" id="chgpuser$pct" name="chgpuser$pct" value="0"/>
-    #set($slen=$puser.getEppn().length())
-    <input type="text" id="puser$pct" name="puser$pct" value="$puser.getEppn()" size="$slen" class="pgrp-$alternator"/>
-    #if($alternator == "light")
-      #set($alternator="dark")
-    #else
-      #set($alternator="light")
-    #end
-  </td>
-  <td>
-    <button id="rbpuser$pct" name="rbpuser$pct" class="rbuserclass action">remove</button>
-  </td>
-  </tr>
-  #set($pct=$pct+1)
-#end
-<tr>
-  <td><button name="additem" class="additem action" id="additem">Add Login Access Rule</button></td><td></td>
-</tr>
- 
-  </table>
- 
- </form>
- </div>
+  <div id="subheading" class="subheading">
+    Only users with one or more of the following properties will be allowed to log in to Proconsul
+  </div>
+
+  <div id="table" class="tablediv">
+    <form name="accessform" id="accessform" method="POST" action="#">
+      <input type="hidden" name="accessformsubmitted" value="1"/>
+      <table name="displaytable" class="table" >
+        #set($pct=0)
+        #foreach($pgrp in $proconsul_groups)
+          <tr>
+            <td class="property">Group Membership</td>
+            <td class="value">
+              <input type="hidden" id="delpgrp$pct" name="delpgrp$pct" value="0"/>
+              <input type="hidden" id="chgpgrp$pct" name="chgpgrp$pct" value="0"/>
+              #set($slen=$pgrp.getGroupurn().length())
+              <input type="text" id="pgrp$pct" name="pgrp$pct" value="$pgrp.getGroupurn()" size="$slen"/>
+            </td>
+            <td>
+              <button id="rbpgrp$pct" name="rbpgrp$pct" class="rbgrpclass">remove</button>
+            </td>
+          </tr>
+          #set($pct=$pct+1)
+        #end
+        #set($pct=0)
+        #foreach($pent in $proconsul_entitlements)
+          <tr>
+            <td class="property">eduPersonEntitlement</td>
+            <td class="value">
+              <input type="hidden" id="delpent$pct" name="delpent$pct" value="0"/>
+              <input type="hidden" id="chgpent$pct" name="chgpent$pct" value="0"/>
+              #set($slen=$pent.getEntitlement().length())
+              <input type="text" id="pent$pct" name="pent$pct" value="$pent.getEntitlement()" size="$slen"/>
+            </td>
+            <td>
+              <button id="rbpent$pct" name="rbpent$pct" class="rbpentclass">remove</button>
+            </td>
+          </tr>
+          #set($pct=$pct+1)
+        #end
+        
+        #set($pct=0)
+        #foreach($puser in $proconsul_users)
+          <tr>
+            <td class="property">UserName (ePPN)</td>
+            <td class="value">
+              <input type="hidden" id="delpuser$pct" name="delpuser$pct" value="0"/>
+              <input type="hidden" id="chgpuser$pct" name="chgpuser$pct" value="0"/>
+              #set($slen=$puser.getEppn().length())
+              <input type="text" id="puser$pct" name="puser$pct" value="$puser.getEppn()" size="$slen"/>
+            </td>
+            <td>
+              <button id="rbpuser$pct" name="rbpuser$pct" class="rbuserclass action">remove</button>
+            </td>
+          </tr>
+          #set($pct=$pct+1)
+        #end
+        
+        <tr>
+          <td>
+            <button name="additem" class="additem action" id="additem">Add Login Access Rule</button></td><td>
+          </td>
+        </tr>
+      </table>
+    </form>
+   </div>
  </div>
  
- <br><hr><br>
  <div id="da_rules" class="wrapperdiv">
-<div id="heading" class="heading">
-Domain Admin Access Rules
-</div>
-<div id="subheading" class="subheading">
-Only users with one or more of the following properties (in addition to one or more of the login access properties above) will be allowed to use Domain Admin privileges via Proconsul
-</div>
-<div id="datable" class="tablediv">
-<form name="daaccessform" id="daaccessform" method="POST" action="#">
-<input type="hidden" name="daaformsubmitted" value="1"/>
-<table name="dadisplaytable" class="table" >
+   <div id="heading" class="heading">
+     Domain Admin Access Rules
+   </div>
 
-<!--<tr>
-<th>Property</th><th>Value</th><th>Options</th>
-</tr>-->
-#set($alternator="light")
-#set($pct=0)
-#foreach($dagrp in $da_groups)
-  <tr class="pgrp-$alternator">
-  <td class="property">Group Membership</td>
-  <td class="value">
-    <!--<input type="hidden" id="pgrp$pct" name="pgrp$pct" value="$pgrp.getGroupurn()" class="pgrp"/>-->
-    <input type="hidden" id="deldagrp$pct" name="deldagrp$pct" value="0"/>
-    <input type="hidden" id="chgdagrp$pct" name="chgdagrp$pct" value="0"/>
-    #set($slen=$dagrp.getGroupurn().length())
-    <input type="text" id="dagrp$pct" name="dagrp$pct" value="$dagrp.getGroupurn()" size="$slen" class="pgrp-$alternator"/>
-    #if($alternator == "light")
-      #set($alternator="dark")
-    #else
-      #set($alternator="light")
-    #end
-  </td>
-  <td>
-    <button id="rbdagrp$pct" name="rbdagrp$pct" class="rbdagrpclass action">remove</button>
-  </td>
-  </tr>
-  #set($pct=$pct+1)
-#end
-#set($pct=0)
-#foreach($daent in $da_entitlements)
-  <tr class="pgrp-$alternator">
-  <td class="property">eduPersonEntitlement</td>
-  <td class="value">
-    <input type="hidden" id="deldaent$pct" name="deldaent$pct" value="0"/>
-    <input type="hidden" id="chgdaent$pct" name="chgdaent$pct" value="0"/>
-    #set($slen=$daent.getEntitlement().length())
-    <input type="text" id="daent$pct" name="daent$pct" value="$daent.getEntitlement()" size="$slen" class="pgrp-$alternator"/>
-    #if($alternator == "light")
-      #set($alternator="dark")
-    #else
-      #set($alternator="light")
-    #end
-  </td>
-  <td>
-    <button id="rbdaent$pct" name="rbdaent$pct" class="rbdaentclass action">remove</button>
-  </td>
-  </tr>
-  #set($pct=$pct+1)
-#end
-#set($pct=0)
-#foreach($dauser in $da_users)
-  <tr class="pgrp-$alternator">
-  <td class="property">UserName (eppn)</td>
-  <td class="value">
-    <input type="hidden" id="deldauser$pct" name="deldauser$pct" value="0"/>
-    <input type="hidden" id="chgdauser$pct" name="chgdauser$pct" value="0"/>
-    #set($slen=$dauser.getEppn().length())
-    <input type="text" id="dauser$pct" name="dauser$pct" value="$dauser.getEppn()" size="$slen" class="pgrp-$alternator"/>
-    #if($alternator == "light")
-      #set($alternator="dark")
-    #else
-      #set($alternator="light")
-    #end
-  </td>
-  <td>
-    <button id="rbdauser$pct" name="rbdauser$pct" class="rbdauserclass action">remove</button>
-  </td>
-  </tr>
-  #set($pct=$pct+1)
-#end
-<tr>
-  <td> </td><td><button name="daadditem" class="additem action" id="daadditem">Add Domain Admin Access Rule</button></td><td></td>
-</tr>
- 
-  </table>
- 
- </form>
- </div>
+   <div id="subheading" class="subheading">
+     Only users with one or more of the following properties (in addition to one or more of the login access properties above) will be allowed to use Domain Admin privileges via Proconsul
+   </div>
+   
+   <div id="datable" class="tablediv">
+     <form name="daaccessform" id="daaccessform" method="POST" action="#">
+       <input type="hidden" name="daaformsubmitted" value="1"/>
+       <table name="dadisplaytable" class="table" >
+         #set($pct=0)
+         #foreach($dagrp in $da_groups)
+           <tr>
+             <td class="property">Group Membership</td>
+             <td class="value">
+               <input type="hidden" id="deldagrp$pct" name="deldagrp$pct" value="0"/>
+               <input type="hidden" id="chgdagrp$pct" name="chgdagrp$pct" value="0"/>
+               #set($slen=$dagrp.getGroupurn().length())
+               <input type="text" id="dagrp$pct" name="dagrp$pct" value="$dagrp.getGroupurn()" size="$slen"/>
+             </td>
+             <td>
+               <button id="rbdagrp$pct" name="rbdagrp$pct" class="rbdagrpclass action">remove</button>
+             </td>
+           </tr> 
+           #set($pct=$pct+1)
+          #end
+
+          #set($pct=0)
+          #foreach($daent in $da_entitlements)
+            <tr>
+              <td class="property">eduPersonEntitlement</td>
+              <td class="value">
+                <input type="hidden" id="deldaent$pct" name="deldaent$pct" value="0"/>
+                <input type="hidden" id="chgdaent$pct" name="chgdaent$pct" value="0"/>
+                #set($slen=$daent.getEntitlement().length())
+                <input type="text" id="daent$pct" name="daent$pct" value="$daent.getEntitlement()" size="$slen" />
+              </td>
+              <td>
+                <button id="rbdaent$pct" name="rbdaent$pct" class="rbdaentclass action">remove</button>
+              </td>
+            </tr>
+            #set($pct=$pct+1)
+          #end
+          
+          #set($pct=0)
+          #foreach($dauser in $da_users)
+            <tr>
+              <td class="property">UserName (eppn)</td>
+              <td class="value">
+                <input type="hidden" id="deldauser$pct" name="deldauser$pct" value="0"/>
+                <input type="hidden" id="chgdauser$pct" name="chgdauser$pct" value="0"/>
+                #set($slen=$dauser.getEppn().length())
+                <input type="text" id="dauser$pct" name="dauser$pct" value="$dauser.getEppn()" size="$slen"/>
+              </td>
+              <td>
+                <button id="rbdauser$pct" name="rbdauser$pct" class="rbdauserclass action">remove</button>
+              </td>
+            </tr>
+            #set($pct=$pct+1)
+          #end
+          
+          <tr>
+            <td>&nbsp;</td>
+            <td><button name="daadditem" class="additem action" id="daadditem">Add Domain Admin Access Rule</button></td>
+            <td>&nbsp;</td>
+          </tr>
+      </table>
+    </form>
+   </div>
  </div>
  
  <!--<div id='addformdiv' name='addformdiv' class="addivclass" title="Add a Login Access Rule">-->
  <div id='addformdiv' name='addformdiv' title="Add a Login Access Rule">
-
- <form name='aform' id='aform' method='POST' action='#'>
- <table>
- <tr>
- <td><select name='typeselector' id='typeselector'><option value='eppn'>Username</option><option value='group'>Group URN</option><option value='entitlement'>Entitlement</option></select></td>
- <td><input type='text' value='value' name='userproperty' id='userproperty'/></td>
- </tr>
- <tr><td><button name='submit' value='submit' class='action' id='aformsubmit'>Submit</button></td></tr>
- </table>
- <input type="hidden" name="addformsubmitted" value="1"/>
- </form>
-
+  <form name='aform' id='aform' method='POST' action='#'>
+    <input type="hidden" name="addformsubmitted" value="1"/>
+    <table>
+      <tr>
+        <td>
+          <select name='typeselector' id='typeselector'>
+            <option value='eppn'>Username</option>
+            <option value='group'>Group URN</option>
+            <option value='entitlement'>Entitlement</option>
+          </select>
+        </td>
+        <td><input type='text' value='value' name='userproperty' id='userproperty'/></td>
+      </tr>
+      <tr>
+        <td><button name='submit' value='submit' class='action' id='aformsubmit'>Submit</button></td>
+      </tr>
+    </table>
+  </form>
  </div>
  
  <div id='adddadiv' name='adddadiv' title="Add a Domain Admin Access Rule">
- 
- <form name='daform' id='daform' method='POST' action='#'>
- <table>
- <tr>
- <td><select name='daselector' id='daselector'><option value='eppn'>Username</option><option value='group'>Group URN</option><option value='entitlement'>Entitlement</option></select></td>
- <td><input type='text' value='value' name='daproperty' id='daproperty'/></td>
- </tr>
- <tr><td><button name='dasubmit' value='dasumbit' class="action" id='daformsubmit'>Submit</button></td></tr>
- </table>
- <input type="hidden" name="adddaformsubmitted" value="1"/>
- </form>
+   <form name='daform' id='daform' method='POST' action='#'>
+     <input type="hidden" name="adddaformsubmitted" value="1"/>
+     <table>
+       <tr>
+         <td>
+           <select name='daselector' id='daselector'>
+             <option value='eppn'>Username</option>
+             <option value='group'>Group URN</option>
+             <option value='entitlement'>Entitlement</option>
+           </select>
+         </td>
+         <td><input type='text' value='value' name='daproperty' id='daproperty'/></td>
+       </tr>
+       <tr>
+         <td>
+           <button name='dasubmit' value='dasumbit' class="action" id='daformsubmit'>Submit</button>
+         </td>
+       </tr>
+     </table>
+   </form>
  </div>
  
 #include("footer.vm")
