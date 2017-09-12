@@ -1,5 +1,3 @@
-#include("header.vm")
-
 <div id="access_rules" class="wrapperdiv">
   <div id="heading" class="heading">
     Proconsul Login Rules

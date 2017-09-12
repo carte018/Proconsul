@@ -1,5 +1,3 @@
-#include("header.vm")
-
 <div id="host_map" class="wrapperdiv">
   <div id="heading" class="heading">
     Proconsul AD Group Management
@@ -107,8 +105,6 @@
 		</table>
 	</form>
 </div>
-
-#include("footer.vm")
 
 
 <script type="text/javascript">

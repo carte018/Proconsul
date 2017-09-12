@@ -1,5 +1,3 @@
-#include("header.vm")
-
 <div id="host_map" class="wrapperdiv">
   <div id="heading" class="heading">
     Proconsul Host Mappings
@@ -210,9 +208,6 @@
 		  </table>
 	  </form>
    </div>
-   
-#include("footer.vm")
-
 
 <script type="text/javascript">
  $( document ).ready(function() {
