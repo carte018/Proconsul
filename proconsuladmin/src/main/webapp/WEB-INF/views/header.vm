@@ -9,5 +9,5 @@
   </head>
 
   <body>
-    <h1>Proconsul Admin</h1>
+    <h1><a href="/admin/main">Proconsul Admin</a></h1>
     <hr>
