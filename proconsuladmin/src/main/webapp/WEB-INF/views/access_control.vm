@@ -24,7 +24,7 @@
               <input type="text" id="pgrp$pct" name="pgrp$pct" value="$pgrp.getGroupurn()" size="$slen"/>
             </td>
             <td>
-              <button id="rbpgrp$pct" name="rbpgrp$pct" class="rbgrpclass">remove</button>
+              <button id="rbpgrp$pct" name="rbpgrp$pct" class="rbgrpclass action">remove</button>
             </td>
           </tr>
           #set($pct=$pct+1)
@@ -40,7 +40,7 @@
               <input type="text" id="pent$pct" name="pent$pct" value="$pent.getEntitlement()" size="$slen"/>
             </td>
             <td>
-              <button id="rbpent$pct" name="rbpent$pct" class="rbpentclass">remove</button>
+              <button id="rbpent$pct" name="rbpent$pct" class="rbpentclass action">remove</button>
             </td>
           </tr>
           #set($pct=$pct+1)
