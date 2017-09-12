@@ -37,7 +37,7 @@ Proconsul will assign AD group memberships to dynamic users based on actual user
     #end
   </td>
   <td>
-    <button id="rug$pct" name="rug$pct" class="rugclass">remove</button>
+    <button id="rug$pct" name="rug$pct" class="rugclass action">remove</button>
   </td>
   </tr>
   #set($pct=$pct+1)

@@ -46,7 +46,7 @@ Users with the following properties will be allowed to log in to the following W
     #end
   </td>
   <td>
-    <button id="rbu$pct" name="rbu$pct" class="rbuclass">remove</button>
+    <button id="rbu$pct" name="rbu$pct" class="rbuclass action">remove</button>
   </td>
   </tr>
   #set($pct=$pct+1)
@@ -83,7 +83,7 @@ Users with the following properties will be allowed to log in to the following W
     #end
   </td>
   <td>
-    <button id="rbg$pct" name="rbg$pct" class="rbgclass">remove</button>
+    <button id="rbg$pct" name="rbg$pct" class="rbgclass action">remove</button>
   </td>
   </tr>
   #set($pct=$pct+1)
@@ -120,13 +120,13 @@ Users with the following properties will be allowed to log in to the following W
     #end
   </td>
   <td>
-    <button id="rbe$pct" name="rbe$pct" class="rbeclass">remove</button>
+    <button id="rbe$pct" name="rbe$pct" class="rbeclass action">remove</button>
   </td>
   </tr>
   #set($pct=$pct+1)
 #end  
 <tr>
-  <td> </td><td><button name="additem" class="additem" id="additem">Add Host Mapping Rule</button></td><td></td>
+  <td> </td><td><button name="additem" class="additem action" id="additem">Add Host Mapping Rule</button></td><td></td>
 </tr>
  
   </table>
@@ -169,13 +169,13 @@ Users with Domain Admin rights will be allowed to use them to log in to the foll
     #end
   </td>
   <td>
-    <button id="rdh$pct" name="rdh$pct" class="rdhclass">remove</button>
+    <button id="rdh$pct" name="rdh$pct" class="rdhclass action">remove</button>
   </td>
   </tr>
   #set($pct=$pct+1)
 #end
 <tr>
-  <td> </td><td><button name="adddaitem" class="additem" id="adddaitem">Add DA host</button></td><td></td>
+  <td> </td><td><button name="adddaitem" class="additem action" id="adddaitem">Add DA host</button></td><td></td>
 </tr>
 </table>
 
@@ -195,7 +195,7 @@ Users with Domain Admin rights will be allowed to use them to log in to the foll
 				<td><input type="text" name="rhs" id="rhs" value="value"/></td>
 			</tr>
 			<tr>
-				<td span=4><button name='submit' value='submit' id='aformsubmit'>Submit</button></td>
+				<td span=4><button name='submit' value='submit' id='aformsubmit' class='action'>Submit</button></td>
 			</tr>
 		</table>
 		<input type="hidden" name="aformsubmitted" id="aformsubmitted" value="1"/>
@@ -210,7 +210,7 @@ Users with Domain Admin rights will be allowed to use them to log in to the foll
 				<td><input type="text" name="darhs" id="darhs" value="value"/></td>
 			</tr>
 			<tr>
-				<td span=2><button name='submit' value='submit' id='daaformsubmit'>Submit</button></td>
+				<td span=2><button name='submit' value='submit' id='daaformsubmit' class='action'>Submit</button></td>
 			</tr>
 		</table>
 		<input type="hidden" name="daaformsubmitted" id="daaformsubmitted" value="1"/>

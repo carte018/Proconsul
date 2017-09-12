@@ -75,13 +75,13 @@ Only users with one or more of the following properties will be allowed to log i
     #end
   </td>
   <td>
-    <button id="rbpuser$pct" name="rbpuser$pct" class="rbuserclass">remove</button>
+    <button id="rbpuser$pct" name="rbpuser$pct" class="rbuserclass action">remove</button>
   </td>
   </tr>
   #set($pct=$pct+1)
 #end
 <tr>
-  <td><button name="additem" class="additem" id="additem">Add Login Access Rule</button></td><td></td>
+  <td><button name="additem" class="additem action" id="additem">Add Login Access Rule</button></td><td></td>
 </tr>
  
   </table>
@@ -124,7 +124,7 @@ Only users with one or more of the following properties (in addition to one or m
     #end
   </td>
   <td>
-    <button id="rbdagrp$pct" name="rbdagrp$pct" class="rbdagrpclass">remove</button>
+    <button id="rbdagrp$pct" name="rbdagrp$pct" class="rbdagrpclass action">remove</button>
   </td>
   </tr>
   #set($pct=$pct+1)
@@ -145,7 +145,7 @@ Only users with one or more of the following properties (in addition to one or m
     #end
   </td>
   <td>
-    <button id="rbdaent$pct" name="rbdaent$pct" class="rbdaentclass">remove</button>
+    <button id="rbdaent$pct" name="rbdaent$pct" class="rbdaentclass action">remove</button>
   </td>
   </tr>
   #set($pct=$pct+1)
@@ -166,13 +166,13 @@ Only users with one or more of the following properties (in addition to one or m
     #end
   </td>
   <td>
-    <button id="rbdauser$pct" name="rbdauser$pct" class="rbdauserclass">remove</button>
+    <button id="rbdauser$pct" name="rbdauser$pct" class="rbdauserclass action">remove</button>
   </td>
   </tr>
   #set($pct=$pct+1)
 #end
 <tr>
-  <td> </td><td><button name="daadditem" class="additem" id="daadditem">Add Domain Admin Access Rule</button></td><td></td>
+  <td> </td><td><button name="daadditem" class="additem action" id="daadditem">Add Domain Admin Access Rule</button></td><td></td>
 </tr>
  
   </table>
@@ -190,7 +190,7 @@ Only users with one or more of the following properties (in addition to one or m
  <td><select name='typeselector' id='typeselector'><option value='eppn'>Username</option><option value='group'>Group URN</option><option value='entitlement'>Entitlement</option></select></td>
  <td><input type='text' value='value' name='userproperty' id='userproperty'/></td>
  </tr>
- <tr><td><button name='submit' value='submit' id='aformsubmit'>Submit</button></td></tr>
+ <tr><td><button name='submit' value='submit' class='action' id='aformsubmit'>Submit</button></td></tr>
  </table>
  <input type="hidden" name="addformsubmitted" value="1"/>
  </form>
@@ -205,7 +205,7 @@ Only users with one or more of the following properties (in addition to one or m
  <td><select name='daselector' id='daselector'><option value='eppn'>Username</option><option value='group'>Group URN</option><option value='entitlement'>Entitlement</option></select></td>
  <td><input type='text' value='value' name='daproperty' id='daproperty'/></td>
  </tr>
- <tr><td><button name='dasubmit' value='dasumbit' id='daformsubmit'>Submit</button></td></tr>
+ <tr><td><button name='dasubmit' value='dasumbit' class="action" id='daformsubmit'>Submit</button></td></tr>
  </table>
  <input type="hidden" name="adddaformsubmitted" value="1"/>
  </form>

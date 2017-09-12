@@ -36,7 +36,7 @@ Typically, Windows systems require a group membership for RDP use;  Proconsul wi
       #set($alternator="light")
     #end
   <td>
-    <button id="rug$pct" name="rug$pct" class="rugclass">remove</button>
+    <button id="rug$pct" name="rug$pct" class="rugclass action">remove</button>
   </td>
   #else
   	<td class="property">When Accessing Hosts in the OU</td>
@@ -56,14 +56,14 @@ Typically, Windows systems require a group membership for RDP use;  Proconsul wi
 		#set($alternator="light")
 	#end
 	<td>
-		<button id="rog$pct" name="rog$pct" class="rogclass">remove</button>
+		<button id="rog$pct" name="rog$pct" class="rogclass action">remove</button>
 	</td>
   #end
   </tr>
   #set($pct=$pct+1)
 #end
 <tr>
-  <td> </td><td><button name="addgrp" id="addgrp" class="addgrp">Add Host Access Group</button></td><td></td>
+  <td> </td><td><button name="addgrp" id="addgrp" class="addgrp action">Add Host Access Group</button></td><td></td>
 </tr>
 </table>
 </form>
@@ -112,13 +112,13 @@ Some Windows systems require the use of a special RDP gateway;  Proconsul will e
       #set($alternator="light")
     #end
   <td>
-    <button id="rgw$pct" name="rgw$pct" class="rgwclass">remove</button>
+    <button id="rgw$pct" name="rgw$pct" class="rgwclass action">remove</button>
   </td>
   </tr>
   #set($pct=$pct+1)
 #end
 <tr>
-  <td> </td><td><button name="addgw" class="addgw" id="addgw">Add RDP Gateway Config</button></td><td></td>
+  <td> </td><td><button name="addgw" class="addgw button" id="addgw">Add RDP Gateway Config</button></td><td></td>
 </tr>
 </table>
 </form>
@@ -135,7 +135,7 @@ Some Windows systems require the use of a special RDP gateway;  Proconsul will e
 				<td><input type="text" name="rhs" id="rhs" value="AD Group DN"/></td>
 			</tr>
 			<tr>
-				<td span=4><button name='submit' value='submit' id='addhostmapsubmit'>Submit</button></td>
+				<td span=4><button name='submit' value='submit' id='addhostmapsubmit' class="action">Submit</button></td>
 			</tr>
 		</table>
 		<input type="hidden" name="addhostmapformsubmitted" id="addhostmapeformsubmitted" value="1"/>
@@ -153,7 +153,7 @@ Some Windows systems require the use of a special RDP gateway;  Proconsul will e
 			<tr>
 				<td><input type="text" name="other" id="other" value="RDP GW AD Group DN"/></td>
 			<tr>
-				<td span=4><button name='submit' value='submit' id='agwformsubmit'>Submit</button></td>
+				<td span=4><button name='submit' value='submit' id='agwformsubmit' class="action">Submit</button></td>
 			</tr>
 		</table>
 		<input type="hidden" name="addgwformsubmitted" id="addgwformsubmitted" value="1"/>

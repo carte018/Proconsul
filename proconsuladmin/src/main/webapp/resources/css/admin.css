@@ -74,3 +74,61 @@ div#pagetitle{
   margin-left: 0.4em;
   font-size: 2em;
 }
+
+button.action{
+  font-family: "Open Sans", sans-serif;
+  margin-top: 1em;
+  width: 100%;
+  background: #001a57;
+  color: #f7f7f7;
+  border: 1px solid #b3b0b0;
+  border-radius: 5px;
+  padding: 0.5em;
+  font-size: 110%;
+}
+
+button.action .fa, button.passive .fa{
+  color: #0577b1;
+  width: 2em;
+}
+
+button.passive{
+  font-family: "Open Sans", sans-serif;
+  margin-top: 1em;
+  width: 100%;
+  background: #fff;
+  border: 2px solid #b3b0b0;
+  color: #4a4a4a;
+  border-radius: 5px;
+  padding: 0.5em;
+  font-size: 110%;
+}
+
+button.action:hover{
+  background: #0577b1;
+  border: 1px solid #b3b0b0;
+}
+
+button.action:hover .fa{
+  color: #fff;
+}
+
+button.passive:hover{
+  color: #4a4a4a;
+  background: #d8d8d8;
+  border: 2px solid #b3b0b0;
+}
+
+button.inline{
+  width: 200px;
+  display: inline-block;
+  margin-right: 1em;
+}
+
+@media screen and (max-device-width: 480px) {
+  button.action, button.passive, button.inline{
+    width: 100%;
+    font-size: 3em;
+  }
+
+}
