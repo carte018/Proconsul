@@ -1,11 +1,5 @@
-<html>
-<head><link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<link rel="stylesheet" href="resources/css/proconsuladmin.css">
-<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-<script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-<title>Proconsul Host Groups and Gateways</title>
-</head>
-<body>
+#include("header.vm")
+
 <div id="host_map" class="wrapperdiv">
 <div id="heading" class="heading">
 Proconsul Host Groups
@@ -165,8 +159,8 @@ Some Windows systems require the use of a special RDP gateway;  Proconsul will e
 		<input type="hidden" name="addgwformsubmitted" id="addgwformsubmitted" value="1"/>
 	</form>
 </div>
-</body>
-</html>
+#include("footer.vm")
+
 
 <script type="text/javascript">
  $( document ).ready(function() {

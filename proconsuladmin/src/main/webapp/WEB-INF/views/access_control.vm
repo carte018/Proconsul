@@ -1,12 +1,4 @@
-<html>
-<head>
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-<link rel="stylesheet" href="resources/css/proconsuladmin.css">
-<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-<script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-<title>Proconsul Access Control</title>
-</head>
-<body>
+#include("header.vm")
 
 <div id="access_rules" class="wrapperdiv">
 <div id="heading" class="heading">
@@ -219,8 +211,8 @@ Only users with one or more of the following properties (in addition to one or m
  </form>
  </div>
  
- </body>
- </html>
+#include("footer.vm")
+
 
  <script type="text/javascript">
  $( document ).ready(function() {

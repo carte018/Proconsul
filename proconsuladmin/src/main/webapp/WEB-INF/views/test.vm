@@ -1,8 +1,10 @@
+#include("header.vm")
+
 <html>
 <head>
 <title>Test</title>
 </head>
 <body>
 $message
-</body>
-</html>
+
+#include("footer.vm")
