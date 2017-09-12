@@ -1,221 +1,216 @@
 #include("header.vm")
 
 <div id="host_map" class="wrapperdiv">
-<div id="heading" class="heading">
-Proconsul Host Mappings
-</div>
-<div id="subheading" class="subheading">
-Users with the following properties will be allowed to log in to the following Windows machines
-</div>
+  <div id="heading" class="heading">
+    Proconsul Host Mappings
+  </div>
+  
+  <div id="subheading" class="subheading">
+    Users with the following properties will be allowed to log in to the following Windows machines
+  </div>
 
-<div id="table" class="tablediv">
-<form name="accessform" id="accessform" method="POST" action="#">
-<table name="displaytable" class="table" >
-<input type="hidden" name="accessformsubmitted" value="1"/>
+  <div id="table" class="tablediv">
+    <form name="accessform" id="accessform" method="POST" action="#">
+      <input type="hidden" name="accessformsubmitted" value="1"/>
+      <table name="displaytable" class="table">
+        #set($pct=0)
+        #foreach( $heppn in $userhosts )
+          <tr>
+            <td class="property">UserName (eduPersonPrincipalName)</td>
+            <td class="property"><input type="text" id="uname$pct" name="uname$pct" value="$heppn.getEppn()"></td>
+            <td class="property">CAN ACCESS</td>
 
-#set($alternator="light")
-#set($pct=0)
-#foreach( $heppn in $userhosts )
-  <tr class="pgrp-$alternator">
-  <td class="property">UserName (eduPersonPrincipalName)</td>
-  <td class="property"><input type="text" id="uname$pct" name="uname$pct" value="$heppn.getEppn()" class="pgrp-$alternator"/></td>
-  <td class="property">CAN ACCESS</td>
+            #if( $heppn.getFqdn() )
+              #set($slen=$heppn.getFqdn().length())
+    	        <td>Hostname</td>
+    		      <td class="value">
+    		       <input type="hidden" id="deluhost$pct" name="deluhost$pct" value="0"/>
+    		       <input type="hidden" id="chguhost$pct" name="chguhost$pct" value="0"/>
+    		       <input type="text" id="uhost$pct" name="uhost$pct" value="$heppn.getFqdn()" size="$slen" class="pgrp-$alternator"/>
+    		      </td>
+	          #else
+		          #set($slen=$heppn.getOudn().length())
+		          <td>Orgunit DN</td>
+			        <td class="value">
+    		        <input type="hidden" id="deluou$pct" name="deluou$pct" value="0"/>
+    		        <input type="hidden" id="chguou$pct" name="chguou$pct" value="0"/>
+    		        <input type="text" id="uou$pct" name="uou$pct" value="$heppn.getOudn()" size="$slen" class="pgrp-$alternator"/>
+              </td>
+	          #end
 
-    #if( $heppn.getFqdn() )
-        #set($slen=$heppn.getFqdn().length())
-    	<td>Hostname</td>
-    		<td class="value">
-    		<input type="hidden" id="deluhost$pct" name="deluhost$pct" value="0"/>
-    		<input type="hidden" id="chguhost$pct" name="chguhost$pct" value="0"/>
-    		<input type="text" id="uhost$pct" name="uhost$pct" value="$heppn.getFqdn()" size="$slen" class="pgrp-$alternator"/>
-    		</td>
-	#else
-		#set($slen=$heppn.getOudn().length())
-		<td>Orgunit DN</td>
-			<td class="value">
-    		<input type="hidden" id="deluou$pct" name="deluou$pct" value="0"/>
-    		<input type="hidden" id="chguou$pct" name="chguou$pct" value="0"/>
-    		<input type="text" id="uou$pct" name="uou$pct" value="$heppn.getOudn()" size="$slen" class="pgrp-$alternator"/>
-    </td>
-	#end
+            <td>
+              <button id="rbu$pct" name="rbu$pct" class="rbuclass action">remove</button>
+            </td>
+          </tr>
+          #set($pct=$pct+1)
+        #end
+        
+        #set($pct=0)
+        #foreach( $hgrp in $grouphosts )
+          <tr>
+            <td class="property">Group Membership</td>
+            <td class="property"><input type="text" id="hgrp$pct" name="hgrp$pct" value="$hgrp.getGroupurn()"/></td>
+            <td class="property">CAN ACCESS</td>
 
-    #if($alternator == "light")
-      #set($alternator="dark")
-    #else
-      #set($alternator="light")
-    #end
-  </td>
-  <td>
-    <button id="rbu$pct" name="rbu$pct" class="rbuclass action">remove</button>
-  </td>
-  </tr>
-  #set($pct=$pct+1)
-#end
-#set($pct=0)
-#foreach( $hgrp in $grouphosts )
-  <tr class="pgrp-$alternator">
-  <td class="property">Group Membership</td>
-  <td class="property"><input type="text" id="hgrp$pct" name="hgrp$pct" value="$hgrp.getGroupurn()" class="pgrp-$alternator"/></td>
-  <td class="property">CAN ACCESS</td>
+            #if( $hgrp.getFqdn() )
+              #set($slen=$hgrp.getFqdn().length())
+    	        <td>Hostname</td>
+    		      <td class="value">
+   			        <input type="hidden" id="delghost$pct" name="delghost$pct" value="0"/>
+    		        <input type="hidden" id="chgghost$pct" name="chgghost$pct" value="0"/>
+    		        <input type="text" id="ghost$pct" name="ghost$pct" value="$hgrp.getFqdn()" size="$slen" class="pgrp-$alternator"/>
+    		      </td>
+	          #else
+		          #set($slen=$hgrp.getOudn().length())
+		          <td>Orgunit DN</td>
+			        <td class="value">
+    		        <input type="hidden" id="delgou$pct" name="delgou$pct" value="0"/>
+    		        <input type="hidden" id="chggou$pct" name="chggou$pct" value="0"/>
+    		        <input type="text" id="gou$pct" name="gou$pct" value="$hgrp.getOudn()" size="$slen" class="pgrp-$alternator"/>
+    		      </td>
+	          #end
+            
+            <td>
+              <button id="rbg$pct" name="rbg$pct" class="rbgclass action">remove</button>
+            </td>
+          </tr>
+          #set($pct=$pct+1)
+        #end
+        
+        #set($pct=0)
+        #foreach( $hent in $entitlementhosts )
+          <tr class="pgrp-$alternator">
+            <td class="property">Entitlement (eduPersonEntitlement)</td>
+            <td class="property">
+              <input type="text" name="hent$pct" id="hent$pct" value="$hent.getEntitlement()"/>
+            </td>
+            <td class="property">CAN ACCESS</td>
 
-    #if( $hgrp.getFqdn() )
-        #set($slen=$hgrp.getFqdn().length())
-    	<td>Hostname</td>
-    		<td class="value">
-   			<input type="hidden" id="delghost$pct" name="delghost$pct" value="0"/>
-    		<input type="hidden" id="chgghost$pct" name="chgghost$pct" value="0"/>
-    		<input type="text" id="ghost$pct" name="ghost$pct" value="$hgrp.getFqdn()" size="$slen" class="pgrp-$alternator"/>
-    		</td>
-	#else
-		#set($slen=$hgrp.getOudn().length())
-		<td>Orgunit DN</td>
-			<td class="value">
-    		<input type="hidden" id="delgou$pct" name="delgou$pct" value="0"/>
-    		<input type="hidden" id="chggou$pct" name="chggou$pct" value="0"/>
-    		<input type="text" id="gou$pct" name="gou$pct" value="$hgrp.getOudn()" size="$slen" class="pgrp-$alternator"/>
-    		</td>
-	#end
-
-    #if($alternator == "light")
-      #set($alternator="dark")
-    #else
-      #set($alternator="light")
-    #end
-  </td>
-  <td>
-    <button id="rbg$pct" name="rbg$pct" class="rbgclass action">remove</button>
-  </td>
-  </tr>
-  #set($pct=$pct+1)
-#end
-#set($pct=0)
-#foreach( $hent in $entitlementhosts )
-  <tr class="pgrp-$alternator">
-  <td class="property">Entitlement (eduPersonEntitlement)</td>
-  <td class="property"><input type="text" name="hent$pct" id="hent$pct" value="$hent.getEntitlement()" class="pgrp-$alternator"/></td>
-  <td class="property">CAN ACCESS</td>
-
-    #if( $hent.getFqdn() )
-        #set($slen=$hent.getFqdn().length())
-    	<td>Hostname</td>
-    		<td class="value">
-   			<input type="hidden" id="delehost$pct" name="delehost$pct" value="0"/>
-    		<input type="hidden" id="chgehost$pct" name="chgehost$pct" value="0"/>
-    		<input type="text" id="ehost$pct" name="ehost$pct" value="$hent.getFqdn()" size="$slen" class="pgrp-$alternator"/>
-    		</td>
-	#else
-		#set($slen=$hent.getOudn().length())
-		<td>Orgunit DN</td>
-			<td class="value">
-    		<input type="hidden" id="deleou$pct" name="deleou$pct" value="0"/>
-    		<input type="hidden" id="chgeou$pct" name="chgeou$pct" value="0"/>
-    		<input type="text" id="eou$pct" name="eou$pct" value="$hent.getOudn()" size="$slen" class="pgrp-$alternator"/>
-    		</td>
-	#end
-
-    #if($alternator == "light")
-      #set($alternator="dark")
-    #else
-      #set($alternator="light")
-    #end
-  </td>
-  <td>
-    <button id="rbe$pct" name="rbe$pct" class="rbeclass action">remove</button>
-  </td>
-  </tr>
-  #set($pct=$pct+1)
-#end  
-<tr>
-  <td> </td><td><button name="additem" class="additem action" id="additem">Add Host Mapping Rule</button></td><td></td>
-</tr>
- 
-  </table>
- 
- </form>
- </div>
+            #if( $hent.getFqdn() )
+              #set($slen=$hent.getFqdn().length())
+    	        <td>Hostname</td>
+    		      <td class="value">
+   			        <input type="hidden" id="delehost$pct" name="delehost$pct" value="0"/>
+    		        <input type="hidden" id="chgehost$pct" name="chgehost$pct" value="0"/>
+    		        <input type="text" id="ehost$pct" name="ehost$pct" value="$hent.getFqdn()" size="$slen" class="pgrp-$alternator"/>
+    		      </td>
+	            
+            #else
+		          #set($slen=$hent.getOudn().length())
+		          <td>Orgunit DN</td>
+			        <td class="value">
+    		        <input type="hidden" id="deleou$pct" name="deleou$pct" value="0"/>
+    		        <input type="hidden" id="chgeou$pct" name="chgeou$pct" value="0"/>
+    		        <input type="text" id="eou$pct" name="eou$pct" value="$hent.getOudn()" size="$slen" class="pgrp-$alternator"/>
+    		      </td>
+	          #end
+            
+            <td>
+              <button id="rbe$pct" name="rbe$pct" class="rbeclass action">remove</button>
+            </td>
+          </tr>
+          #set($pct=$pct+1)
+        #end
+          
+        <tr>
+          <td>&nbsp;</td>
+          <td><button name="additem" class="additem action" id="additem">Add Host Mapping Rule</button></td>
+          <td>&nbsp;</td>
+        </tr>
+      </table>
+    </form>
+   </div>
  </div>
  
  <div id="access_rules" class="wrapperdiv">
-<div id="heading" class="heading">
-Domain Admin Hosts
-</div>
-<div id="subheading" class="subheading">
-Users with Domain Admin rights will be allowed to use them to log in to the following hosts
-</div>
+   <div id="heading" class="heading">
+     Domain Admin Hosts
+   </div>
 
-<div id="dahosts" class="wrapperdiv">
-<div id="table2" class="tablediv">
-<form name="daform" id="daform" method="POST" action="#">
-<input type="hidden" name="daformsubmitted" value="1"/>
-<table name="displaytable2" class="table" >
+   <div id="subheading" class="subheading">
+     Users with Domain Admin rights will be allowed to use them to log in to the following hosts
+   </div>
 
-#set($alternator="light")
-#set($pct=0)
-#foreach( $dah in $dahosts )
-  <tr class="pgrp-$alternator">
+   <div id="dahosts" class="wrapperdiv">
+     <div id="table2" class="tablediv">
+       <form name="daform" id="daform" method="POST" action="#">
+        <input type="hidden" name="daformsubmitted" value="1"/>
+        <table name="displaytable2" class="table" >
+         
+          #set($pct=0)
+          #foreach( $dah in $dahosts )
+            <tr>
+              #set($slen=$dah.length())
+    	        <td>Hostname</td>
+    	   	     <td class="value">
+    	   	       <input type="hidden" id="deldah$pct" name="deldah$pct" value="0"/>
+    	   	       <input type="hidden" id="chgdah$pct" name="chgdah$pct" value="0"/>
+    	   	       <input type="text" id="dah$pct" name="dah$pct" value="$dah" size="$slen" class="pgrp-$alternator"/>
+    	   	     </td>
+              <td>
+                <button id="rdh$pct" name="rdh$pct" class="rdhclass action">remove</button>
+              </td>
+            </tr>
+            #set($pct=$pct+1)
+          #end
+          
+          <tr>
+            <td>&nbsp;</td>
+            <td><button name="adddaitem" class="additem action" id="adddaitem">Add DA host</button></td>
+            <td>&nbsp;</td>
+          </tr>
+        </table>
+       </form>
+     </div>
+   </div>
 
-        #set($slen=$dah.length())
-    	<td>Hostname</td>
-    		<td class="value">
-    		<input type="hidden" id="deldah$pct" name="deldah$pct" value="0"/>
-    		<input type="hidden" id="chgdah$pct" name="chgdah$pct" value="0"/>
-    		<input type="text" id="dah$pct" name="dah$pct" value="$dah" size="$slen" class="pgrp-$alternator"/>
-    		</td>
+   <div id="addhostdiv" name="addhostdiv" title="Add a Proconsul Host Mapping">
+	   <form name="aform" id="aform" method="POST" action="#">
+   	   <input type="hidden" name="aformsubmitted" id="aformsubmitted" value="1"/>
+		   <table>
+			   <tr>
+				   <td>
+             <select id="lhsselector" name="lhsselector">
+               <option value='eppn'>Username</option>
+               <option value='group'>Group Membership</option>
+               <option value='entitlement'>Entitlement</option>
+             </select>
+           </td>
+				   <td><input type="text" name="lhs" id="lhs" value="value"/></td>
+			   </tr>
+			   <tr>
+				   <td>
+             <select id="rhsselector" name="rhsselector">
+               <option value='fqdn'>Hostname</option>
+               <option value='oudn'>AD OU</option>
+             </select>
+           </td>
+				   <td><input type="text" name="rhs" id="rhs" value="value"/></td>
+			   </tr>
+			   <tr>
+				   <td span=4>
+             <button name='submit' value='submit' id='aformsubmit' class='action'>Submit</button>
+           </td>
+			   </tr>
+		   </table>
+	   </form>
+   </div>
 
-    #if($alternator == "light")
-      #set($alternator="dark")
-    #else
-      #set($alternator="light")
-    #end
-  </td>
-  <td>
-    <button id="rdh$pct" name="rdh$pct" class="rdhclass action">remove</button>
-  </td>
-  </tr>
-  #set($pct=$pct+1)
-#end
-<tr>
-  <td> </td><td><button name="adddaitem" class="additem action" id="adddaitem">Add DA host</button></td><td></td>
-</tr>
-</table>
-
-</form>
-</div>
-</div>
-
-<div id="addhostdiv" name="addhostdiv" title="Add a Proconsul Host Mapping">
-	<form name="aform" id="aform" method="POST" action="#">
-		<table>
-			<tr>
-				<td><select id="lhsselector" name="lhsselector"><option value='eppn'>Username</option><option value='group'>Group Membership</option><option value='entitlement'>Entitlement</option></select></td>
-				<td><input type="text" name="lhs" id="lhs" value="value"/></td>
-			</tr>
-			<tr>
-				<td><select id="rhsselector" name="rhsselector"><option value='fqdn'>Hostname</option><option value='oudn'>AD OU</option></select></td>
-				<td><input type="text" name="rhs" id="rhs" value="value"/></td>
-			</tr>
-			<tr>
-				<td span=4><button name='submit' value='submit' id='aformsubmit' class='action'>Submit</button></td>
-			</tr>
-		</table>
-		<input type="hidden" name="aformsubmitted" id="aformsubmitted" value="1"/>
-	</form>
-</div>
-
-<div id="adddadiv" name="adddadiv" title="Add a Domain Admin Host">
-	<form name="daaform" id="daaform" method="POST" action="#">
-		<table>
-			<tr>
-				<td>Hostname</td>
-				<td><input type="text" name="darhs" id="darhs" value="value"/></td>
-			</tr>
-			<tr>
-				<td span=2><button name='submit' value='submit' id='daaformsubmit' class='action'>Submit</button></td>
-			</tr>
-		</table>
-		<input type="hidden" name="daaformsubmitted" id="daaformsubmitted" value="1"/>
-	</form>
-</div>
+   <div id="adddadiv" name="adddadiv" title="Add a Domain Admin Host">
+	   <form name="daaform" id="daaform" method="POST" action="#">
+   		<input type="hidden" name="daaformsubmitted" id="daaformsubmitted" value="1"/>
+		  <table>
+			  <tr>
+				  <td>Hostname</td>
+				  <td><input type="text" name="darhs" id="darhs" value="value"/></td>
+			  </tr>
+			  <tr>
+				  <td span=2><button name='submit' value='submit' id='daaformsubmit' class='action'>Submit</button></td>
+			  </tr>
+		  </table>
+	  </form>
+   </div>
+   
 #include("footer.vm")
 
 
