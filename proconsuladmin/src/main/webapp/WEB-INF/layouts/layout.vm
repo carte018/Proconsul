@@ -9,8 +9,11 @@
   </head>
 
   <body>
-    <h1><a href="/admin/main">Proconsul Admin</a></h1>
-    <hr>
-    $screen_content
+    <div id="header">
+      <h1><a href="/admin/main">Proconsul Admin</a></h1>
+    </div>
+    <div id="main">
+      $screen_content
+    </div>
   </body>
 </html>
