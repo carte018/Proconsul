@@ -1,110 +1,101 @@
 #include("header.vm")
 
 <div id="host_map" class="wrapperdiv">
-<div id="heading" class="heading">
-Proconsul AD Group Management
-</div>
-<div id="subheading" class="subheading">
-Proconsul will assign AD group memberships to dynamic users based on actual user properties as follows:
+  <div id="heading" class="heading">
+    Proconsul AD Group Management
+  </div>
+
+  <div id="subheading" class="subheading">
+    Proconsul will assign AD group memberships to dynamic users based on actual user properties as follows:
+  </div>
+
+  <div id="table" class="tablediv">
+    <form name="accessform" id="accessform" method="POST" action="#">
+      <input type="hidden" id="aformsubmitted" name="aformsubmitted" value="1"/>
+      <table name="displaytable" class="table" >
+        #set($pct=0)
+        #foreach( $heppn in $usergroups )
+          <tr>
+            <td class="property">UserName (eduPersonPrincipalName)</td>
+            <td class="property"><input type="text" id="uname$pct" name="uname$pct" value="$heppn.getEppn()"/></td>
+            #set($slen=$heppn.getGroupdn().length())
+    	      <td>Will be a member of</td>
+    		    <td class="value">
+    		      <input type="hidden" id="delugrp$pct" name="delugrp$pct" value="0"/>
+    		      <input type="hidden" id="chgugrp$pct" name="chgugrp$pct" value="0"/>
+    		      <input type="text" id="ugrp$pct" name="ugrp$pct" value="$heppn.getGroupdn()" size="$slen"/>
+    		    </td>
+            <td>
+              <button id="rug$pct" name="rug$pct" class="rugclass action">remove</button>
+            </td>
+          </tr>
+          #set($pct=$pct+1)
+        #end
+        
+        #set($pct=0)
+        #foreach( $hgdn in $groupgroups )
+          <tr>
+            #set($llen=$hgdn.getGroupurn().length())
+            <td class="property">Group URN (isMemberOf)</td>
+            <td class="property">
+              <input type="text" name="gname$pct" id="gname$pct" value="$hgdn.getGroupurn()" size="$llen"/>
+            </td>
+  	        #set($slen=$hgdn.getGroupdn().length())
+  	        <td>Will be a member of</td>
+  	        <td class="value">
+  	          <input type="hidden" id="delggrp$pct" name="delggrp$pct" value="0"/>
+  	          <input type="hidden" id="chgggrp$pct" name="chgggrp$pct" value="0"/>
+  	          <input type="text" id="ggrp$pct" name="ggrp$pct" value="$hgdn.getGroupdn()" size="$slen"/>
+  	        </td>
+            <td>
+              <button id="rgg$pct" name="rgg$pct" class="rggclass">remove</button>
+            </td>
+          </tr>
+          #set($pct=$pct+1)
+        #end
+        
+        #set($pct=0)
+        #foreach( $hedn in $entitlementgroups )
+          <tr>
+            #set($llen=$hedn.getEntitlement().length())
+            <td class="property">Entitlement (eduPersonEntitlement)</td>
+            <td class="property">
+              <input type="text" name="ename$pct" id="ename$pct" value="$hedn.getEntitlement()" size="$llen" />
+            </td>
+            #set($slen=$hedg.getGroupdn().length())
+            <td>Will be a member of</td>
+            <td class="value">
+              <input type="hidden" id="delegrp$pct" name="delegrp$pct" value="0"/>
+              <input type="hidden" id="chgegrp$pct" name="chgegrp$pct" value="0"/>
+              <input type="text" id="egrp$pct" name="egrp$pct" value="$hedn.getGroupdn()" size="$slen" />
+            </td>
+            <td>
+              <button id="reg$pct" name="reg$pct" class="regclass">remove</button>
+            </td>
+          </tr>
+          #set($pct=$pct+1)
+        #end
+
+        #set($pct=0)
+        <tr>
+          <td>&nbsp;</td>
+          <td><button name="additem" class="additem" id="additem">Add AD Group Mapping</button>
+          </td>
+          <td>&nbsp;</td>
+        </tr>
+      </table>
+    </form>
+  </div>
 </div>
 
-<div id="table" class="tablediv">
-<form name="accessform" id="accessform" method="POST" action="#">
-<table name="displaytable" class="table" >
-<input type="hidden" id="aformsubmitted" name="aformsubmitted" value="1"/>
-<!--<tr>
-<th>Property</th><th>Value</th><th>Options</th>
-</tr>-->
-#set($alternator="light")
-#set($pct=0)
-#foreach( $heppn in $usergroups )
-  <tr class="pgrp-$alternator">
-  <td class="property">UserName (eduPersonPrincipalName)</td>
-  <td class="property"><input type="text" id="uname$pct" name="uname$pct" value="$heppn.getEppn()" class="pgrp-$alternator"/></td>
 
-        #set($slen=$heppn.getGroupdn().length())
-    	<td>Will be a member of</td>
-    		<td class="value">
-    		<input type="hidden" id="delugrp$pct" name="delugrp$pct" value="0"/>
-    		<input type="hidden" id="chgugrp$pct" name="chgugrp$pct" value="0"/>
-    		<input type="text" id="ugrp$pct" name="ugrp$pct" value="$heppn.getGroupdn()" size="$slen" class="pgrp-$alternator"/>
-    		</td>
-
-    #if($alternator == "light")
-      #set($alternator="dark")
-    #else
-      #set($alternator="light")
-    #end
-  </td>
-  <td>
-    <button id="rug$pct" name="rug$pct" class="rugclass action">remove</button>
-  </td>
-  </tr>
-  #set($pct=$pct+1)
-#end
-#set($pct=0)
-#foreach( $hgdn in $groupgroups )
-  <tr class="pgrp-$alternator">
-  #set($llen=$hgdn.getGroupurn().length())
-  <td class="property">Group URN (isMemberOf)</td>
-  <td class="property"><input type="text" name="gname$pct" id="gname$pct" value="$hgdn.getGroupurn()" size="$llen" class="pgrp-$alternator"/></td>
-  	#set($slen=$hgdn.getGroupdn().length())
-  	<td>Will be a member of</td>
-  	<td class="value">
-  	<input type="hidden" id="delggrp$pct" name="delggrp$pct" value="0"/>
-  	<input type="hidden" id="chgggrp$pct" name="chgggrp$pct" value="0"/>
-  	<input type="text" id="ggrp$pct" name="ggrp$pct" value="$hgdn.getGroupdn()" size="$slen" class="pgrp-$alternator"/>
-  	</td>
-  #if($alternator == "light")
-    #set($alternator="dark")
-  #else
-  	#set($alternator="light")
-  #end
-  </td>
-  <td>
-    <button id="rgg$pct" name="rgg$pct" class="rggclass">remove</button>
-  </td>
-  </tr>
-  #set($pct=$pct+1)
-#end
-#set($pct=0)
-#foreach( $hedn in $entitlementgroups )
-  <tr class="pgrp=$alternator">
-  #set($llen=$hedn.getEntitlement().length())
-  <td class="property">Entitlement (eduPersonEntitlement)</td>
-  <td class="property"><input type="text" name="ename$pct" id="ename$pct" value="$hedn.getEntitlement()" size="$llen" class="pgrp-$alternator"/></td>
-    #set($slen=$hedg.getGroupdn().length())
-    <td>Will be a member of</td>
-    <td class="value">
-    <input type="hidden" id="delegrp$pct" name="delegrp$pct" value="0"/>
-    <input type="hidden" id="chgegrp$pct" name="chgegrp$pct" value="0"/>
-    <input type="text" id="egrp$pct" name="egrp$pct" value="$hedn.getGroupdn()" size="$slen" class="pgrp-$alternator"/>
-    </td>
-  #if($alternator == "light")
-    #set($altrnator="dark")
-  #else
-    #set($alternator="light")
-  #end
-  </td>
-  <td>
-    <button id="reg$pct" name="reg$pct" class="regclass">remove</button>
-  </td>
-  </tr>
-  #set($pct=$pct+1)
-#end
-#set($pct=0)
-<tr>
-  <td> </td><td><button name="additem" class="additem" id="additem">Add AD Group Mapping</button></td><td></td>
-</tr>
-</table>
-</form>
-</div>
-</div>
 <div id="addmapdiv" name="addmapdiv" title="Add a Proconsul Group Mapping">
 	<form name="aform" id="aform" method="POST" action="#">
+		<input type="hidden" name="addformsubmitted" id="addformsubmitted" value="1"/>
 		<table>
 			<tr>
-				<td><select id="lhsselector" name="lhsselector"><option value='eppn'>Username</option><option value='group'>Group Membership</option><option value='entitlement'>Entitlement</option></select></td>
+				<td><select id="lhsselector" name="lhsselector"><option value='eppn'>Username</option><option value='group'>Group Membership</option><option value='entitlement'>Entitlement</option></select>
+        </td>
 				<td><input type="text" name="lhs" id="lhs" value="value"/></td>
 			</tr>
 			<tr>
@@ -114,9 +105,9 @@ Proconsul will assign AD group memberships to dynamic users based on actual user
 				<td span=4><button name='submit' value='submit' id='aformsubmit'>Submit</button></td>
 			</tr>
 		</table>
-		<input type="hidden" name="addformsubmitted" id="addformsubmitted" value="1"/>
 	</form>
 </div>
+
 #include("footer.vm")
 
 
