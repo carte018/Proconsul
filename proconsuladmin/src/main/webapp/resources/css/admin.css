@@ -1,0 +1,76 @@
+a{
+  color: #0577b1;
+  text-decoration: none;
+  border-bottom: 1px dotted #0577b1;
+}
+
+a img{
+  height: 0.70em;
+}
+
+a:hover, a:active{
+  color: #001a57;
+  border-bottom: 1px solid #001a57;
+}
+
+h1, h2, h3, h4, h5{
+  margin: 0; 
+  font-weight: normal;
+  font-family: Georgia, serif;
+  color: #001a57;
+}
+
+h1{
+  font-size: 170%;
+  line-height: 175%;
+}
+
+h1 img{
+  height: 20px;
+}
+
+h2{
+  color: #666;
+  font-family: "Open Sans", sans-serif;
+  font-size: 130%;
+}
+
+h4{
+  color: #666;
+  font-family: "Open Sans", sans-serif;
+  font-weight: bold;
+}
+
+.error{
+  color: #cc3300;
+  font-weight: bold;
+  margin-bottom: 1em;
+}
+
+body{
+  margin: 0;
+  padding: 0;
+  font-family: "Open Sans", sans-serif;
+  color: #666;
+}
+
+#header{
+  background: #001a57;
+}
+
+#header, #main{padding: 17px 40px}
+
+@media screen and (max-width: 480px) {
+  #header, #main{padding: 10px}
+}
+
+img#dukelogo{
+  height: 50px;
+}
+
+div#pagetitle{
+  display: inline;
+  color: #ffd960;
+  margin-left: 0.4em;
+  font-size: 2em;
+}
