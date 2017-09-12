@@ -77,7 +77,7 @@
         #set($pct=0)
         <tr>
           <td>&nbsp;</td>
-          <td><button name="additem" class="additem" id="additem">Add AD Group Mapping</button>
+          <td><button name="additem" class="additem action" id="additem">Add AD Group Mapping</button>
           </td>
           <td>&nbsp;</td>
         </tr>

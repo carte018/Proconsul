@@ -10,7 +10,7 @@
 
   <body>
     <div id="header">
-      <h1><a href="/admin">Proconsul Admin</a></h1>
+      <h1><a href="/admin/">Proconsul Admin</a></h1>
     </div>
     <div id="main">
       $screen_content

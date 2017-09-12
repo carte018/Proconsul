@@ -189,9 +189,6 @@
      </table>
    </form>
  </div>
- 
-#include("footer.vm")
-
 
  <script type="text/javascript">
  $( document ).ready(function() {
