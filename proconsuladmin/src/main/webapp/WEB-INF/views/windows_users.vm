@@ -36,7 +36,8 @@
             #set($llen=$hgdn.getGroupurn().length())
             <td class="property">Group URN (isMemberOf)</td>
             <td class="property">
-              <input type="text" name="gname$pct" id="gname$pct" value="$hgdn.getGroupurn()" size="$llen"/>
+              <input type="hidden" name="gname$pct" id="gname$pct" value="$hgdn.getGroupurn()" size="$llen"/>
+              <span class="populated-value">$hgdn.getGroupurn()</span>
             </td>
   	        #set($slen=$hgdn.getGroupdn().length())
   	        <td>Will be a member of</td>
@@ -59,7 +60,8 @@
             #set($llen=$hedn.getEntitlement().length())
             <td class="property">Entitlement (eduPersonEntitlement)</td>
             <td class="property">
-              <input type="text" name="ename$pct" id="ename$pct" value="$hedn.getEntitlement()" size="$llen" />
+              <input type="hidden" name="ename$pct" id="ename$pct" value="$hedn.getEntitlement()" size="$llen" />
+              <span class="populated-value">$hedn.getEntitlement()</span>
             </td>
             #set($slen=$hedg.getGroupdn().length())
             <td>Will be a member of</td>

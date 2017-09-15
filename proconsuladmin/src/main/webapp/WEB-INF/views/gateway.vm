@@ -38,7 +38,7 @@
   	          <td class="property">When Accessing Hosts in the OU</td>
   	          #set($llen=$hag.getOu().length())
   	          <td class="property">
-                <input tye="hidden"name="oudn$pct" id="oudn$pct" value="$hag.getOu()" size="$llen"/>
+                <input type="hidden"name="oudn$pct" id="oudn$pct" value="$hag.getOu()" size="$llen"/>
                 <span class="populated-value">$hag.getOu()</span>
               </td>
   	          <td class="property">user will be made a member of</td>

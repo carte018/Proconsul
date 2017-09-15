@@ -87,7 +87,8 @@
           <tr>
             <td class="property">Entitlement (eduPersonEntitlement)</td>
             <td class="property">
-              <input type="text" name="hent$pct" id="hent$pct" value="$hent.getEntitlement()"/>
+              <input type="hidden" name="hent$pct" id="hent$pct" value="$hent.getEntitlement()"/>
+              <span class="populated-value">$hent.getEntitlement()</span>
             </td>
             <td class="property">CAN ACCESS</td>
 
