@@ -160,8 +160,12 @@ table.displaytable tr:nth-child(even) td{
   background-color: #ddd;
 }
 
-table.displaytable td{
+table.displaytable td, table.displaytable th{
   padding: 7px;
+}
+
+table.displaytable th{
+  text-align: left;
 }
 
 table.displaytable > input{

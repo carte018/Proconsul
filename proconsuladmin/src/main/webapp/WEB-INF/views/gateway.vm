@@ -75,18 +75,19 @@
       <input type="hidden" name="gwformsubmitted" id="gwformsubmitted" value="1"/>
       <table class="displaytable">
         <tr>
-          <th colspan="5">When Accessing HostName</th>
+          <th>When accessing HostName...</th>
+          <th>Proconsul will use the gateway...</th>
+          <th colspan="2">And (for gateway access) make the user a member of...</th>
         </tr>
         
         #set($pct=0)
         #foreach($hgw in $hostgateway) 
           <tr>
 	          #set($llen=$hag.getFqdn().length())
-  	        <td class="property">
+  	        <td>
               <input type="hidden" id="tfqdn$pct" name="tfqdn$pct" value="$hgw.getFqdn()" size="$llen"/>
               <span class="populated-value">$hgw.getFqdn()</span>
             </td>
-  	        <td class="property">Proconsul will use the gateway</td>
 
             #set($slen=$hag.getGateway().length())
     		    <td class="value">
@@ -96,7 +97,6 @@
               <span class="populated-value">$hgw.getGateway()</span>
     		    </td>
 		        #set($slen=$hag.getGroupdn().length())
-			      <td class="property">and (for gateway access) make the user a member of</td>
 			      <td class="value">
 			        <input type="hidden" id="hgwg$pct" name="hgwg$pct" value="$hgw.getGroupdn()" size="$slen" />
               <span class="populated-value">$hgw.getGroupdn()</span>
