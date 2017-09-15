@@ -162,6 +162,7 @@ table.displaytable tr:nth-child(even) td{
 
 table.displaytable td, table.displaytable th{
   padding: 7px;
+  vertical-align: top;
 }
 
 table.displaytable th{
