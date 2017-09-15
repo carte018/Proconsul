@@ -20,7 +20,8 @@
     		    <td class="value">
     		      <input type="hidden" id="delugrp$pct" name="delugrp$pct" value="0"/>
     		      <input type="hidden" id="chgugrp$pct" name="chgugrp$pct" value="0"/>
-    		      <input type="text" id="ugrp$pct" name="ugrp$pct" value="$heppn.getGroupdn()" size="$slen"/>
+    		      <input type="hidden" id="ugrp$pct" name="ugrp$pct" value="$heppn.getGroupdn()" size="$slen"/>
+              <span class="populated-value">$heppn.getGroupdn()</span>
     		    </td>
             <td>
               <button id="rug$pct" name="rug$pct" class="rugclass action">remove</button>
@@ -42,7 +43,8 @@
   	        <td class="value">
   	          <input type="hidden" id="delggrp$pct" name="delggrp$pct" value="0"/>
   	          <input type="hidden" id="chgggrp$pct" name="chgggrp$pct" value="0"/>
-  	          <input type="text" id="ggrp$pct" name="ggrp$pct" value="$hgdn.getGroupdn()" size="$slen"/>
+  	          <input type="hidden" id="ggrp$pct" name="ggrp$pct" value="$hgdn.getGroupdn()" size="$slen"/>
+              <span class="populated-value">$hgdn.getGroupdn()</span>
   	        </td>
             <td>
               <button id="rgg$pct" name="rgg$pct" class="rggclass action">remove</button>
@@ -64,7 +66,8 @@
             <td class="value">
               <input type="hidden" id="delegrp$pct" name="delegrp$pct" value="0"/>
               <input type="hidden" id="chgegrp$pct" name="chgegrp$pct" value="0"/>
-              <input type="text" id="egrp$pct" name="egrp$pct" value="$hedn.getGroupdn()" size="$slen" />
+              <input type="hidden" id="egrp$pct" name="egrp$pct" value="$hedn.getGroupdn()" size="$slen" />
+              <span class="populated-value">$hedn.getGroupdn()</span>
             </td>
             <td>
               <button id="reg$pct" name="reg$pct" class="regclass action">remove</button>

@@ -26,7 +26,8 @@
     		      <td class="value">
     		        <input type="hidden" id="delhgrp$pct" name="delhgrp$pct" value="0"/>
     		        <input type="hidden" id="chghgrp$pct" name="chghgrp$pct" value="0"/>
-    		        <input type="text" id="hgrp$pct" name="hgrp$pct" value="$hag.getGroupdn()" size="$slen"/>
+    		        <input type="hidden" id="hgrp$pct" name="hgrp$pct" value="$hag.getGroupdn()" size="$slen"/>
+                <span class="populated-value">$hag.getGroupdn()</span>
     	        </td>
 
               <td>
@@ -43,7 +44,8 @@
   	          <td class="value">
   	            <input type="hidden" id="delogrp$pct" name="delogrp$pct" value="0"/>
   	            <input type="hidden" id="chgogrp$pct" name="chgogrp$pct" value="0"/>
-  	            <input type="text" id="ogrp$pct" name="ogrp$pct" value="$hag.getGroupdn()" size="$slen"/>
+  	            <input type="hidden" id="ogrp$pct" name="ogrp$pct" value="$hag.getGroupdn()" size="$slen"/>
+                <span class="populated-value">$hag.getGroupdn()</span>
   	          </td>
 	            <td>
 		            <button id="rog$pct" name="rog$pct" class="rogclass action">remove</button>
@@ -84,7 +86,8 @@
     		    <td class="value">
     		      <input type="hidden" id="delgw$pct" name="delgw$pct" value="0"/>
     		      <input type="hidden" id="chggw$pct" name="chggw$pct" value="0"/>
-    		      <input type="text" id="hgw$pct" name="hgw$pct" value="$hgw.getGateway()" size="$slen" />
+    		      <input type="hidden" id="hgw$pct" name="hgw$pct" value="$hgw.getGateway()" size="$slen" />
+              <span class="populated-value">$hgw.getGateway()</span>
     		    </td>
 		        #set($slen=$hag.getGroupdn().length())
 			      <td class="property">and (for gateway access) make the user a member of</td>
