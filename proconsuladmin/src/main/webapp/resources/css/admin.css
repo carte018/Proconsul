@@ -82,6 +82,15 @@ div#pagetitle{
   font-size: 2em;
 }
 
+div#pagetitle a{
+  border: none;
+}
+
+div#pagetitle a:hover{
+  color: #0577b1;
+  border-bottom: 1px solid #0577b1;
+}
+
 button.action{
   font-family: "Open Sans", sans-serif;
   margin-top: 1em;
