@@ -20,7 +20,8 @@
               <input type="hidden" id="delpgrp$pct" name="delpgrp$pct" value="0"/>
               <input type="hidden" id="chgpgrp$pct" name="chgpgrp$pct" value="0"/>
               #set($slen=$pgrp.getGroupurn().length())
-              <input type="text" id="pgrp$pct" name="pgrp$pct" value="$pgrp.getGroupurn()" size="$slen"/>
+              <input type="hidden" id="pgrp$pct" name="pgrp$pct" value="$pgrp.getGroupurn()" size="$slen"/>
+              <span class="populated-value">$pgrp.getGroupurn()</span>
             </td>
             <td>
               <button id="rbpgrp$pct" name="rbpgrp$pct" class="rbgrpclass action">remove</button>
@@ -54,7 +55,8 @@
               <input type="hidden" id="delpuser$pct" name="delpuser$pct" value="0"/>
               <input type="hidden" id="chgpuser$pct" name="chgpuser$pct" value="0"/>
               #set($slen=$puser.getEppn().length())
-              <input type="text" id="puser$pct" name="puser$pct" value="$puser.getEppn()" size="$slen"/>
+              <input type="hidden" id="puser$pct" name="puser$pct" value="$puser.getEppn()" size="$slen"/>
+              <span class="populated-value">$puser.getEppn()</span>
             </td>
             <td>
               <button id="rbpuser$pct" name="rbpuser$pct" class="rbuserclass action">remove</button>
@@ -89,7 +91,8 @@
                <input type="hidden" id="deldagrp$pct" name="deldagrp$pct" value="0"/>
                <input type="hidden" id="chgdagrp$pct" name="chgdagrp$pct" value="0"/>
                #set($slen=$dagrp.getGroupurn().length())
-               <input type="text" id="dagrp$pct" name="dagrp$pct" value="$dagrp.getGroupurn()" size="$slen"/>
+               <input type="hidden" id="dagrp$pct" name="dagrp$pct" value="$dagrp.getGroupurn()" size="$slen"/>
+               <span class="populated-value">$dagrp.getGroupurn()</span>
              </td>
              <td>
                <button id="rbdagrp$pct" name="rbdagrp$pct" class="rbdagrpclass action">remove</button>
@@ -106,7 +109,8 @@
                 <input type="hidden" id="deldaent$pct" name="deldaent$pct" value="0"/>
                 <input type="hidden" id="chgdaent$pct" name="chgdaent$pct" value="0"/>
                 #set($slen=$daent.getEntitlement().length())
-                <input type="text" id="daent$pct" name="daent$pct" value="$daent.getEntitlement()" size="$slen" />
+                <input type="hidden" id="daent$pct" name="daent$pct" value="$daent.getEntitlement()" size="$slen" />
+                <span class="populated-value">$daent.getEntitlement()</span>
               </td>
               <td>
                 <button id="rbdaent$pct" name="rbdaent$pct" class="rbdaentclass action">remove</button>
@@ -123,7 +127,8 @@
                 <input type="hidden" id="deldauser$pct" name="deldauser$pct" value="0"/>
                 <input type="hidden" id="chgdauser$pct" name="chgdauser$pct" value="0"/>
                 #set($slen=$dauser.getEppn().length())
-                <input type="text" id="dauser$pct" name="dauser$pct" value="$dauser.getEppn()" size="$slen"/>
+                <input type="hidden" id="dauser$pct" name="dauser$pct" value="$dauser.getEppn()" size="$slen"/>
+                <span class="populated-value">$dauser.getEppn()</span>
               </td>
               <td>
                 <button id="rbdauser$pct" name="rbdauser$pct" class="rbdauserclass action">remove</button>

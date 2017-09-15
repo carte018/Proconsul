@@ -19,7 +19,7 @@
 	            <td class="property">When Accessing HostName</td>
 	            #set($llen=$hag.getFqdn().length())
   	          <td class="property">
-                <input type="text" class="pgrp-$alternator" name="hostfqdn$pct" id="hostfqdn$pct" value="$hag.getFqdn()" size="$llen"/>
+                <input type="text" name="hostfqdn$pct" id="hostfqdn$pct" value="$hag.getFqdn()" size="$llen"/>
               </td>
   	          <td class="property">user will be made a member of</td>
               #set($slen=$hag.getGroupdn().length())

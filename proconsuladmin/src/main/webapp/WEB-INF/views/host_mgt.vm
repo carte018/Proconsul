@@ -26,7 +26,8 @@
     		      <td class="value">
     		       <input type="hidden" id="deluhost$pct" name="deluhost$pct" value="0"/>
     		       <input type="hidden" id="chguhost$pct" name="chguhost$pct" value="0"/>
-    		       <input type="text" id="uhost$pct" name="uhost$pct" value="$heppn.getFqdn()" size="$slen" class="pgrp-$alternator"/>
+    		       <input type="hidden" id="uhost$pct" name="uhost$pct" value="$heppn.getFqdn()" size="$slen" />
+               <span class="populated-value">$heppn.getFqdn()</span>
     		      </td>
 	          #else
 		          #set($slen=$heppn.getOudn().length())
@@ -34,7 +35,8 @@
 			        <td class="value">
     		        <input type="hidden" id="deluou$pct" name="deluou$pct" value="0"/>
     		        <input type="hidden" id="chguou$pct" name="chguou$pct" value="0"/>
-    		        <input type="text" id="uou$pct" name="uou$pct" value="$heppn.getOudn()" size="$slen" class="pgrp-$alternator"/>
+    		        <input type="hidden" id="uou$pct" name="uou$pct" value="$heppn.getOudn()" size="$slen" />
+                <span class="populated-value">$heppn.getOudn()</span>
               </td>
 	          #end
 
@@ -58,7 +60,8 @@
     		      <td class="value">
    			        <input type="hidden" id="delghost$pct" name="delghost$pct" value="0"/>
     		        <input type="hidden" id="chgghost$pct" name="chgghost$pct" value="0"/>
-    		        <input type="text" id="ghost$pct" name="ghost$pct" value="$hgrp.getFqdn()" size="$slen" class="pgrp-$alternator"/>
+    		        <input type="hidden" id="ghost$pct" name="ghost$pct" value="$hgrp.getFqdn()" size="$slen" />
+                <span class="populated-value">$hgrp.getFqdn()</span>
     		      </td>
 	          #else
 		          #set($slen=$hgrp.getOudn().length())
@@ -66,7 +69,9 @@
 			        <td class="value">
     		        <input type="hidden" id="delgou$pct" name="delgou$pct" value="0"/>
     		        <input type="hidden" id="chggou$pct" name="chggou$pct" value="0"/>
-    		        <input type="text" id="gou$pct" name="gou$pct" value="$hgrp.getOudn()" size="$slen" class="pgrp-$alternator"/>
+    		        <input type="hidden" id="gou$pct" name="gou$pct" value="$hgrp.getOudn()" size="$slen"/>
+                <span class="populated-value">$hgrp.getOudn()</span>
+
     		      </td>
 	          #end
             
@@ -79,7 +84,7 @@
         
         #set($pct=0)
         #foreach( $hent in $entitlementhosts )
-          <tr class="pgrp-$alternator">
+          <tr>
             <td class="property">Entitlement (eduPersonEntitlement)</td>
             <td class="property">
               <input type="text" name="hent$pct" id="hent$pct" value="$hent.getEntitlement()"/>
@@ -92,7 +97,7 @@
     		      <td class="value">
    			        <input type="hidden" id="delehost$pct" name="delehost$pct" value="0"/>
     		        <input type="hidden" id="chgehost$pct" name="chgehost$pct" value="0"/>
-    		        <input type="text" id="ehost$pct" name="ehost$pct" value="$hent.getFqdn()" size="$slen" class="pgrp-$alternator"/>
+    		        <input type="text" id="ehost$pct" name="ehost$pct" value="$hent.getFqdn()" size="$slen" />
     		      </td>
 	            
             #else
@@ -101,7 +106,7 @@
 			        <td class="value">
     		        <input type="hidden" id="deleou$pct" name="deleou$pct" value="0"/>
     		        <input type="hidden" id="chgeou$pct" name="chgeou$pct" value="0"/>
-    		        <input type="text" id="eou$pct" name="eou$pct" value="$hent.getOudn()" size="$slen" class="pgrp-$alternator"/>
+    		        <input type="text" id="eou$pct" name="eou$pct" value="$hent.getOudn()" size="$slen" />
     		      </td>
 	          #end
             
@@ -141,7 +146,8 @@
     	   	     <td class="value">
     	   	       <input type="hidden" id="deldah$pct" name="deldah$pct" value="0"/>
     	   	       <input type="hidden" id="chgdah$pct" name="chgdah$pct" value="0"/>
-    	   	       <input type="text" id="dah$pct" name="dah$pct" value="$dah" size="$slen" class="pgrp-$alternator"/>
+    	   	       <input type="hidden" id="dah$pct" name="dah$pct" value="$dah" size="$slen" />
+                 <span class="populated-value">$dah</span>
     	   	     </td>
               <td>
                 <button id="rdh$pct" name="rdh$pct" class="rdhclass action">remove</button>

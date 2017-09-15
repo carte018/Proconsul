@@ -184,5 +184,9 @@ table.displaytable button{
   margin: 0;
 }
 
+span.populated-field{
+  font-family: monospace;
+  font-size: 1.2em;
+}
 
 
