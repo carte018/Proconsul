@@ -19,7 +19,8 @@
 	            <td class="property">When Accessing HostName</td>
 	            #set($llen=$hag.getFqdn().length())
   	          <td class="property">
-                <input type="text" name="hostfqdn$pct" id="hostfqdn$pct" value="$hag.getFqdn()" size="$llen"/>
+                <input type="hidden" name="hostfqdn$pct" id="hostfqdn$pct" value="$hag.getFqdn()" size="$llen"/>
+                <span class="populated-value">$hag.getFqdn()</span>
               </td>
   	          <td class="property">user will be made a member of</td>
               #set($slen=$hag.getGroupdn().length())
@@ -37,7 +38,8 @@
   	          <td class="property">When Accessing Hosts in the OU</td>
   	          #set($llen=$hag.getOu().length())
   	          <td class="property">
-                <input tye="text"name="oudn$pct" id="oudn$pct" value="$hag.getOu()" size="$llen"/>
+                <input tye="hidden"name="oudn$pct" id="oudn$pct" value="$hag.getOu()" size="$llen"/>
+                <span class="populated-value">$hag.getOu()</span>
               </td>
   	          <td class="property">user will be made a member of</td>
   	          #set($slen=$hag.getGroupdn().length())
@@ -78,7 +80,8 @@
             <td class="property">When Accessing HostName</td>
 	          #set($llen=$hag.getFqdn().length())
   	        <td class="property">
-              <input type="text" id="tfqdn$pct" name="tfqdn$pct" value="$hgw.getFqdn()" size="$llen"/>
+              <input type="hidden" id="tfqdn$pct" name="tfqdn$pct" value="$hgw.getFqdn()" size="$llen"/>
+              <span class="populated-value">$hgw.getFqdn()</span>
             </td>
   	        <td class="property">Proconsul will use the gateway</td>
 
@@ -92,7 +95,8 @@
 		        #set($slen=$hag.getGroupdn().length())
 			      <td class="property">and (for gateway access) make the user a member of</td>
 			      <td class="value">
-			        <input type="text" id="hgwg$pct" name="hgwg$pct" value="$hgw.getGroupdn()" size="$slen" />
+			        <input type="hidden" id="hgwg$pct" name="hgwg$pct" value="$hgw.getGroupdn()" size="$slen" />
+              <span class="populated-value">$hgw.getGroupdn()</span>
 		        </td>
 	
             <td>
