@@ -8,7 +8,7 @@
   <div id="gtable" class="tablediv">
     <form name="groupform" id="groupform" method="POST" action="#">
       <input type="hidden" id="groupformsubmitted" name="groupformsubmitted" value="1"/>
-      <table name="gdisplaytable" class="table" >
+      <table class="displaytable">
         #set($pct=0)
         #foreach($hag in $hostaccessgroups) 
           <tr>
@@ -67,10 +67,9 @@
     Some Windows systems require the use of a special RDP gateway;  Proconsul will employ gateways as follows to access specific hosts
   </div>
 
-  <div id="gwtable" class="tablediv">
-    <form name="gwform" id="gwform" method="POST" action="#">
+  <form name="gwform" id="gwform" method="POST" action="#">
       <input type="hidden" name="gwformsubmitted" id="gwformsubmitted" value="1"/>
-      <table name="gwdisplaytable" class="table" >
+      <table class="displaytable">
         #set($pct=0)
         #foreach($hgw in $hostgateway) 
           <tr>
@@ -103,13 +102,12 @@
         <tr>
           <td>&nbsp;</td>
           <td>
-            <button name="addgw" class="addgw button" id="addgw">Add RDP Gateway Config</button>
+            <button name="addgw" class="addgw button action" id="addgw">Add RDP Gateway Config</button>
           </td>
           <td>&nbsp;</td>
         </tr>
       </table>
     </form>
-  </div>
 </div>
 
 <div id="addhostmapdiv" name="addhostmapdiv" title="Add a Proconsul Host Group">

@@ -1,8 +1,6 @@
 <h1>Proconsul Login Rules</h1>
 
-
 <div id="access_rules">
-
   <div class="subheading">
     Only users with one or more of the following properties will be allowed to log in to Proconsul
   </div>
@@ -10,7 +8,7 @@
   <div id="table" class="tablediv">
     <form name="accessform" id="accessform" method="POST" action="#">
       <input type="hidden" name="accessformsubmitted" value="1"/>
-      <table name="displaytable" class="table" >
+      <table class="displaytable">
         #set($pct=0)
         #foreach($pgrp in $proconsul_groups)
           <tr>
@@ -81,7 +79,7 @@
    <div id="datable" class="tablediv">
      <form name="daaccessform" id="daaccessform" method="POST" action="#">
        <input type="hidden" name="daaformsubmitted" value="1"/>
-       <table name="dadisplaytable" class="table" >
+       <table class="displaytable">
          #set($pct=0)
          #foreach($dagrp in $da_groups)
            <tr>

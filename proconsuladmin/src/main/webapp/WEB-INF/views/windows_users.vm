@@ -1,14 +1,15 @@
 <div id="host_map">
   <h1>Proconsul AD Group Management</h1>
 
-  <div class="subheading">
-  Proconsul will assign AD group memberships to dynamic users based on actual user properties as follows:
+  <div class="subheading">Proconsul will assign AD group memberships to dynamic users based on actual user properties as follows:</div>
+  
+  <div style="width: 250px">
+    <button name="additem" class="additem action" id="additem">Add AD Group Mapping</button>
   </div>
-
-  <div id="table" class="tablediv">
-    <form name="accessform" id="accessform" method="POST" action="#">
-      <input type="hidden" id="aformsubmitted" name="aformsubmitted" value="1"/>
-      <table name="displaytable" class="table" >
+  
+  <form name="accessform" id="accessform" method="POST" action="#">
+    <input type="hidden" id="aformsubmitted" name="aformsubmitted" value="1"/>
+      <table class="displaytable">
         #set($pct=0)
         #foreach( $heppn in $usergroups )
           <tr>
@@ -44,7 +45,7 @@
   	          <input type="text" id="ggrp$pct" name="ggrp$pct" value="$hgdn.getGroupdn()" size="$slen"/>
   	        </td>
             <td>
-              <button id="rgg$pct" name="rgg$pct" class="rggclass">remove</button>
+              <button id="rgg$pct" name="rgg$pct" class="rggclass action">remove</button>
             </td>
           </tr>
           #set($pct=$pct+1)
@@ -66,22 +67,15 @@
               <input type="text" id="egrp$pct" name="egrp$pct" value="$hedn.getGroupdn()" size="$slen" />
             </td>
             <td>
-              <button id="reg$pct" name="reg$pct" class="regclass">remove</button>
+              <button id="reg$pct" name="reg$pct" class="regclass action">remove</button>
             </td>
           </tr>
           #set($pct=$pct+1)
         #end
 
         #set($pct=0)
-        <tr>
-          <td>&nbsp;</td>
-          <td><button name="additem" class="additem action" id="additem">Add AD Group Mapping</button>
-          </td>
-          <td>&nbsp;</td>
-        </tr>
       </table>
     </form>
-  </div>
 </div>
 
 

@@ -41,6 +41,14 @@ h4{
   font-weight: bold;
 }
 
+.subheading {
+  font-size: 14px;
+  font-weight: normal;
+  font-family: sans-serif;
+  margin-bottom: 10px;
+  margin-left: 6px;
+}
+
 .error{
   color: #cc3300;
   font-weight: bold;
@@ -132,3 +140,26 @@ button.inline{
   }
 
 }
+
+table.displaytable td{
+  border: 1px solid green;
+}
+
+table.displaytable > input{
+  width: 320px;
+  margin-bottom: 1em;
+}
+
+table.displaytable input{
+  font-size: 120%;
+  background: #fff;
+}
+
+table.displaytable input[type="text"]{
+  border: 1px solid #d1d1d1;
+  box-shadow: inset 1px 1px 5px #ddd;
+  padding: 3px;
+}
+
+
+

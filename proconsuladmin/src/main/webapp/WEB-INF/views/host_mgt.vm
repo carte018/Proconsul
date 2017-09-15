@@ -8,7 +8,7 @@
   <div id="table" class="tablediv">
     <form name="accessform" id="accessform" method="POST" action="#">
       <input type="hidden" name="accessformsubmitted" value="1"/>
-      <table name="displaytable" class="table">
+      <table class="displaytable">
         #set($pct=0)
         #foreach( $heppn in $userhosts )
           <tr>
@@ -125,11 +125,10 @@
      Users with Domain Admin rights will be allowed to use them to log in to the following hosts
    </div>
 
-   <div id="dahosts" class="wrapperdiv">
-     <div id="table2" class="tablediv">
-       <form name="daform" id="daform" method="POST" action="#">
+   <div id="dahosts">
+     <form name="daform" id="daform" method="POST" action="#">
         <input type="hidden" name="daformsubmitted" value="1"/>
-        <table name="displaytable2" class="table" >
+        <table class="displaytable">
          
           #set($pct=0)
           #foreach( $dah in $dahosts )
@@ -155,7 +154,6 @@
           </tr>
         </table>
        </form>
-     </div>
    </div>
 
    <div id="addhostdiv" name="addhostdiv" title="Add a Proconsul Host Mapping">
