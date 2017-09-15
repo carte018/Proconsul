@@ -13,12 +13,19 @@
     <form name="accessform" id="accessform" method="POST" action="#">
       <input type="hidden" name="accessformsubmitted" value="1"/>
       <table class="displaytable">
+        <tr>
+          <th colspan="2">Entities matching...</th>
+          <th colspan="3">Can access...</th>
+        </tr>
+        
         #set($pct=0)
         #foreach( $heppn in $userhosts )
           <tr>
-            <td class="property">UserName (eduPersonPrincipalName)</td>
-            <td class="property"><input type="text" id="uname$pct" name="uname$pct" value="$heppn.getEppn()"></td>
-            <td class="property">CAN ACCESS</td>
+            <td>UserName (eduPersonPrincipalName)</td>
+            <td>
+              <input type="hidden" id="uname$pct" name="uname$pct" value="$heppn.getEppn()">
+              <span class="populated-value">$heppn.getEppn()</span>
+            </td>
 
             #if( $heppn.getFqdn() )
               #set($slen=$heppn.getFqdn().length())
@@ -50,9 +57,11 @@
         #set($pct=0)
         #foreach( $hgrp in $grouphosts )
           <tr>
-            <td class="property">Group Membership</td>
-            <td class="property"><input type="text" id="hgrp$pct" name="hgrp$pct" value="$hgrp.getGroupurn()"/></td>
-            <td class="property">CAN ACCESS</td>
+            <td>Group Membership</td>
+            <td>
+              <input type="hidden" id="hgrp$pct" name="hgrp$pct" value="$hgrp.getGroupurn()"/>
+              <span class="populated-value">$hgrp.getGroupurn()</span>
+            </td>
 
             #if( $hgrp.getFqdn() )
               #set($slen=$hgrp.getFqdn().length())
@@ -85,12 +94,11 @@
         #set($pct=0)
         #foreach( $hent in $entitlementhosts )
           <tr>
-            <td class="property">Entitlement (eduPersonEntitlement)</td>
-            <td class="property">
+            <td>Entitlement (eduPersonEntitlement)</td>
+            <td>
               <input type="hidden" name="hent$pct" id="hent$pct" value="$hent.getEntitlement()"/>
               <span class="populated-value">$hent.getEntitlement()</span>
             </td>
-            <td class="property">CAN ACCESS</td>
 
             #if( $hent.getFqdn() )
               #set($slen=$hent.getFqdn().length())
