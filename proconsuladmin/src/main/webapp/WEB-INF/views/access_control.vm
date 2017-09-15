@@ -73,7 +73,7 @@
    </div>
    
    <div id="datable" class="tablediv">
-     <div style="width: 250px">
+     <div style="width: 300px">
        <button name="daadditem" class="additem action" id="daadditem">Add Domain Admin Access Rule</button>
      </div>
      

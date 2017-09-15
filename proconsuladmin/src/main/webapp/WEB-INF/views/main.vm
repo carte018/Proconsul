@@ -22,7 +22,7 @@
 </div>
 
 <div class="admin-section">
-  <a href="/admin/windows_users">Proconsul/AD Group Configuration</a>
+  <a href="/admin/windows_users">Target Provisioning</a>
   <div class="subheader">
     Configure RDP gateway requirements, AD group membership requirements for accessing specific  hosts or collections of hosts
   </div>

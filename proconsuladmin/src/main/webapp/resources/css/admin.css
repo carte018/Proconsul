@@ -161,7 +161,7 @@ table.displaytable tr:nth-child(odd) td{
 }
 
 table.displaytable td{
-  padding: 2px 7px;
+  padding: 7px;
 }
 
 table.displaytable > input{
@@ -178,6 +178,10 @@ table.displaytable input[type="text"]{
   border: 1px solid #d1d1d1;
   box-shadow: inset 1px 1px 5px #ddd;
   padding: 3px;
+}
+
+table.displaytable button{
+  margin: 0;
 }
 
 
