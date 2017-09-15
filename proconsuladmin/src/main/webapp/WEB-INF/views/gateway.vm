@@ -1,9 +1,7 @@
-<div id="host_map" class="wrapperdiv">
-  <div id="heading" class="heading">
-    Proconsul Host Groups
-  </div>
+<div id="host_map">
+  <h1>Proconsul Host Groups</h1>
 
-  <div id="subheading" class="subheading">
+  <div class="subheading">
     Typically, Windows systems require a group membership for RDP use;  Proconsul will assign group memberships to  dynamic users for this purpose as follows:
   </div>
 
@@ -62,11 +60,10 @@
   </div>
 </div>
 
-<div id="gw_map" class="wrapperdiv">
-  <div id="heading" class="heading">
-    Proconsul RDP Gateway Configuration
-  </div>
-  <div id="subheading2" class="subheading">
+<div id="gw_map">
+  <h1>Proconsul RDP Gateway Configuration</h1>
+  
+  <div class="subheading">
     Some Windows systems require the use of a special RDP gateway;  Proconsul will employ gateways as follows to access specific hosts
   </div>
 

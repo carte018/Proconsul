@@ -1,9 +1,7 @@
-<div id="host_map" class="wrapperdiv">
-  <div id="heading" class="heading">
-    Proconsul Host Mappings
-  </div>
+<div id="host_map">
+  <h1>Proconsul Host Mappings</h1>
   
-  <div id="subheading" class="subheading">
+  <div class="subheading">
     Users with the following properties will be allowed to log in to the following Windows machines
   </div>
 
@@ -120,12 +118,10 @@
    </div>
  </div>
  
- <div id="access_rules" class="wrapperdiv">
-   <div id="heading" class="heading">
-     Domain Admin Hosts
-   </div>
+ <div id="access_rules">
+   <h1>Domain Admin Hosts</h1>
 
-   <div id="subheading" class="subheading">
+   <div class="subheading">
      Users with Domain Admin rights will be allowed to use them to log in to the following hosts
    </div>
 

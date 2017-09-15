@@ -1,9 +1,9 @@
-<div id="access_rules" class="wrapperdiv">
-  <div id="heading" class="heading">
-    Proconsul Login Rules
-  </div>
+<h1>Proconsul Login Rules</h1>
 
-  <div id="subheading" class="subheading">
+
+<div id="access_rules">
+
+  <div class="subheading">
     Only users with one or more of the following properties will be allowed to log in to Proconsul
   </div>
 
@@ -71,12 +71,10 @@
    </div>
  </div>
  
- <div id="da_rules" class="wrapperdiv">
-   <div id="heading" class="heading">
-     Domain Admin Access Rules
-   </div>
+ <div id="da_rules">
+   <h1>Domain Admin Access Rules</h1>
 
-   <div id="subheading" class="subheading">
+   <div class="subheading">
      Only users with one or more of the following properties (in addition to one or more of the login access properties above) will be allowed to use Domain Admin privileges via Proconsul
    </div>
    

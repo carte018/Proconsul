@@ -1,10 +1,8 @@
-<div id="host_map" class="wrapperdiv">
-  <div id="heading" class="heading">
-    Proconsul AD Group Management
-  </div>
+<div id="host_map">
+  <h1>Proconsul AD Group Management</h1>
 
-  <div id="subheading" class="subheading">
-    Proconsul will assign AD group memberships to dynamic users based on actual user properties as follows:
+  <div class="subheading">
+  Proconsul will assign AD group memberships to dynamic users based on actual user properties as follows:
   </div>
 
   <div id="table" class="tablediv">
