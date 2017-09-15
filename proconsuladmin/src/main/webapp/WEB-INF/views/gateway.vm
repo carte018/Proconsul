@@ -74,10 +74,13 @@
   <form name="gwform" id="gwform" method="POST" action="#">
       <input type="hidden" name="gwformsubmitted" id="gwformsubmitted" value="1"/>
       <table class="displaytable">
+        <tr>
+          <th colspan="5">When Accessing HostName</th>
+        </tr>
+        
         #set($pct=0)
         #foreach($hgw in $hostgateway) 
           <tr>
-            <td class="property">When Accessing HostName</td>
 	          #set($llen=$hag.getFqdn().length())
   	        <td class="property">
               <input type="hidden" id="tfqdn$pct" name="tfqdn$pct" value="$hgw.getFqdn()" size="$llen"/>

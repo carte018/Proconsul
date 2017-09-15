@@ -156,7 +156,7 @@ table.displaytable{
   border: 2px solid #ddd;
 }
 
-table.displaytable tr:nth-child(odd) td{
+table.displaytable tr:nth-child(even) td{
   background-color: #ddd;
 }
 
@@ -189,8 +189,10 @@ span.populated-value{
   font-size: 1.2em;
 }
 
-.admin-section{
-  color: #0577b1;
-  padding-bottom: 10px;
+.admin-section a{
   margin-bottom: 5px;
+}
+
+.admin-section{
+  margin-bottom: 15px;
 }
