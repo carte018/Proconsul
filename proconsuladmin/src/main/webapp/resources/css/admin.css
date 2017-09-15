@@ -200,3 +200,7 @@ span.populated-value{
 .admin-section{
   margin-bottom: 15px;
 }
+
+.admin-section .subheader{
+  padding-top: 7px
+}
