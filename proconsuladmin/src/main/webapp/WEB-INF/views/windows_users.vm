@@ -13,8 +13,11 @@
         #set($pct=0)
         #foreach( $heppn in $usergroups )
           <tr>
-            <td class="property">UserName (eduPersonPrincipalName)</td>
-            <td class="property"><input type="text" id="uname$pct" name="uname$pct" value="$heppn.getEppn()"/></td>
+            <td>UserName (eduPersonPrincipalName)</td>
+            <td>
+              <input type="hidden" id="uname$pct" name="uname$pct" value="$heppn.getEppn()"/>
+              <span class="populated-value">$heppn.getEppn()</span>
+            </td>
             #set($slen=$heppn.getGroupdn().length())
     	      <td>Will be a member of</td>
     		    <td class="value">
