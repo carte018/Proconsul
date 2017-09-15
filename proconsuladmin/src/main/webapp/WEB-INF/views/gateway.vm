@@ -5,8 +5,11 @@
     Typically, Windows systems require a group membership for RDP use;  Proconsul will assign group memberships to  dynamic users for this purpose as follows:
   </div>
 
-  <div id="gtable" class="tablediv">
-    <form name="groupform" id="groupform" method="POST" action="#">
+  <div style="width: 250px">
+    <button name="addgrp" id="addgrp" class="addgrp action">Add Host Access Group</button>
+  </div>
+
+  <form name="groupform" id="groupform" method="POST" action="#">
       <input type="hidden" id="groupformsubmitted" name="groupformsubmitted" value="1"/>
       <table class="displaytable">
         #set($pct=0)
@@ -49,15 +52,8 @@
           </tr>
           #set($pct=$pct+1)
         #end
-
-        <tr>
-          <td>&nbsp;</td>
-          <td><button name="addgrp" id="addgrp" class="addgrp action">Add Host Access Group</button></td>
-          <td>&nbsp;</td>
-        </tr>
       </table>
     </form>
-  </div>
 </div>
 
 <div id="gw_map">
@@ -65,6 +61,10 @@
   
   <div class="subheading">
     Some Windows systems require the use of a special RDP gateway;  Proconsul will employ gateways as follows to access specific hosts
+  </div>
+  
+  <div style="width: 250px">
+    <button name="addgw" class="addgw button action" id="addgw">Add RDP Gateway Config</button>
   </div>
 
   <form name="gwform" id="gwform" method="POST" action="#">
@@ -98,14 +98,6 @@
           </tr>
           #set($pct=$pct+1)
         #end
-
-        <tr>
-          <td>&nbsp;</td>
-          <td>
-            <button name="addgw" class="addgw button action" id="addgw">Add RDP Gateway Config</button>
-          </td>
-          <td>&nbsp;</td>
-        </tr>
       </table>
     </form>
 </div>

@@ -4,9 +4,12 @@
   <div class="subheading">
     Only users with one or more of the following properties will be allowed to log in to Proconsul
   </div>
+  
+  <div style="width: 250px">
+      <button name="additem" class="additem action" id="additem">Add Login Access Rule</button>
+  </div>
 
-  <div id="table" class="tablediv">
-    <form name="accessform" id="accessform" method="POST" action="#">
+  <form name="accessform" id="accessform" method="POST" action="#">
       <input type="hidden" name="accessformsubmitted" value="1"/>
       <table class="displaytable">
         #set($pct=0)
@@ -58,15 +61,8 @@
           </tr>
           #set($pct=$pct+1)
         #end
-        
-        <tr>
-          <td>
-            <button name="additem" class="additem action" id="additem">Add Login Access Rule</button></td><td>
-          </td>
-        </tr>
       </table>
     </form>
-   </div>
  </div>
  
  <div id="da_rules">
@@ -77,6 +73,10 @@
    </div>
    
    <div id="datable" class="tablediv">
+     <div style="width: 250px">
+       <button name="daadditem" class="additem action" id="daadditem">Add Domain Admin Access Rule</button>
+     </div>
+     
      <form name="daaccessform" id="daaccessform" method="POST" action="#">
        <input type="hidden" name="daaformsubmitted" value="1"/>
        <table class="displaytable">
@@ -130,12 +130,6 @@
             </tr>
             #set($pct=$pct+1)
           #end
-          
-          <tr>
-            <td>&nbsp;</td>
-            <td><button name="daadditem" class="additem action" id="daadditem">Add Domain Admin Access Rule</button></td>
-            <td>&nbsp;</td>
-          </tr>
       </table>
     </form>
    </div>

@@ -141,8 +141,18 @@ button.inline{
 
 }
 
+table.displaytable{
+  width: 100%;
+  margin-top: 1em;
+  border-spacing: 0;
+}
+
+table.displaytable tr:nth-child(odd) td{
+  background-color: pink;
+}
+
 table.displaytable td{
-  border: 1px solid green;
+  padding: 2px 7px;
 }
 
 table.displaytable > input{

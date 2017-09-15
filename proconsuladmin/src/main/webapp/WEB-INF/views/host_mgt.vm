@@ -4,6 +4,10 @@
   <div class="subheading">
     Users with the following properties will be allowed to log in to the following Windows machines
   </div>
+  
+  <div style="width: 250px">
+    <button name="additem" class="additem action" id="additem">Add Host Mapping Rule</button>
+  </div>
 
   <div id="table" class="tablediv">
     <form name="accessform" id="accessform" method="POST" action="#">
@@ -107,12 +111,6 @@
           </tr>
           #set($pct=$pct+1)
         #end
-          
-        <tr>
-          <td>&nbsp;</td>
-          <td><button name="additem" class="additem action" id="additem">Add Host Mapping Rule</button></td>
-          <td>&nbsp;</td>
-        </tr>
       </table>
     </form>
    </div>
@@ -123,6 +121,11 @@
 
    <div class="subheading">
      Users with Domain Admin rights will be allowed to use them to log in to the following hosts
+   </div>
+   
+   
+   <div style="width: 250px">
+     <button name="adddaitem" class="additem action" id="adddaitem">Add DA host</button>
    </div>
 
    <div id="dahosts">
@@ -146,12 +149,7 @@
             </tr>
             #set($pct=$pct+1)
           #end
-          
-          <tr>
-            <td>&nbsp;</td>
-            <td><button name="adddaitem" class="additem action" id="adddaitem">Add DA host</button></td>
-            <td>&nbsp;</td>
-          </tr>
+
         </table>
        </form>
    </div>
