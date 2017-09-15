@@ -12,17 +12,22 @@
   <form name="groupform" id="groupform" method="POST" action="#">
       <input type="hidden" id="groupformsubmitted" name="groupformsubmitted" value="1"/>
       <table class="displaytable">
+        <tr>
+          <th colspan="2">When accessing...</th>
+          <th colspan="2">User will be made a member of...</th>    
+        </tr>
+        
+        
         #set($pct=0)
         #foreach($hag in $hostaccessgroups) 
           <tr>
             #if($hag.getFqdn())
-	            <td class="property">When Accessing HostName</td>
+	            <td>HostName</td>
 	            #set($llen=$hag.getFqdn().length())
-  	          <td class="property">
+  	          <td>
                 <input type="hidden" name="hostfqdn$pct" id="hostfqdn$pct" value="$hag.getFqdn()" size="$llen"/>
                 <span class="populated-value">$hag.getFqdn()</span>
               </td>
-  	          <td class="property">user will be made a member of</td>
               #set($slen=$hag.getGroupdn().length())
     		      <td class="value">
     		        <input type="hidden" id="delhgrp$pct" name="delhgrp$pct" value="0"/>
@@ -35,13 +40,12 @@
                 <button id="rug$pct" name="rug$pct" class="rugclass action">remove</button>
               </td>
             #else
-  	          <td class="property">When Accessing Hosts in the OU</td>
+  	          <td>Hosts in the OU</td>
   	          #set($llen=$hag.getOu().length())
-  	          <td class="property">
+  	          <td>
                 <input type="hidden"name="oudn$pct" id="oudn$pct" value="$hag.getOu()" size="$llen"/>
                 <span class="populated-value">$hag.getOu()</span>
               </td>
-  	          <td class="property">user will be made a member of</td>
   	          #set($slen=$hag.getGroupdn().length())
   	          <td class="value">
   	            <input type="hidden" id="delogrp$pct" name="delogrp$pct" value="0"/>
