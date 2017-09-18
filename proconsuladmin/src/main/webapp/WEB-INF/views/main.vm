@@ -1,18 +1,37 @@
-<h3>You may review and/or update:</h3>
+<h1>You may review and/or update:</h1>
 
-  <p><a href="/admin/access_control">Proconsul Access Rules</a><br>
-    <i><font size=-1>Configure who (based on usernames, group memberships, and/or entitlements) can access Proconsul, and which of those users can use Proconsul for Domain Admin access</font></i>
-  </p>
-  
-  <p><a href="/admin/host_mgt">Proconsul Target Systems</a>
-    <br><i><font size=-1>Configure mappings from users to hosts, as well as the set of hosts domain admins can access via Proconsul</font></i>
-  </p>
-  
-  <p><a href="/admin/windows_users">Proconsul/AD Group Configuration</a>
-    <br><i><font size=-1>Configure AD group memberships dynamic users will have in Windows sessions based on the properties of their owners</font></i>
-  </p>
+<table style="margin-top: 1em">
+  <tr>
+    <td style="width: 50%; padding-right: 30px">
 
-  <p><a href="/admin/host_and_gateway_details">Target Provisioning</a>
-    <br><i><font size=-1>Configure RDP gateway requirements, AD group membership requirements for accessing specific  hosts or collections of hosts</font></i>
-</p>
+      <div class="admin-section">
+        <a href="/admin/access_control">Proconsul Access Rules</a>
+        <div class="subheader">
+          Configure who (based on usernames, group memberships, and/or entitlements) can access Proconsul, and  which of those users can use Proconsul for Domain Admin access
+        </div>
+      </div>
+      
+      <div class="admin-section">
+        <a href="/admin/host_mgt">Proconsul Target Systems</a>
+        <div class="subheader">
+          Configure mappings from users to hosts, as well as the set of hosts domain admins can access via Proconsul
+        </div>
+      </div>
+    </td><td>
 
+      <div class="admin-section">
+        <a href="/admin/windows_users">Proconsul/AD Group Configuration</a>
+        <div class="subheader">
+          Configure AD group memberships dynamic users will have in Windows sessions based on the properties of their owners
+        </div>
+      </div>
+      
+      <div class="admin-section">
+        <a href="/admin/host_and_gateway_details">Target Provisioning</a>
+        <div class="subheader">
+          Configure RDP gateway requirements, AD group membership requirements for accessing specific  hosts or collections of hosts
+        </div>
+      </div>
+    </td>
+  </tr>
+</table>

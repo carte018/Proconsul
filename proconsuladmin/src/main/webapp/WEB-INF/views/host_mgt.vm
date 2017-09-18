@@ -1,38 +1,46 @@
-<div id="host_map" class="wrapperdiv">
-  <div id="heading" class="heading">
-    Proconsul Host Mappings
+<div id="host_map">
+  <h1>Proconsul Host Mappings</h1>
+  
+  <div class="subheading">
+    Users with the following properties will be allowed to log in to the following Windows machines
   </div>
   
-  <div id="subheading" class="subheading">
-    Users with the following properties will be allowed to log in to the following Windows machines
+  <div style="width: 250px">
+    <button name="additem" class="additem action" id="additem">Add Host Mapping Rule</button>
   </div>
 
   <div id="table" class="tablediv">
     <form name="accessform" id="accessform" method="POST" action="#">
       <input type="hidden" name="accessformsubmitted" value="1"/>
-      <table name="displaytable" class="table">
+      <table class="displaytable">
+        <tr>
+          <th colspan="1">Entities matching...</th>
+          <th colspan="2">Can access...</th>
+        </tr>
+        
         #set($pct=0)
         #foreach( $heppn in $userhosts )
           <tr>
-            <td class="property">UserName (eduPersonPrincipalName)</td>
-            <td class="property"><input type="text" id="uname$pct" name="uname$pct" value="$heppn.getEppn()"></td>
-            <td class="property">CAN ACCESS</td>
+            <td>UserName (eduPersonPrincipalName):<br>
+              <input type="hidden" id="uname$pct" name="uname$pct" value="$heppn.getEppn()">
+              <span class="populated-value">$heppn.getEppn()</span>
+            </td>
 
             #if( $heppn.getFqdn() )
               #set($slen=$heppn.getFqdn().length())
-    	        <td>Hostname</td>
-    		      <td class="value">
+    	        <td>Hostname:<br>
     		       <input type="hidden" id="deluhost$pct" name="deluhost$pct" value="0"/>
     		       <input type="hidden" id="chguhost$pct" name="chguhost$pct" value="0"/>
-    		       <input type="text" id="uhost$pct" name="uhost$pct" value="$heppn.getFqdn()" size="$slen" class="pgrp-$alternator"/>
+    		       <input type="hidden" id="uhost$pct" name="uhost$pct" value="$heppn.getFqdn()" size="$slen" />
+               <span class="populated-value">$heppn.getFqdn()</span>
     		      </td>
 	          #else
 		          #set($slen=$heppn.getOudn().length())
-		          <td>Orgunit DN</td>
-			        <td class="value">
+		          <td>Orgunit DN:<br>
     		        <input type="hidden" id="deluou$pct" name="deluou$pct" value="0"/>
     		        <input type="hidden" id="chguou$pct" name="chguou$pct" value="0"/>
-    		        <input type="text" id="uou$pct" name="uou$pct" value="$heppn.getOudn()" size="$slen" class="pgrp-$alternator"/>
+    		        <input type="hidden" id="uou$pct" name="uou$pct" value="$heppn.getOudn()" size="$slen" />
+                <span class="populated-value">$heppn.getOudn()</span>
               </td>
 	          #end
 
@@ -46,25 +54,27 @@
         #set($pct=0)
         #foreach( $hgrp in $grouphosts )
           <tr>
-            <td class="property">Group Membership</td>
-            <td class="property"><input type="text" id="hgrp$pct" name="hgrp$pct" value="$hgrp.getGroupurn()"/></td>
-            <td class="property">CAN ACCESS</td>
+            <td>Group Membership:<br>
+              <input type="hidden" id="hgrp$pct" name="hgrp$pct" value="$hgrp.getGroupurn()"/>
+              <span class="populated-value">$hgrp.getGroupurn()</span>
+            </td>
 
             #if( $hgrp.getFqdn() )
               #set($slen=$hgrp.getFqdn().length())
-    	        <td>Hostname</td>
-    		      <td class="value">
+    	        <td>Hostname:<br>
    			        <input type="hidden" id="delghost$pct" name="delghost$pct" value="0"/>
     		        <input type="hidden" id="chgghost$pct" name="chgghost$pct" value="0"/>
-    		        <input type="text" id="ghost$pct" name="ghost$pct" value="$hgrp.getFqdn()" size="$slen" class="pgrp-$alternator"/>
+    		        <input type="hidden" id="ghost$pct" name="ghost$pct" value="$hgrp.getFqdn()" size="$slen" />
+                <span class="populated-value">$hgrp.getFqdn()</span>
     		      </td>
 	          #else
 		          #set($slen=$hgrp.getOudn().length())
-		          <td>Orgunit DN</td>
-			        <td class="value">
+		          <td>Orgunit DN:<br>
     		        <input type="hidden" id="delgou$pct" name="delgou$pct" value="0"/>
     		        <input type="hidden" id="chggou$pct" name="chggou$pct" value="0"/>
-    		        <input type="text" id="gou$pct" name="gou$pct" value="$hgrp.getOudn()" size="$slen" class="pgrp-$alternator"/>
+    		        <input type="hidden" id="gou$pct" name="gou$pct" value="$hgrp.getOudn()" size="$slen"/>
+                <span class="populated-value">$hgrp.getOudn()</span>
+
     		      </td>
 	          #end
             
@@ -77,29 +87,26 @@
         
         #set($pct=0)
         #foreach( $hent in $entitlementhosts )
-          <tr class="pgrp-$alternator">
-            <td class="property">Entitlement (eduPersonEntitlement)</td>
-            <td class="property">
-              <input type="text" name="hent$pct" id="hent$pct" value="$hent.getEntitlement()"/>
+          <tr>
+            <td>Entitlement (eduPersonEntitlement):<br>
+              <input type="hidden" name="hent$pct" id="hent$pct" value="$hent.getEntitlement()"/>
+              <span class="populated-value">$hent.getEntitlement()</span>
             </td>
-            <td class="property">CAN ACCESS</td>
 
             #if( $hent.getFqdn() )
               #set($slen=$hent.getFqdn().length())
-    	        <td>Hostname</td>
-    		      <td class="value">
+    	        <td>Hostname:<br>
    			        <input type="hidden" id="delehost$pct" name="delehost$pct" value="0"/>
     		        <input type="hidden" id="chgehost$pct" name="chgehost$pct" value="0"/>
-    		        <input type="text" id="ehost$pct" name="ehost$pct" value="$hent.getFqdn()" size="$slen" class="pgrp-$alternator"/>
+    		        <input type="text" id="ehost$pct" name="ehost$pct" value="$hent.getFqdn()" size="$slen" />
     		      </td>
 	            
             #else
 		          #set($slen=$hent.getOudn().length())
-		          <td>Orgunit DN</td>
-			        <td class="value">
+		          <td>Orgunit DN:<br>
     		        <input type="hidden" id="deleou$pct" name="deleou$pct" value="0"/>
     		        <input type="hidden" id="chgeou$pct" name="chgeou$pct" value="0"/>
-    		        <input type="text" id="eou$pct" name="eou$pct" value="$hent.getOudn()" size="$slen" class="pgrp-$alternator"/>
+    		        <input type="text" id="eou$pct" name="eou$pct" value="$hent.getOudn()" size="$slen" />
     		      </td>
 	          #end
             
@@ -109,31 +116,27 @@
           </tr>
           #set($pct=$pct+1)
         #end
-          
-        <tr>
-          <td>&nbsp;</td>
-          <td><button name="additem" class="additem action" id="additem">Add Host Mapping Rule</button></td>
-          <td>&nbsp;</td>
-        </tr>
       </table>
     </form>
    </div>
  </div>
  
- <div id="access_rules" class="wrapperdiv">
-   <div id="heading" class="heading">
-     Domain Admin Hosts
-   </div>
+ <div id="access_rules">
+   <h1>Domain Admin Hosts</h1>
 
-   <div id="subheading" class="subheading">
+   <div class="subheading">
      Users with Domain Admin rights will be allowed to use them to log in to the following hosts
    </div>
+   
+   
+   <div style="width: 250px">
+     <button name="adddaitem" class="additem action" id="adddaitem">Add DA host</button>
+   </div>
 
-   <div id="dahosts" class="wrapperdiv">
-     <div id="table2" class="tablediv">
-       <form name="daform" id="daform" method="POST" action="#">
+   <div id="dahosts">
+     <form name="daform" id="daform" method="POST" action="#">
         <input type="hidden" name="daformsubmitted" value="1"/>
-        <table name="displaytable2" class="table" >
+        <table class="displaytable">
          
           #set($pct=0)
           #foreach( $dah in $dahosts )
@@ -143,7 +146,8 @@
     	   	     <td class="value">
     	   	       <input type="hidden" id="deldah$pct" name="deldah$pct" value="0"/>
     	   	       <input type="hidden" id="chgdah$pct" name="chgdah$pct" value="0"/>
-    	   	       <input type="text" id="dah$pct" name="dah$pct" value="$dah" size="$slen" class="pgrp-$alternator"/>
+    	   	       <input type="hidden" id="dah$pct" name="dah$pct" value="$dah" size="$slen" />
+                 <span class="populated-value">$dah</span>
     	   	     </td>
               <td>
                 <button id="rdh$pct" name="rdh$pct" class="rdhclass action">remove</button>
@@ -151,15 +155,9 @@
             </tr>
             #set($pct=$pct+1)
           #end
-          
-          <tr>
-            <td>&nbsp;</td>
-            <td><button name="adddaitem" class="additem action" id="adddaitem">Add DA host</button></td>
-            <td>&nbsp;</td>
-          </tr>
+
         </table>
        </form>
-     </div>
    </div>
 
    <div id="addhostdiv" name="addhostdiv" title="Add a Proconsul Host Mapping">

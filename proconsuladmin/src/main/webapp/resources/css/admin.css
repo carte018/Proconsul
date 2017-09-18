@@ -41,6 +41,13 @@ h4{
   font-weight: bold;
 }
 
+.subheading {
+  font-size: 14px;
+  font-weight: normal;
+  font-family: sans-serif;
+  margin-bottom: 10px;
+}
+
 .error{
   color: #cc3300;
   font-weight: bold;
@@ -73,6 +80,15 @@ div#pagetitle{
   color: #ffd960;
   margin-left: 0.4em;
   font-size: 2em;
+}
+
+div#pagetitle a{
+  border: none;
+}
+
+div#pagetitle a:hover{
+  color: #0577b1;
+  border-bottom: 1px solid #0577b1;
 }
 
 button.action{
@@ -131,4 +147,61 @@ button.inline{
     font-size: 3em;
   }
 
+}
+
+table.displaytable{
+  width: 100%;
+  margin-top: 1em;
+  border-spacing: 0;
+  border: 2px solid #ddd;
+}
+
+table.displaytable tr:nth-child(even) td{
+  background-color: #ddd;
+}
+
+table.displaytable td, table.displaytable th{
+  padding: 7px;
+  vertical-align: top;
+}
+
+table.displaytable th{
+  text-align: left;
+}
+
+table.displaytable > input{
+  width: 320px;
+  margin-bottom: 1em;
+}
+
+table.displaytable input{
+  font-size: 120%;
+  background: #fff;
+}
+
+table.displaytable input[type="text"]{
+  border: 1px solid #d1d1d1;
+  box-shadow: inset 1px 1px 5px #ddd;
+  padding: 3px;
+}
+
+table.displaytable button{
+  margin: 0;
+}
+
+span.populated-value{
+  font-family: monospace;
+  font-size: 1.2em;
+}
+
+.admin-section a{
+  margin-bottom: 5px;
+}
+
+.admin-section{
+  margin-bottom: 15px;
+}
+
+.admin-section .subheader{
+  padding-top: 7px
 }

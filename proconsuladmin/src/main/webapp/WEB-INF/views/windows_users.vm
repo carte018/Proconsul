@@ -1,27 +1,30 @@
-<div id="host_map" class="wrapperdiv">
-  <div id="heading" class="heading">
-    Proconsul AD Group Management
-  </div>
+<div id="host_map">
+  <h1>Proconsul AD Group Management</h1>
 
-  <div id="subheading" class="subheading">
-    Proconsul will assign AD group memberships to dynamic users based on actual user properties as follows:
+  <div class="subheading">Proconsul will assign AD group memberships to dynamic users based on actual user properties as follows:</div>
+  
+  <div style="width: 250px">
+    <button name="additem" class="additem action" id="additem">Add AD Group Mapping</button>
   </div>
-
-  <div id="table" class="tablediv">
-    <form name="accessform" id="accessform" method="POST" action="#">
-      <input type="hidden" id="aformsubmitted" name="aformsubmitted" value="1"/>
-      <table name="displaytable" class="table" >
+  
+  <form name="accessform" id="accessform" method="POST" action="#">
+    <input type="hidden" id="aformsubmitted" name="aformsubmitted" value="1"/>
+      <table class="displaytable">
         #set($pct=0)
         #foreach( $heppn in $usergroups )
           <tr>
-            <td class="property">UserName (eduPersonPrincipalName)</td>
-            <td class="property"><input type="text" id="uname$pct" name="uname$pct" value="$heppn.getEppn()"/></td>
+            <td>UserName (eduPersonPrincipalName)</td>
+            <td>
+              <input type="hidden" id="uname$pct" name="uname$pct" value="$heppn.getEppn()"/>
+              <span class="populated-value">$heppn.getEppn()</span>
+            </td>
             #set($slen=$heppn.getGroupdn().length())
     	      <td>Will be a member of</td>
     		    <td class="value">
     		      <input type="hidden" id="delugrp$pct" name="delugrp$pct" value="0"/>
     		      <input type="hidden" id="chgugrp$pct" name="chgugrp$pct" value="0"/>
-    		      <input type="text" id="ugrp$pct" name="ugrp$pct" value="$heppn.getGroupdn()" size="$slen"/>
+    		      <input type="hidden" id="ugrp$pct" name="ugrp$pct" value="$heppn.getGroupdn()" size="$slen"/>
+              <span class="populated-value">$heppn.getGroupdn()</span>
     		    </td>
             <td>
               <button id="rug$pct" name="rug$pct" class="rugclass action">remove</button>
@@ -36,17 +39,19 @@
             #set($llen=$hgdn.getGroupurn().length())
             <td class="property">Group URN (isMemberOf)</td>
             <td class="property">
-              <input type="text" name="gname$pct" id="gname$pct" value="$hgdn.getGroupurn()" size="$llen"/>
+              <input type="hidden" name="gname$pct" id="gname$pct" value="$hgdn.getGroupurn()" size="$llen"/>
+              <span class="populated-value">$hgdn.getGroupurn()</span>
             </td>
   	        #set($slen=$hgdn.getGroupdn().length())
   	        <td>Will be a member of</td>
   	        <td class="value">
   	          <input type="hidden" id="delggrp$pct" name="delggrp$pct" value="0"/>
   	          <input type="hidden" id="chgggrp$pct" name="chgggrp$pct" value="0"/>
-  	          <input type="text" id="ggrp$pct" name="ggrp$pct" value="$hgdn.getGroupdn()" size="$slen"/>
+  	          <input type="hidden" id="ggrp$pct" name="ggrp$pct" value="$hgdn.getGroupdn()" size="$slen"/>
+              <span class="populated-value">$hgdn.getGroupdn()</span>
   	        </td>
             <td>
-              <button id="rgg$pct" name="rgg$pct" class="rggclass">remove</button>
+              <button id="rgg$pct" name="rgg$pct" class="rggclass action">remove</button>
             </td>
           </tr>
           #set($pct=$pct+1)
@@ -58,32 +63,27 @@
             #set($llen=$hedn.getEntitlement().length())
             <td class="property">Entitlement (eduPersonEntitlement)</td>
             <td class="property">
-              <input type="text" name="ename$pct" id="ename$pct" value="$hedn.getEntitlement()" size="$llen" />
+              <input type="hidden" name="ename$pct" id="ename$pct" value="$hedn.getEntitlement()" size="$llen" />
+              <span class="populated-value">$hedn.getEntitlement()</span>
             </td>
             #set($slen=$hedg.getGroupdn().length())
             <td>Will be a member of</td>
             <td class="value">
               <input type="hidden" id="delegrp$pct" name="delegrp$pct" value="0"/>
               <input type="hidden" id="chgegrp$pct" name="chgegrp$pct" value="0"/>
-              <input type="text" id="egrp$pct" name="egrp$pct" value="$hedn.getGroupdn()" size="$slen" />
+              <input type="hidden" id="egrp$pct" name="egrp$pct" value="$hedn.getGroupdn()" size="$slen" />
+              <span class="populated-value">$hedn.getGroupdn()</span>
             </td>
             <td>
-              <button id="reg$pct" name="reg$pct" class="regclass">remove</button>
+              <button id="reg$pct" name="reg$pct" class="regclass action">remove</button>
             </td>
           </tr>
           #set($pct=$pct+1)
         #end
 
         #set($pct=0)
-        <tr>
-          <td>&nbsp;</td>
-          <td><button name="additem" class="additem action" id="additem">Add AD Group Mapping</button>
-          </td>
-          <td>&nbsp;</td>
-        </tr>
       </table>
     </form>
-  </div>
 </div>
 
 

@@ -1,16 +1,17 @@
-<div id="access_rules" class="wrapperdiv">
-  <div id="heading" class="heading">
-    Proconsul Login Rules
-  </div>
+<h1>Proconsul Login Rules</h1>
 
-  <div id="subheading" class="subheading">
+<div id="access_rules">
+  <div class="subheading">
     Only users with one or more of the following properties will be allowed to log in to Proconsul
   </div>
+  
+  <div style="width: 250px">
+      <button name="additem" class="additem action" id="additem">Add Login Access Rule</button>
+  </div>
 
-  <div id="table" class="tablediv">
-    <form name="accessform" id="accessform" method="POST" action="#">
+  <form name="accessform" id="accessform" method="POST" action="#">
       <input type="hidden" name="accessformsubmitted" value="1"/>
-      <table name="displaytable" class="table" >
+      <table class="displaytable">
         #set($pct=0)
         #foreach($pgrp in $proconsul_groups)
           <tr>
@@ -19,7 +20,8 @@
               <input type="hidden" id="delpgrp$pct" name="delpgrp$pct" value="0"/>
               <input type="hidden" id="chgpgrp$pct" name="chgpgrp$pct" value="0"/>
               #set($slen=$pgrp.getGroupurn().length())
-              <input type="text" id="pgrp$pct" name="pgrp$pct" value="$pgrp.getGroupurn()" size="$slen"/>
+              <input type="hidden" id="pgrp$pct" name="pgrp$pct" value="$pgrp.getGroupurn()" size="$slen"/>
+              <span class="populated-value">$pgrp.getGroupurn()</span>
             </td>
             <td>
               <button id="rbpgrp$pct" name="rbpgrp$pct" class="rbgrpclass action">remove</button>
@@ -35,7 +37,8 @@
               <input type="hidden" id="delpent$pct" name="delpent$pct" value="0"/>
               <input type="hidden" id="chgpent$pct" name="chgpent$pct" value="0"/>
               #set($slen=$pent.getEntitlement().length())
-              <input type="text" id="pent$pct" name="pent$pct" value="$pent.getEntitlement()" size="$slen"/>
+              <input type="hidden" id="pent$pct" name="pent$pct" value="$pent.getEntitlement()" />
+              <span class="populated-value">$pent.getEntitlement()</span>
             </td>
             <td>
               <button id="rbpent$pct" name="rbpent$pct" class="rbpentclass action">remove</button>
@@ -52,7 +55,8 @@
               <input type="hidden" id="delpuser$pct" name="delpuser$pct" value="0"/>
               <input type="hidden" id="chgpuser$pct" name="chgpuser$pct" value="0"/>
               #set($slen=$puser.getEppn().length())
-              <input type="text" id="puser$pct" name="puser$pct" value="$puser.getEppn()" size="$slen"/>
+              <input type="hidden" id="puser$pct" name="puser$pct" value="$puser.getEppn()" size="$slen"/>
+              <span class="populated-value">$puser.getEppn()</span>
             </td>
             <td>
               <button id="rbpuser$pct" name="rbpuser$pct" class="rbuserclass action">remove</button>
@@ -60,30 +64,25 @@
           </tr>
           #set($pct=$pct+1)
         #end
-        
-        <tr>
-          <td>
-            <button name="additem" class="additem action" id="additem">Add Login Access Rule</button></td><td>
-          </td>
-        </tr>
       </table>
     </form>
-   </div>
  </div>
  
- <div id="da_rules" class="wrapperdiv">
-   <div id="heading" class="heading">
-     Domain Admin Access Rules
-   </div>
+ <div id="da_rules">
+   <h1>Domain Admin Access Rules</h1>
 
-   <div id="subheading" class="subheading">
+   <div class="subheading">
      Only users with one or more of the following properties (in addition to one or more of the login access properties above) will be allowed to use Domain Admin privileges via Proconsul
    </div>
    
    <div id="datable" class="tablediv">
+     <div style="width: 300px">
+       <button name="daadditem" class="additem action" id="daadditem">Add Domain Admin Access Rule</button>
+     </div>
+     
      <form name="daaccessform" id="daaccessform" method="POST" action="#">
        <input type="hidden" name="daaformsubmitted" value="1"/>
-       <table name="dadisplaytable" class="table" >
+       <table class="displaytable">
          #set($pct=0)
          #foreach($dagrp in $da_groups)
            <tr>
@@ -92,7 +91,8 @@
                <input type="hidden" id="deldagrp$pct" name="deldagrp$pct" value="0"/>
                <input type="hidden" id="chgdagrp$pct" name="chgdagrp$pct" value="0"/>
                #set($slen=$dagrp.getGroupurn().length())
-               <input type="text" id="dagrp$pct" name="dagrp$pct" value="$dagrp.getGroupurn()" size="$slen"/>
+               <input type="hidden" id="dagrp$pct" name="dagrp$pct" value="$dagrp.getGroupurn()" size="$slen"/>
+               <span class="populated-value">$dagrp.getGroupurn()</span>
              </td>
              <td>
                <button id="rbdagrp$pct" name="rbdagrp$pct" class="rbdagrpclass action">remove</button>
@@ -109,7 +109,8 @@
                 <input type="hidden" id="deldaent$pct" name="deldaent$pct" value="0"/>
                 <input type="hidden" id="chgdaent$pct" name="chgdaent$pct" value="0"/>
                 #set($slen=$daent.getEntitlement().length())
-                <input type="text" id="daent$pct" name="daent$pct" value="$daent.getEntitlement()" size="$slen" />
+                <input type="hidden" id="daent$pct" name="daent$pct" value="$daent.getEntitlement()" size="$slen" />
+                <span class="populated-value">$daent.getEntitlement()</span>
               </td>
               <td>
                 <button id="rbdaent$pct" name="rbdaent$pct" class="rbdaentclass action">remove</button>
@@ -126,7 +127,8 @@
                 <input type="hidden" id="deldauser$pct" name="deldauser$pct" value="0"/>
                 <input type="hidden" id="chgdauser$pct" name="chgdauser$pct" value="0"/>
                 #set($slen=$dauser.getEppn().length())
-                <input type="text" id="dauser$pct" name="dauser$pct" value="$dauser.getEppn()" size="$slen"/>
+                <input type="hidden" id="dauser$pct" name="dauser$pct" value="$dauser.getEppn()" size="$slen"/>
+                <span class="populated-value">$dauser.getEppn()</span>
               </td>
               <td>
                 <button id="rbdauser$pct" name="rbdauser$pct" class="rbdauserclass action">remove</button>
@@ -134,12 +136,6 @@
             </tr>
             #set($pct=$pct+1)
           #end
-          
-          <tr>
-            <td>&nbsp;</td>
-            <td><button name="daadditem" class="additem action" id="daadditem">Add Domain Admin Access Rule</button></td>
-            <td>&nbsp;</td>
-          </tr>
       </table>
     </form>
    </div>
