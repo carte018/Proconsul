@@ -174,7 +174,7 @@ public class DockerContainer {
 		}
 		
 		LOG.info("Calling docker api");
-		docker = DockerClientBuilder.getInstance("http://" + dockerHost + ":2375").build();
+		docker = DockerClientBuilder.getInstance("http://" + dockerHost + ":2375/v1.19").build();
 		// docker = DockerClientBuilder.getInstance("http://localhost:2375").build();
 		LOG.info("Docker connection established");
 		if (docker == null) {
