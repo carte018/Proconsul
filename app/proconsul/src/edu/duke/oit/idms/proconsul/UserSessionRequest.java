@@ -6,6 +6,7 @@ public class UserSessionRequest {
 	String targetFQDN;
 	String displayName;
 	String csrfToken;
+	String resolution;
 
 	public String getCsrfToken() {
 		return csrfToken;
@@ -29,6 +30,14 @@ public class UserSessionRequest {
 
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
+	}
+	
+	public String getResolution() {
+		return resolution;
+	}
+	
+	public void setResolution(String res) {
+		this.resolution = res;
 	}
 	
 }

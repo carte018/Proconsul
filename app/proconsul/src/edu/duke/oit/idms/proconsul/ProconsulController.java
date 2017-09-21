@@ -159,7 +159,10 @@ public class ProconsulController {
 		// Spawn a docker container...
 		DockerContainer container = new DockerContainer(reconnectSession);
 		LOG.info("Created new container");
-		container.start();
+		if ((request.getParameter("rresolution") != null && request.getParameter("rresolution").equals("large")) || (request.getParameter("rdaresolution") != null && request.getParameter("rdaresolution").equals("large")))
+			container.start("large");
+		else
+			container.start();
 		LOG.info("Started container");
 		reconnectSession.setStatus(Status.CONNECTED);
 		ProconsulUtils.writeSessionToDB(reconnectSession);
@@ -323,7 +326,10 @@ public class ProconsulController {
 		
 		DockerContainer container = new DockerContainer(session);
 		LOG.info("Created new container");
-		container.start();
+		if (request.getParameter("daresolution") != null && request.getParameter("daresolution").equals("large")) 
+			container.start("large");
+		else
+			container.start();
 		LOG.info("Started new container");
 		
 		session.setStatus(Status.CONNECTED);
@@ -673,7 +679,10 @@ public class ProconsulController {
 		// Now we spawn a docker container based on the session
 		DockerContainer container = new DockerContainer(session);
 		LOG.info("Created new container");
-		container.start();
+		if (request.getParameter("resolution") != null && request.getParameter("resolution").equals("large"))
+			container.start("large");
+		else
+			container.start();
 		LOG.info("Started new container");
 		// and update database with new status
 		session.setStatus(Status.CONNECTED); // now we're connected

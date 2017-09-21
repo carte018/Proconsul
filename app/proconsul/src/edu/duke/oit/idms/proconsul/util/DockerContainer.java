@@ -166,6 +166,12 @@ public class DockerContainer {
 	// Utility method for invoking start on the container
 	
 	public void start() {
+		start("default");
+	}
+	
+	public void start(String size) {
+		PCConfig config = PCConfig.getInstance();
+		
 		if (imageName == null || imageName.equalsIgnoreCase("")) {
 			throw new ContainerInitException("Imagename is required for initialization");
 		}
@@ -196,7 +202,10 @@ public class DockerContainer {
 		//	System.out.println("Exposed port bindings");
 		}
 		LOG.info("Creating new container");
-		command = docker.createContainerCmd(imageName).withPrivileged(privileged).withCpuset(cpuset).withNetworkMode("host").withPortBindings(portBindings.toArray(new PortBinding[portBindings.size()]));
+		if (size != null && size.equals("large")) 
+			command = docker.createContainerCmd(config.getProperty("docker.image.large", true)).withPrivileged(privileged).withCpuset(cpuset).withNetworkMode("host").withPortBindings(portBindings.toArray(new PortBinding[portBindings.size()]));
+		else
+			command = docker.createContainerCmd(imageName).withPrivileged(privileged).withCpuset(cpuset).withNetworkMode("host").withPortBindings(portBindings.toArray(new PortBinding[portBindings.size()]));
 		LOG.info("New container created");
 		if (command == null) {
 			throw new ContainerInitException("Creation of new container failed");

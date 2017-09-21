@@ -7,6 +7,7 @@ public class DomainAdminRequest {
 	boolean exposePassword;
 	String displayName;
 	String csrfToken;
+	private String daresolution;
 	public String getCsrfToken() {
 		return csrfToken;
 	}
@@ -30,5 +31,11 @@ public class DomainAdminRequest {
 	}
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
+	}
+	public String getDaresolution() {
+		return daresolution;
+	}
+	public void setDaresolution(String r) {
+		this.daresolution = r;
 	}
 }

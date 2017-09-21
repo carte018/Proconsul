@@ -76,14 +76,16 @@ $(document).ready(
           <form:hidden path="csrfToken" value="${userRecon.csrfToken}"/>
           <tr>
             <td>${userSession.fqdn}</td>
-            <td>${userSession.displayname}</td>
+            <td>${userSession.displayname}<br>
+            <div class="session-option" style="display:inline"><form:radiobutton path="rresolution" value="default"/>Default (1024x768)</div><div class="session-option" style="display:inline"><form:radiobutton path="rresolution" value="large"/>Large (1920x1200)</div></td>     
             <td><button class="actionButton" type="submit">Reconnect</button></td>
           </tr>
           </form:form>
           </c:forEach>
           <form:form id="userConnectForm" method="POST" commandName="usersession" action="/proconsul/usersession">
           <tr>
-            <td><div class="session-option"><label>Host Name:</label><form:select path="targetFQDN" items="${userhosts}"></form:select></div></td>
+            <td><div class="session-option"><label>Host Name:</label><form:select path="targetFQDN" items="${userhosts}"></form:select></div><br>
+            	<div class="session-option" style="display:inline"><form:radiobutton path="resolution" value="default"/>Default (1024x768)</div><div class="session-option" style="display:inline"><form:radiobutton path="resolution" value="large"/>Large (1920x1200)</div></td>
             <td><div class="session-option"><label>Session Display Name:</label><form:input path="displayName" maxLength="20"></form:input></div></td>
             <td><div class="session-option"><label>&nbsp;</label><button class="actionButton" type="submit">Connect</button></div></td>
           </tr>
@@ -99,7 +101,9 @@ $(document).ready(
           <form:hidden path="csrfToken" value="${domainRecon.csrfToken}"/>
           <tr>
             <td>${domainSession.fqdn}</td>
-            <td>${domainSession.displayname}</td>
+            <td>${domainSession.displayname}<br>
+            <div class="session-option" style="display:inline"><form:radiobutton path="rdaresolution" value="default"/>Default (1024x768)</div><div class="session-option" style="display:inline"><form:radiobutton path="rdaresolution" value="large"/>Large (1920x1200)</div></td>
+            
             <td><button class="actionButton" type="submit">Reconnect</button></td>
           </tr>
           </form:form>
@@ -107,7 +111,8 @@ $(document).ready(
           <form:form id="domainConnectForm" method="POST" commandName="domadmin" action="/proconsul/domainadmin">
           <tr>
             <td><div class="session-option"><label>Host Name:</label><form:select path="targetFQDN" items="${domainhosts}"></form:select></div>
-            	<div class="sesion-option">Display password? <form:checkbox path="exposePassword" disabled="true"/></div></td>
+            	<!--<div class="session-option">Display password? <form:checkbox path="exposePassword" disabled="true"/></div><br>-->
+            	<div class="session-option" style="display:inline"><form:radiobutton path="daresolution" value="default"/>Default (1024x768)</div><div class="session-option" style="display:inline"><form:radiobutton path="daresolution" value="large"/>Large (1920x1200)</div></td>
             <td><div class="session-option"><label>Session Display Name:</label><form:input path="displayName" maxLength="20"></form:input></div></td>
             <td><div class="session-option"><label>&nbsp;</label><button class="actionButton" type="submit">Connect</button></div></td>
           </tr>
