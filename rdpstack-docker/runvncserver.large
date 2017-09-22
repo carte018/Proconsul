@@ -14,4 +14,4 @@ done
 # and then start vnc server and X stuff
 #
 /tmp/setvncpass
-exec vncserver :$DISPLAY -fg -rfbauth=/var/www/html/vnc-home/.vnc/passwd -Protocol3.3 DisconnectClients=0 NeverShared=1 >> /var/spool/docker/$DISPLAY.vncserver.out 2>&1
+exec vncserver :$DISPLAY -fg -geometry 1920x1200 -rfbauth=/var/www/html/vnc-home/.vnc/passwd -Protocol3.3 DisconnectClients=0 NeverShared=1 >> /var/spool/docker/$DISPLAY.vncserver.out 2>&1

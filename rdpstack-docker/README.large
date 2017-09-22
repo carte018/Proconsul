@@ -1,0 +1,6 @@
+Two versions of the scripts "runvncserver" and "writexclients" are provided here -- a "*.default" version, which uses the default window size of 
+1024x768 pixels, and a "*.large" version, which uses the larger window size of 1920x1200 (for cinematic displays).
+
+If you wish to offer both resolutions, you will need to build two distinct rdpstack images -- one for the default screen size (with the *.default files copied
+into place), and one for the larger screen size (with the *.large files copied into place).  Make sure the two images are named distinctly, and update the
+proconsul.properties file with the full names of both images.  
