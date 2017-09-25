@@ -1217,9 +1217,110 @@ public class ProconsulUtils {
 		// Can the user use the DA panel?
 		boolean retval = false;
 		PreparedStatement ps = null;
+		PreparedStatement ps2 = null;
+		PreparedStatement ps3 = null;
 		Connection pcdb = null;
+		Connection pcdb2 = null;
+		Connection pcdb3 = null;
 		ResultSet rs = null;
-		// Check AuthUser memberships
+		ResultSet rs2 = null;
+		ResultSet rs3 = null;
+		
+		// Check direct user authorization
+		if (au.getUid() == null || au.getUid().equalsIgnoreCase("")) {
+			// No user ID.  We don't allow DA access without an explicit userid to audit.  Go away
+			LOG.info("Userid is not available, and thus, no DA access allowed");
+			return false;
+		} else {
+			// Maybe the user is explicitly authorized -- check, with fall-thru
+			try {
+				pcdb2 = DatabaseConnectionFactory.getProconsulDatabaseConnection();
+				if (pcdb2 != null) {
+					ps2 = pcdb2.prepareStatement("select eppn from access_user where eppn = ? and type = 'da'");
+					if (ps2 != null) {
+						ps2.setString(1, au.getUid());
+						rs2 = ps2.executeQuery();
+						if (rs2 != null && rs2.next()) {
+							LOG.info("User " + au.getUid() + " is directly authorized to use DA privileges");
+							return true;
+						}
+					}
+				}
+			} catch (Exception e) {
+				return false; // if we except on checking, fail
+			} finally {
+				if (rs2 != null) {
+					try {
+						rs2.close();
+					} catch (Exception ign) {
+						// ignore
+					}
+				}
+				if (ps2 != null) {
+					try {
+						ps2.close();
+					} catch (Exception ign) {
+						// ignore
+					}
+				}
+				if (pcdb2 != null) {
+					try {
+						pcdb2.close();
+					} catch (Exception ign) {
+						// ignore
+					}
+				}
+			}
+		}
+		// And check for an entitlement with fall-thru
+		if (au.getEntitlements() == null || au.getEntitlements().isEmpty()) {
+			// Nothing to see here
+		} else {
+			// Check entitlements for a match
+			try {
+				pcdb3 = DatabaseConnectionFactory.getProconsulDatabaseConnection();
+				if (pcdb3 != null) {
+					ps3 = pcdb3.prepareStatement("select entitlement from entitlements where entitlement = ? and type = 'da'");
+					if (ps3 != null) {
+						Iterator<String> iter = au.getEntitlements().iterator();
+						while (retval == false && iter != null && iter.hasNext()) {
+							String checkEntitlement = iter.next();
+							ps3.setString(1,checkEntitlement);
+							rs3 = ps3.executeQuery();
+							if (rs3 != null && rs3.next()) {
+								LOG.info("DA authorized via entitlement " + checkEntitlement + " for user " + au.getUid());
+								return true;
+							}
+						}
+					}
+				}
+			} catch (Exception e) {
+				return false;  // fail if we cannot check
+			} finally {
+				if (rs3 != null) {
+					try {
+						rs3.close();
+					} catch (Exception ign) {
+						// ignore
+					}
+				}
+				if (ps3 != null) {
+					try {
+						ps3.close();
+					} catch (Exception ign) {
+						// ignore
+					}
+				}
+				if (pcdb3 != null) {
+					try {
+						pcdb3.close();
+					} catch (Exception ign) {
+						// ignore
+					}
+				}
+			}
+		}
+		// Check AuthUser memberships -- fail if we get here and don't get authorized.
 		if (au.getMemberships() == null || au.getMemberships().isEmpty()) {
 			LOG.info("User " + au.getUid() +" has no memberships and thus is not a DA");
 			return false;
@@ -1279,9 +1380,106 @@ public class ProconsulUtils {
 	public static boolean canUseApp(AuthUser au) {
 		boolean retval = false;
 		PreparedStatement ps = null;
+		PreparedStatement ps2 = null;
+		PreparedStatement ps3 = null;
 		Connection pcdb = null;
+		Connection pcdb2 = null;
+		Connection pcdb3 = null;
 		ResultSet rs = null;
+		ResultSet rs2 = null;
+		ResultSet rs3 = null;
 		
+		// Check for explicit authorization by userid (with fall-thru)
+		if (au.getUid() == null || au.getUid().equalsIgnoreCase("")) {
+			// Fail if we don't have a uid value for the user for auditing purposes
+			LOG.info("Userid missing -- cannot proceed");
+			return false;
+		}
+		try {
+			pcdb2 = DatabaseConnectionFactory.getProconsulDatabaseConnection();
+			if (pcdb2 != null) {
+				ps2 = pcdb2.prepareStatement("select eppn from access_user where eppn = ? and type = 'proconsul'");
+				if (ps2 != null) {
+					ps2.setString(1, au.getUid());
+					rs2 = ps2.executeQuery();
+					if (rs2 != null && rs2.next()) {
+						LOG.info("User " + au.getUid() + " is explicitly authorized to use Proconsul");
+						return true;
+					}
+				}
+			}
+		} catch (Exception e) {
+			return false; // fail if we are not able to test
+		} finally {
+			if (rs2 != null) {
+				try {
+					rs2.close();
+				} catch (Exception ign) {
+					// ignore
+				}
+			}
+			if (ps2 != null) {
+				try {
+					ps2.close();
+				} catch (Exception ign) {
+					// ignore
+				}
+			}
+			if (pcdb2 != null) {
+				try {
+					pcdb2.close();
+				} catch (Exception ign) {
+					// ignore
+				}
+			}
+		}
+		// And check entitlements just in case (with fall-thru)
+		if (au.getEntitlements() == null || au.getEntitlements().isEmpty()) {
+			// Do nothing
+		} else {
+			try {
+				pcdb3 = DatabaseConnectionFactory.getProconsulDatabaseConnection();
+				if (pcdb3 != null) {
+					ps3 = pcdb3.prepareStatement("select entitlement from entitlements where entitlement = ? and type = 'proconsul'");
+					if (ps3 != null) {
+						Iterator<String> iter = au.getEntitlements().iterator();
+						while (retval == false && iter != null && iter.hasNext()) {
+							String checkEntitlement = iter.next();
+							ps3.setString(1,checkEntitlement);
+							rs2 = ps3.executeQuery();
+							if (rs3 != null && rs3.next()) {
+								LOG.info("User " + au.getUid() + " is authorized for Proconsul use via entitlement " + checkEntitlement);
+								return true;
+							}
+						}
+					}
+				}
+			} catch (Exception e) {
+				return false;  // fail if we cannot check
+			} finally {
+				if (rs3 != null) {
+					try {
+						rs3.close();
+					} catch (Exception ign) {
+						//ignore
+					}
+				}
+				if (ps3 != null) {
+					try {
+						ps3.close();
+					} catch (Exception ign) {
+						// ignore
+					}
+				}
+				if (pcdb3 != null) {
+					try {
+						pcdb3.close();
+					} catch (Exception ign) {
+						// ignore
+					}
+				}
+			}
+		}
 		// Check the AuthUser for a membership that confers app
 		// access.  Only need one.
 		if (au.getMemberships() == null || au.getMemberships().isEmpty()) {
