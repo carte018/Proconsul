@@ -189,4 +189,4 @@ responsiveness at this time, as grant funding for the project runs out
 in August 2016).
 
 For questions and to report bugs, contact the author directly at the
-address rob<at>duke.edu.
+address rob\<at\>duke.edu.
