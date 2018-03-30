@@ -21,11 +21,6 @@ RUN yum -y install tigervnc-server
 #
 RUN yum -y install numpy
 #
-## Add in xfreerdp
-## This is purely to prepare the install tree in advance -- we build our own version later
-#
-RUN yum -y install xfreerdp
-#
 ## And pyOpenSSL
 RUN yum -y install pyOpenSSL
 #
@@ -67,43 +62,32 @@ ADD runwebsockify /tmp/runwebsockify
 ADD supervisord.conf /etc/supervisord.conf
 #
 #
-## Build up xfreerdp (since the version from RHEL7 is borked and old)
+# Install tigervnc client side
+RUN yum install -y tigervnc
 #
-RUN yum -y install git patch
-WORKDIR /tmp
-RUN git clone https://github.com/FreeRDP/FreeRDP
-WORKDIR /tmp/FreeRDP
-# This patch is no longer required
-#ADD nla-patch /tmp/nla-patch
-
-RUN yum clean all
-RUN yum install -y make
-RUN yum install -y cmake
-RUN yum install -y gcc
-RUN yum install -y zlib-devel
-RUN yum install -y zlib
-RUN yum install -y xorg-x11-server-devel
-RUN yum install -y xorg-x11-proto-devel
-RUN yum install -y libXcursor-devel
-RUN yum install -y openssl-devel
-RUN yum install -y openssl
-RUN yum install -y gcc-c++
-RUN yum install -y avahi-glib
-RUN yum install -y avahi-glib-devel
-RUN yum install -y libXv-devel
-RUN yum install -y libXi-devel
-RUN yum install -y alsa-lib
-RUN yum install -y alsa-lib-devel
-WORKDIR /tmp/FreeRDP
-RUN cmake -DCMAKE_BUILD_TYPE=Release -DWITH_SSE2=ON
-RUN make
-RUN make install
-
+# And sshpass
+RUN yum install -y sshpass
+#
+# And nmap-ncat
+RUN yum install -y nmap-ncat
+#
 WORKDIR /var/www/html/vnc-home
-ADD self.pem /var/www/html/vnc-home/self.pem
+# This is now for alumpcon -- proconsul.oit is in oldself.pem
+# ADD self.pem /var/www/html/vnc-home/self.pem 
+ADD oldself.pem /var/www/html/vnc-home/self.pem
 RUN yum install -y mariadb
 ADD cleanmeup /tmp/cleanmeup
 RUN yum install -y net-tools
+#
+# This sets the default time zone to EST - YMMV
+RUN rm /etc/localtime
+RUN ln -s /usr/share/zoneinfo/US/Eastern /etc/localtime
+# And fixes a bug in the gcc build that causes locales to be busted
+RUN localedef -i en_US -f UTF-8 en_US.UTF-8
+# Add ssh client
+#
+RUN yum install -y openssh-clients
+RUN touch /tmp/localdefed
 VOLUME "/var/spool/docker"
 CMD ["/usr/bin/supervisord","-c","/etc/supervisord.conf"]
 

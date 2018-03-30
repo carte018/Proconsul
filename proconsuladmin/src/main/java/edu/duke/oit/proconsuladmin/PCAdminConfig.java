@@ -1,5 +1,6 @@
 package edu.duke.oit.proconsuladmin;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
@@ -13,20 +14,36 @@ public class PCAdminConfig {
 	private PCAdminConfig() {
 		properties = new Properties();
 		
-		ClassLoader cl = PCAdminConfig.class.getClassLoader();
-		URL url = cl.getResource("proconsuladmin.properties");
-		
+		// First, look for the file in /etc/proconsul/proconsuladmin.properties.  Only use the embedded one if that fails.
+		InputStream etcfile = null;
 		InputStream inputStream = null;
+		
 		try {
-			inputStream = url.openStream();
-			properties.load(inputStream);
-		} catch (Exception e) {
-			throw new RuntimeException("problem loading configuration");
+			etcfile = new FileInputStream("/etc/proconsul/proconsuladmin.properties");
+			properties.load(etcfile);
+		} catch (Exception f) {
+			
+			ClassLoader cl = PCAdminConfig.class.getClassLoader();
+			URL url = cl.getResource("proconsuladmin.properties");
+		
+			try {
+				inputStream = url.openStream();
+				properties.load(inputStream);
+			} catch (Exception e) {
+				throw new RuntimeException("problem loading configuration");
+			}
 		} finally { 
 			if (inputStream != null) {
 				try {
 					inputStream.close();
 				}catch (Exception e) {
+					// ignore
+				}
+			}
+			if (etcfile != null) {
+				try {
+					etcfile.close();
+				} catch (Exception e) {
 					// ignore
 				}
 			}

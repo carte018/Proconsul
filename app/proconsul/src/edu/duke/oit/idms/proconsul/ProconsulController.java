@@ -273,7 +273,8 @@ public class ProconsulController {
 		
 		String vncPassword = ProconsulUtils.getVncPassword();
 		LOG.info("Created new vnc password");
-		ADUser targetUser = ProconsulUtils.createRandomizedADUser();
+		// ADUser targetUser = ProconsulUtils.createRandomizedADUser();
+		ADUser targetUser = ProconsulUtils.createRandomizedADUser(au);
 		LOG.info("Created new target AD user");
 		ProconsulSession session = new ProconsulSession(au,targetFQDN,vncPassword,targetUser,displayName,"domain");
 		LOG.info("Created new session");
@@ -441,7 +442,8 @@ public class ProconsulController {
 		
 		String vncPassword = ProconsulUtils.getVncPassword();
 		LOG.info("Created new vnc password");
-		ADUser targetUser = ProconsulUtils.createRandomizedADUser();
+		ADUser targetUser = ProconsulUtils.createRandomizedADUser(au);
+		//ADUser targetUser = ProconsulUtils.createRandomizedADUser();
 		LOG.info("Created new target AD user");
 		ProconsulSession session = new ProconsulSession(au,targetFQDN,vncPassword,targetUser,displayName,"delegated",orgUnit,roleGroup);
 		LOG.info("Created new session");;
@@ -537,6 +539,139 @@ public class ProconsulController {
 		String redirectUrl = session.getRedirectUrl();
 		return new ModelAndView("redirect:" + redirectUrl);
 	}
+	
+	// POST handler for /staticsession
+	@RequestMapping(value="/staticsession",method=RequestMethod.POST)
+	public ModelAndView handleStaticSessionPost(@ModelAttribute StaticUserSessionRequest staticsession, HttpServletRequest request) {
+		AuthUser au = new AuthUser(request);
+		LOG.info("authuser uid is " + au.getUid());
+		if (! ProconsulUtils.canUseApp(au)) {
+			return new ModelAndView("/authzError").addObject("message","You ("+au.getUid()+") are not authorized to use this application.");
+		}
+		if (au.getUid() == null || (! au.getUid().equals("") && ! ProconsulUtils.fqdnsForStatic(au.getUid()).contains(staticsession.getTargetFQDN()))) {
+			// not authorized
+			return new ModelAndView("/authzError").addObject("message","Access to " + staticsession.getTargetFQDN() + " by " + au.getUid() + " is forbidden.");
+		}
+		// CSRF protections
+		if (! ProconsulUtils.checkOrigin(request)) {
+			LOG.info("CSRF violation");
+			return new ModelAndView("/authzError").addObject("message","CSRF origin violation -- your browser is not authorized for this operation.");
+		}
+		String token = staticsession.getCsrfToken();
+		if (token != null) {
+			String validToken = ProconsulUtils.getSessionCSRFToken(request);
+			if (! token.equals(validToken)) {
+				LOG.info("CSRF token violation");;
+				return new ModelAndView("/authzError").addObject("message","CSRF token violation -- your browser is not auhtorized for this operation.");
+			}
+		} else {
+			LOG.info("CSRF token violation - no token presented");
+			return new ModelAndView("/authzError").addObject("message","CSRF token violation -- your browser did not provide the required token for this operation.");
+		}
+		
+		//If we're here, we made it past basic authZ checks -- we can proceed.
+		//
+		// Create a new session to represent what's being requested.
+		
+		String vncPassword = ProconsulUtils.getVncPassword();
+		LOG.info("Created new vnc password");
+
+		ADUser targetUser = ProconsulUtils.getStaticADUser(au,staticsession.getTargetFQDN());
+		String displayName = staticsession.getDisplayName();
+		displayName = displayName.replaceAll("[^A-za-z0-9:,_@?! -]", "");
+		String targetFQDN = staticsession.getTargetFQDN();
+		targetFQDN = targetFQDN.replaceAll("[^A-za-z0-9._-]", "");
+		ProconsulSession session = new ProconsulSession(au,targetFQDN,vncPassword,targetUser,displayName,"static");
+		LOG.info("Created new session");
+		
+		// Pick a port
+		session.setNovncPort(ProconsulUtils.getVncPortNumber(session));
+		// Set status to Starting
+		session.setStatus(Status.STARTING);
+		// Set session start time (for bookkeeping)
+		session.setStartTime(new Date());
+		
+		// Add the gateway if a gateway is required
+		session = ProconsulUtils.addGatewayToSession(session);
+		
+		// Write out the session to the database and encumber the port
+		//
+		ProconsulUtils.writeSessionToDB(session); // After this, we're committed
+		LOG.info("Wrote new session to db");
+		
+		// We perform no group manipulation for static sessions -- what you get is what the 
+		// existing static user has been afforded directly in the AD by an outside administrator
+		//
+				
+		// Add restrictions on the user to limit logon access to just what is required
+		// Apparently, this may not work with source IPs which are not joined workstations?
+		// Commented out for now...
+		// Also runs into will-not-perform failures from the AD when adding the values...
+		// ProconsulUtils.addWorkstationsToADUser(session,targetUser);
+		
+		// Now we spawn a docker container based on the session
+		DockerContainer container = new DockerContainer(session);
+		LOG.info("Created new container");
+		if (request.getParameter("resolution") != null && request.getParameter("resolution").equals("large"))
+			container.start("large");
+		else if (request.getParameter("resolution") != null && request.getParameter("resolution").equals("vnclarge"))
+			container.start("vnclarge");
+		else if (request.getParameter("resolution") != null && request.getParameter("resolution").equals("vncdefault"))
+			container.start("vncdefault");
+		else
+			container.start();
+		LOG.info("Started new container");
+		// and update database with new status
+		session.setStatus(Status.CONNECTED); // now we're connected
+		ProconsulUtils.writeSessionToDB(session);
+		LOG.info("Wrote session out final time");
+		
+		// And finally send back the redirect document to the user
+		//
+		// There's a secondary race condition here in which the websockify process
+		// hasn't quite started yet and we lose on connection from the browser.
+		// To combat that, pend until the websockify is ready by watching for
+		// /var/spool/docker/ext-portnumber
+		// TODO:  Replace this with the actual pend when we move to the production server
+		// TODO:  For now, just wait ten seconds for the container to start properly
+		// TODO:  Split the difference for now -- if there's a /var/spool/docker dir,
+		// TODO:  wait for the file, else sleep and hope 
+		//
+		File fcheck = null;
+		File dcheck = null;
+		try {
+			int pnum = session.getNovncPort() + 5901;
+			dcheck = new File("/var/spool/docker");
+			if (dcheck.exists()) {
+				fcheck = new File("/var/spool/docker/" + pnum);
+				do {
+					Thread.sleep(1000);;
+					System.out.println("File " + fcheck.getPath() + " still not there");
+				} while (! fcheck.exists());
+				Thread.sleep(1000);  // extra second just in case
+			} else {
+				// TODO:  For now, just wait
+				LOG.info("Sleeping for 5 seconds");
+				Thread.sleep(5000);
+			}
+		} catch (Exception ign) {
+			//ignore
+		} finally {
+			if (fcheck.exists()) {
+				try {
+					fcheck.delete();
+				} catch (Exception ign) {
+					//ignore
+				}
+			}
+		}
+		LOG.info("Wait complete");
+		
+		String redirectUrl = session.getRedirectUrl();
+		LOG.info("Sending redirect URL");
+		return new ModelAndView("redirect:" + redirectUrl);
+	
+	}
 		
 	//POST handler for /usersession
 	@RequestMapping(value="/usersession",method=RequestMethod.POST)
@@ -616,7 +751,8 @@ public class ProconsulController {
 		
 		String vncPassword = ProconsulUtils.getVncPassword();
 		LOG.info("Created new vnc password");
-		ADUser targetUser = ProconsulUtils.createRandomizedADUser();
+		//ADUser targetUser = ProconsulUtils.createRandomizedADUser();
+		ADUser targetUser = ProconsulUtils.createRandomizedADUser(au);
 		LOG.info("Created new AD targetuser");
 		String displayName = usersession.getDisplayName();
 		displayName = displayName.replaceAll("[^A-za-z0-9:,_@?! -]", "");
@@ -760,6 +896,8 @@ public class ProconsulController {
 	 *     DomainAdmin for available DomainAdmin rights (POSTs to /domainadmin)
 	 *     DelegatedAdmin for available DelegateAdmin rights (POSTs to /delegatedadmin)
 	 *     UserSession for available User rights sessions (POSTs to /normal)
+	 * (now five, adding)
+	 *     StaticUserSession for available User rights sessions using static AD users (POSTS to /static)
 	 *     
 	 * Each form posts to a different endpoint to allow for overloading of fields names
 	 * and simplify separation of handling behaviors (although it makes 
@@ -800,6 +938,12 @@ public class ProconsulController {
 		UserSessionRequest usersession = new UserSessionRequest();
 		usersession.setCsrfToken(csrfToken);
 		model.addObject("usersession", usersession);
+		StaticUserSessionRequest staticsession = new StaticUserSessionRequest();
+		staticsession.setCsrfToken(csrfToken);
+		model.addObject("staticsession",staticsession);
+		ReconnectRequest staticRecon = new ReconnectRequest();
+		staticRecon.setCsrfToken(csrfToken);
+		model.addObject("staticRecon",staticRecon);
 		
 		AuthUser testUser = new AuthUser(request);
 		// RGC - override for testing...testUser.setUid("rob@duke.edu");
@@ -828,11 +972,13 @@ public class ProconsulController {
 		ArrayList<DisplayFQDN> userHosts = ProconsulUtils.getAvailableSessionDisplayFQDNs(testUser,"user");
 		ArrayList<DisplayFQDN> delegatedHosts = ProconsulUtils.getAvailableSessionDisplayFQDNs(testUser, "delegated");
 		ArrayList<DisplayFQDN> domainHosts = ProconsulUtils.getAvailableSessionDisplayFQDNs(testUser, "domain");
+		ArrayList<DisplayFQDN> staticHosts = ProconsulUtils.getAvailableSessionDisplayFQDNs(testUser, "static");
 		
 		model.addObject("sessionlist",hosts);
 		model.addObject("userSessionList",userHosts);
 		model.addObject("delegatedSessionList",delegatedHosts);
 		model.addObject("domainSessionList",domainHosts);
+		model.addObject("staticSessionList",staticHosts);
 		
 		if (hosts.isEmpty()) {
 			model.addObject("resumeclass","hiddendiv");
@@ -854,6 +1000,11 @@ public class ProconsulController {
 			model.addObject("domainResumeClass","hiddendiv");
 		} else {
 			model.addObject("domainResumeClasss","displaydiv");
+		}
+		if (staticHosts.isEmpty()) {
+			model.addObject("staticResumeClass","hiddendiv");
+		} else {
+			model.addObject("staticResumeClass","displaydiv");
 		}
 		
 		// Inform the UI about available domain admin hosts
@@ -891,6 +1042,15 @@ public class ProconsulController {
 			model.addObject("delegatedclass","displaydiv");
 		}
 		
+		ArrayList<String> statichosts = new ArrayList<String>();
+		statichosts.addAll(ProconsulUtils.fqdnsForStatic(testUser.getUid()));
+		model.addObject("statichosts",statichosts);
+		if (statichosts.isEmpty()) {
+			model.addObject("staticclass","hiddendiv");
+		} else {
+			model.addObject("staticclass","displaydiv");
+		}
+
 		ArrayList<String> userhosts = new ArrayList<String>();
 		userhosts.addAll(ProconsulUtils.fqdnsForEppn(testUser.getUid()));
 		LOG.info("After adding eppn hosts, now at " + userhosts.size());

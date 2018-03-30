@@ -1,6 +1,6 @@
 <h1>You may review and/or update:</h1>
 
-<table style="margin-top: 1em">
+<table>
   <tr>
     <td style="width: 50%; padding-right: 30px">
 
@@ -33,5 +33,15 @@
         </div>
       </div>
     </td>
+  </tr> <tr>
+    <td>
+    	<div class="admin-section">
+    		<a href="/admin/posix_users">Proconsul POSIX User configuration</a>
+    		<div class="subheader">
+    			Configure POSIX attributes to pass for users acessing Linux machines via Proconsul
+    		</div>
+    	</div>
+    </td>
+    <td> </td>
   </tr>
 </table>

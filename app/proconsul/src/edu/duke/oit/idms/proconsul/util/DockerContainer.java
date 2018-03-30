@@ -204,7 +204,11 @@ public class DockerContainer {
 		LOG.info("Creating new container");
 		if (size != null && size.equals("large")) 
 			command = docker.createContainerCmd(config.getProperty("docker.image.large", true)).withPrivileged(privileged).withCpuset(cpuset).withNetworkMode("host").withPortBindings(portBindings.toArray(new PortBinding[portBindings.size()]));
-		else
+		else if (size != null && size.equals("vnclarge"))
+			command = docker.createContainerCmd(config.getProperty("docker.image.vnclarge", true)).withPrivileged(privileged).withCpuset(cpuset).withNetworkMode("host").withPortBindings(portBindings.toArray(new PortBinding[portBindings.size()]));
+		else if (size != null & size.equals("vncdefault"))
+			command = docker.createContainerCmd(config.getProperty("docker.image.vncdefault", true)).withPrivileged(privileged).withCpuset(cpuset).withNetworkMode("host").withPortBindings(portBindings.toArray(new PortBinding[portBindings.size()]));
+		else	
 			command = docker.createContainerCmd(imageName).withPrivileged(privileged).withCpuset(cpuset).withNetworkMode("host").withPortBindings(portBindings.toArray(new PortBinding[portBindings.size()]));
 		LOG.info("New container created");
 		if (command == null) {

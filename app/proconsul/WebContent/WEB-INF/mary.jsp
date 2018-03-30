@@ -93,6 +93,34 @@ $(document).ready(
           </form:form>
         </tbody>
         
+        <tbody class="${staticclass}">
+        	<tr><th colspan="3" class="banner">Static User Sessions</th></tr>
+        	<c:forEach items="${staticSessionList}" var="staticSession" varStatus="status">
+        		<form:form id="staticReconForm${status.index}" method="POST" commandName="staticRecon" action="/proconsul/reconnect">
+        		<form:hidden path="targetFQDN" value="${staticSession.fqdn}"/>
+        		<form:hidden path="csrfToken" value="${staticRecon.csrfToken}"/>
+        		<tr>
+        			<td>${staticSession.fqdn}</td>
+        			<td>${staticSession.displayname}<br>
+        			<div class="session-option" style="display:inline"><form:radiobutton path="rresolution" value="default"/>Default (1024x768)</div><div class="session-option" style="display:inline"><form:radiobutton path="rresolution" value="large"/>Large (1920x1200)</div><br>
+        			<div class="session-option" style="display:inline"><form:radiobutton path="rresolution" value="vncdefault"/>VNC small (1024x768)</div><div class="session-option" style="display:inline"><form:radiobutton path="rresolution" value="vnclarge"/>VNC large (1920x1200)</div></td>
+        			<td><button class="actionButton" type="submit">Reconnect</button></td>
+        		</tr>
+        		</form:form>
+        	</c:forEach>
+        	<form:form id="statiConnectForm" method="POST" commandName="staticsession" action="/proconsul/staticsession">
+        	<tr>
+        		<td><div class="session-option"><label>Host Name:</label><form:select path="targetFQDN" items="${statichosts}"></form:select></div><br>
+        			<div class="session-option" style="display:inline"><form:radiobutton path="resolution" value="default"/>Default (1024x768)</div><div class="session-option" style="display:inline"><form:radiobutton path="resolution" value="large"/>Large (1920x1200)</div><br>
+        			<div class="session-option" style="display:inline"><form:radiobutton path="resolution" value="vncdefault"/>VNC small (1024x768)</div><div class="session-option" style="display:inline"><form:radiobutton path="resolution" value="vnclarge"/>VNC large (1920x1200)</div></td>
+        		<td><div class="session-option"><label>Session Display Name:</label><form:input path="displayName" maxLength="20"></form:input></div></td>
+        		<td><div class="session-option"><label>&nbsp;</label><button class="actionButton" type="submit">Connect</button></div></td>
+        	</tr>
+        	<form:hidden path="csrfToken" value="${staticsession.csrfToken}"/>
+        	</form:form>
+        </tbody>
+        </tbody>
+        
         <tbody class="${daclass}">
           <tr><th colspan="3" class="banner">Domain Admin Sessions</th></tr>
           <c:forEach items="${domainSessionList}" var="domainSession" varStatus="status">

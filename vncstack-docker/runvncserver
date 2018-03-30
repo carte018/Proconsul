@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# CallMe: runvncserver PORTNUM
+
+HOME=/var/www/html/vnc-home export HOME
+#
+# Wait until the writexclients has completed
+#
+until grep incheck /var/www/html/vnc-home/.Xclients
+do
+  : > /dev/null
+done 
+#
+# and then start vnc server and X stuff
+#
+/tmp/setvncpass
+exec vncserver :$DISPLAY -fg -rfbauth=/var/www/html/vnc-home/.vnc/passwd -Protocol3.3 DisconnectClients=0 NeverShared=1 >> /var/spool/docker/$DISPLAY.vncserver.out 2>&1

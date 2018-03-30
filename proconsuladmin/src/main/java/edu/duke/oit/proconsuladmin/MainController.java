@@ -157,6 +157,70 @@ public class MainController {
 		return retval;
 	}
 	
+	@RequestMapping(value="/posix_users",method=RequestMethod.POST)
+	public ModelAndView handlePostOfPosixUsers(HttpServletRequest request) {
+		ModelAndView retval = new ModelAndView("redirect:https://" + request.getLocalName()+"/admin/posix_users");
+		PCAdminConfig config = PCAdminConfig.getInstance();
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		if (! isAdmin(request)) {
+			return(new ModelAndView("test").addObject("message","You are not authorized to perform that operation"));
+		}
+		try {
+			try {
+				conn = DatabaseConnectionFactory.getPCAdminDBConnection();
+			} catch (Exception e) {
+				throw new RuntimeException("Failed connecting to database: " + e.getMessage());
+			}
+			if (conn == null) {
+				throw new RuntimeException("Failed getting database connection");
+			}
+			if (request.getParameter("pformsubmitted") != null && request.getParameter("pformsubmitted").equals("1")) {
+				// delete 
+				Enumeration<String> pnames = request.getParameterNames();
+				while (pnames != null && pnames.hasMoreElements()) {
+					String t = pnames.nextElement();
+					if (t.matches("^uidnumber[0-9]*") && request.getParameter(t).equals("")) {
+						// delete this one
+						String num = t.replace("uidnumber", "");
+						String eppn = request.getParameter("uname"+num);
+						ps = conn.prepareStatement("delete from posixuser where uid = ?");
+						ps.setString(1, eppn);
+						ps.executeUpdate();
+					}
+				}
+			} else if (request.getParameter("addformsubmitted") != null && request.getParameter("addformsubmitted").equals("1")) {
+				// add
+				ps = conn.prepareStatement("insert into posixuser values(?,?,?,?,?)");
+				ps.setString(1,request.getParameter("user"));
+				ps.setInt(2, Integer.parseInt(request.getParameter("uidnumber")));
+				ps.setInt(3, Integer.parseInt(request.getParameter("gidnumber")));
+				ps.setString(4,request.getParameter("homedirectory"));
+				ps.setString(5, request.getParameter("loginshell"));
+				ps.executeUpdate();
+			}
+		} catch (Exception e) {
+			return(new ModelAndView("test").addObject("message","Failed updating database: " + e.getMessage()));
+		} finally {
+			if (ps != null) {
+				try {
+					ps.close();
+				} catch (Exception ign) {
+					// ignore
+				}
+			}
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (Exception ign) {
+					// ignore
+				}
+			}
+		}
+		return retval;
+	}
+	
 	@RequestMapping(value="/windows_users", method=RequestMethod.POST)
 	public ModelAndView handlePostOfWindowsUsers(HttpServletRequest request) {
 		ModelAndView retval = new ModelAndView("redirect:https://" + request.getLocalName()+"/admin/windows_users");
@@ -683,6 +747,77 @@ public class MainController {
 		retval.addObject("hostgateway",hga);
 		retval.addObject("hostaccessgroups",haga);
 	
+		return retval;
+	}
+	
+	@RequestMapping(value="/posix_users", method=RequestMethod.GET)
+	public ModelAndView generatePosixUser(HttpServletRequest request) {
+		ModelAndView retval = new ModelAndView("posix_user");
+		if (! isAdmin(request)) {
+			ModelAndView eret = new ModelAndView("test");
+			eret.addObject("message","You are not authorized to perform that operation.");
+			return eret;
+		}
+		PCAdminConfig config = PCAdminConfig.getInstance();
+		Connection conn = null; 
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		ArrayList<PosixUser> ap = new ArrayList<PosixUser>();
+		try {
+			try {
+				conn = DatabaseConnectionFactory.getPCAdminDBConnection();
+			} catch (Exception e) {
+				throw new RuntimeException("Failed getting DB connection: " + e.getMessage());
+			}
+			if (conn != null) {
+				ps = conn.prepareStatement("select uid,uidnumber,gidnumber,homedirectory,loginshell from posixuser");
+				if (ps == null) {
+					throw new RuntimeException("Failed to perform select");
+				} else {
+					rs = ps.executeQuery();
+					while (rs!=null && rs.next()) {
+						PosixUser pu = new PosixUser();
+						pu.setEppn(rs.getString("uid"));
+						pu.setUidnumber(rs.getInt("uidnumber"));
+						pu.setGidnumber(rs.getInt("gidnumber"));
+						pu.setHomedirectory(rs.getString("homedirectory"));
+						pu.setLoginshell(rs.getString("loginshell"));
+						ap.add(pu);
+					}
+				}
+				ps.close();
+				if (rs != null)
+					rs.close();
+			}
+		} catch (Exception e) {
+			ModelAndView ev = new ModelAndView("test");
+			ev.addObject("message","Failed retrieving posix users: " + e.getMessage());
+			return ev;
+		} finally {
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (Exception e) {
+					//ignore
+				}
+			}
+			if (ps != null) {
+				try {
+					ps.close();
+				} catch (Exception e) {
+					//ignore
+				}
+			}
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (Exception e) {
+					// ignore
+				}
+			}
+		}
+		
+		retval.addObject("posixusers",ap);
 		return retval;
 	}
 	

@@ -10,6 +10,14 @@ echo "else" >> /var/www/html/vnc-home/.Xclients
 echo "xfreerdp /cert-ignore /u:$WINUSER /d:$DOMAIN /p:$WINPASS /v:$RHOSTNAME /g:$GATEWAY " >> /var/www/html/vnc-home/.Xclients
 echo "fi" >> /var/www/html/vnc-home/.Xclients
 echo "retval=\$? export retval" >> /var/www/html/vnc-home/.Xclients
+
+echo "if egrep 'INITIATED_DISCONNECT|IDLE_TIMEOUT|DISCONNECTDED_BY' /var/www/html/vnc-home/.vnc/*.log > /dev/null" >> /var/www/html/vnc-home/.Xclients
+echo "then" >> /var/www/html/vnc-home/.Xclients
+echo "  retval=1 export retval" >> /var/www/html/vnc-home/.Xclients
+echo "else" >> /var/www/html/vnc-home/.Xclients
+echo "  retval=2 export retval" >> /var/www/html/vnc-home/.Xclients
+echo "fi" >> /var/www/html/vnc-home/.Xclients
+
 echo "echo \$retval > /tmp/retval" >> /var/www/html/vnc-home/.Xclients
 echo "if [ \$retval == 2 -o \$retval == 12 ]; then /tmp/cleanmeup; fi" >> /var/www/html/vnc-home/.Xclients
 echo "if [ \$retval == 2 -o \$retval == 12 -o \$retval == 1 -o \$retval == 11 ]; then pkill -9 websockify; pkill -9 runwebsockify; pkill -9 Xvnc; pkill  -9 xstartup; pkill -9 xinitirc; kill -TERM \`cat /run/supervisord.pid\`; else echo retval is \$retval > /tmp/incheck; fi" >> /var/www/html/vnc-home/.Xclients

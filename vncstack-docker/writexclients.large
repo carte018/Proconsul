@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# CallMe:  writexclients WinUser Domain WinPass Hostname
+#
+
+echo "randvnc=\`cat /dev/urandom | LC_CTYPE=C tr -dc \"[:alpha:]\" | head -16c\` export randvnc" > /var/www/html/vnc-home/.Xclients
+echo "remotedisplay=\`sshpass -p $WINPASS ssh -x $RHOSTNAME -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -l $WINUSER '(echo mate-session > ~/.vnc/xstartup;chmod a+x ~/.vnc/xstartup;echo '\$randvnc' | vncpasswd -f > ~/.vnc/passwd;vncserver :1 -autokill -PasswordFile ~/.vnc/passwd -MaxDisconnectionTime 15 2>&1)' | grep '^New' | awk -F: '{print \$NF}'\` export remotedisplay" >> /var/www/html/vnc-home/.Xclients
+echo "echo \$randvnc | vncpasswd -f > /tmp/vncpasswd" >> /var/www/html/vnc-home/.Xclients
+echo "vncviewer -PasswordFile /tmp/vncpasswd -geometry 1920x1200 ${RHOSTNAME}:\${remotedisplay}" >> /var/www/html/vnc-home/.Xclients
+echo "retval=\$? export retval" >> /var/www/html/vnc-home/.Xclients
+echo "echo \$retval > /tmp/retval" >> /var/www/html/vnc-home/.Xclients
+echo "if [ \$retval == 2 -o \$retval == 12 ]; then /tmp/cleanmeup; fi" >> /var/www/html/vnc-home/.Xclients
+echo "if [ \$retval == 2 -o \$retval == 12 -o \$retval == 1 -o \$retval == 11 ]; then pkill -9 websockify; pkill -9 runwebsockify; pkill -9 Xvnc; pkill  -9 xstartup; pkill -9 xinitirc; kill -TERM \`cat /run/supervisord.pid\`; else echo retval is \$retval > /tmp/incheck; fi" >> /var/www/html/vnc-home/.Xclients
+
+chmod 755 /var/www/html/vnc-home/.Xclients

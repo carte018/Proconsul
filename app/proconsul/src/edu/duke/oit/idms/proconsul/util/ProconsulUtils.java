@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.UUID;
 
 import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.PartialResultException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttribute;
@@ -51,7 +53,7 @@ public class ProconsulUtils {
 			if (sam.equals("")) {
 				LOG.info("SAM is empty but not null in isSamaccountnameAvailable");
 			}
-			if (dc == null || sam == null || sam.equals("")) {
+			if (dc == null || sam == null || sam.equals("")) { 
 				return true;  //for specific server, "true" is "fail"
 			}
 			SearchControls sc = new SearchControls();
@@ -88,10 +90,9 @@ public class ProconsulUtils {
 		}
 	}
 	
-	public static boolean isSamaccountnameAvailable(String sam) {
+	public static boolean isSamaccountnameAvailable(String sam) throws NamingException {
 		NamingEnumeration<SearchResult> results = null;
 		DirContext dc= null;
-		
 		try {
 			dc = LDAPConnectionFactory.getAdminConnection();
 			if (dc == null || sam == null || sam.equals("")) {
@@ -105,14 +106,29 @@ public class ProconsulUtils {
 			String searchBase = config.getProperty("ldap.searchbase", true);
 			
 			results = dc.search(searchBase,  "samaccountname="+sam,sc);
+			if (results == null) {
+				LOG.info("Returning true becasue of null results return");
+				return true;
+			}
 			if (results == null || ! results.hasMore()) {
+				LOG.info("Returning true from isSamaccountnameavailable()");
 				return true;
 			} else {
+				LOG.info("Returning false from isSamaccountnameavailable()");
 				return false;
 			}
-			
-		} catch (Exception e) {
-			throw new RuntimeException("Failed looking up samaccountname in AD");
+		} catch (PartialResultException p) {
+			// ignore partial result exceptions since we do not follow referrals in AD
+			if (results == null || ! results.hasMoreElements()) {
+				LOG.info("Partial result returning true from isSamaccountnameavailable()");
+				return true;
+			} else {
+				LOG.info("Partial result returning false from isSamaccountnameavaialble() for " + sam);
+				return false;
+			}
+		} catch (NamingException e) {
+			LOG.info("Throwing exception from isSamaccountnameavailable()");
+			throw new RuntimeException("Failed looking up samaccountname in AD: " + e.getMessage() + " - throwable " + e.toString() + ":");
 		} finally {
 			if (results != null) {
 				try {
@@ -131,18 +147,20 @@ public class ProconsulUtils {
 		}
 	}
 	
-	// Static routine to find an unused random sAMAccountName value
-	public static String getRandomSamaccountname() {
-		String retval = null;
+	// Static routine to find an unused random sAMAccountName value (lower-case only, for POSIX)
+	public static String getRandomSamaccountname() throws NamingException {
+		String retval = RandomStringUtils.randomAlphanumeric(9).toLowerCase() + "-eas";
 		int count = 0;
 		while (! ProconsulUtils.isSamaccountnameAvailable(retval) && count++ < 10) {
 			// 10 retries before failing
-			retval = RandomStringUtils.randomAlphanumeric(9);
+			retval = RandomStringUtils.randomAlphanumeric(9).toLowerCase();
 			retval += "-eas";
 		}
 		if (count < 10) {
+			LOG.info("Random available samaccountname is " + retval);
 			return retval;
 		} else {
+			LOG.info("Unable to find unused sAMAccountName value after 10 tries");
 			throw new RuntimeException("Unable to find unused sAMAccountName value");
 			
 		}
@@ -186,6 +204,159 @@ public class ProconsulUtils {
 		} catch (Exception e) {
 			return null;
 		}
+	}
+	
+	// Statically create an AD object with POSIX attributes
+	public static ADUser createAdUser(ADUser u, AuthUser au) {
+		// Instead of simply adding on at the end, we actually replace the create operation.  This is more efficient, and 
+		// avoids having to carry around POSIX attributes in the AD User object when they're not useful in many (most?) situations.
+		//
+		if (u == null || u.getsAMAccountName() == null || u.getsAMAccountName().equals("") || u.getAdDomain() == null || u.getAdDomain().equals("")) {
+			LOG.info("createAdUser: empty samaccountname");
+			return null;
+		}
+		
+		//ADConnections adc = new ADConnections();
+		ADConnections adc = ADConnectionsFactory.getInstance();
+		
+		SearchControls sc = null;
+		PCConfig config = null;
+		try {
+			config = PCConfig.getInstance();
+			sc = new SearchControls();
+			sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
+		} catch (Exception e) {
+			LOG.info("createAdUser: Search scope creation failed");
+			return null;
+		}
+		
+		// Attempt POSIX retrieval
+		boolean hasPosix = false;
+		int uidnumber = 65535;
+		int gidnumber = 65535;
+		String homedirectory = null;
+		String loginshell = null;
+		Connection pcdb = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			pcdb = DatabaseConnectionFactory.getProconsulDatabaseConnection();
+			if (pcdb != null) {
+				ps = pcdb.prepareStatement("select * from posixuser where uid = ?");
+				if (ps != null) {
+					ps.setString(1, au.getUid());
+					rs = ps.executeQuery();
+					while (rs != null && rs.next()) {
+						hasPosix = true;
+						uidnumber = rs.getInt("uidnumber");
+						gidnumber = rs.getInt("gidnumber");
+						homedirectory = rs.getString("homedirectory");
+						loginshell = rs.getString("loginshell");
+					}
+				}
+			}
+		} catch (Exception e) {
+			//ignore
+		} finally {
+			try {
+				if (rs != null) {
+					rs.close();
+				} 
+				if (ps != null) {
+					ps.close();
+				}
+				if (pcdb != null) {
+					pcdb.close();
+				}
+			} catch (Exception e) {
+				// ignore
+			}
+		}
+		
+		
+		try {
+			Attributes ba = new BasicAttributes();
+			ba.put("samaccountname", u.getsAMAccountName());
+			ba.put("userprincipalname", u.getsAMAccountName() + "@" + config.getProperty("ldap.domain", true));
+			Attribute oc = new BasicAttribute("objectClass");
+			oc.add("top");
+			oc.add("person");
+			oc.add("organizationalperson");
+			oc.add("user");
+			ba.put(oc);
+			ba.put("givenname", "User");
+			ba.put("sn",u.getsAMAccountName());
+			ba.put("cn",u.getsAMAccountName());
+			ba.put("useraccountcontrol","544"); // disable "must have password" flag
+			
+			// And POSIX if available
+			if (hasPosix) {
+				ba.put("uidnumber",String.valueOf(uidnumber));
+				ba.put("gidnumber",String.valueOf(gidnumber));
+				ba.put("homedirectory",homedirectory);
+				ba.put("loginshell",loginshell);
+			}
+			
+			String dn="cn="+u.getsAMAccountName()+","+u.getAdOu();
+			
+			boolean userCreated = false;
+			
+			for (LDAPAdminConnection lac : adc.connections) {
+				try {
+					if (isSamaccountnameAvailable(u.getsAMAccountName(),lac) && ! userCreated) {
+						lac.getConnection().createSubcontext(dn,ba);
+						LOG.info("Initial account creation completed on " + lac.getConnection().getEnvironment().get(DirContext.PROVIDER_URL));
+						userCreated = true;  // user should be created everywhere we need eventually -- just propagation to deal with
+						Thread.sleep(4000);  // 4-second delay for propagation to catch up
+					} else {
+							while (isSamaccountnameAvailable(u.getsAMAccountName(),lac)) {
+								LOG.info("Waiting for propagation again...user=" + u.getsAMAccountName() + " host=" + lac.getConnection().getEnvironment().get(DirContext.PROVIDER_URL));
+								// blocking loop to wait for propagation
+								Thread.sleep(1000);
+							}
+							LOG.info("Propagation wins!");
+					}
+				} catch (Exception ign) {
+					LOG.info("Threw " + ign.getMessage() + " while creating AD user - " + u.getsAMAccountName());
+					// ignore
+				}
+			}
+			String qPW = "\"" + u.getAdPassword() + "\"";
+			byte ub[] = qPW.getBytes("UnicodeLittleUnmarked");
+			ModificationItem[] mi = new ModificationItem[1];
+			mi[0] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE,new BasicAttribute("UnicodePwd",ub));
+			
+			
+			for (LDAPAdminConnection lac : adc.connections) {
+				try {
+					lac.getConnection().modifyAttributes(dn, mi);
+				} catch (Exception ign2) {
+					LOG.info("Threw " + ign2.getMessage() + " changing password for user");
+					//ignore
+				}
+			}
+			// For reasons of ordering in the individual DCs, we do this in two loops
+			// Add back the "must have password" flag once password is set
+			ModificationItem[] mhp = new ModificationItem[1];
+			mhp[0] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE, new BasicAttribute("userAccountControl", "512"));
+			
+			for (LDAPAdminConnection lac : adc.connections) {
+				try {
+					lac.getConnection().modifyAttributes(dn,  mhp);
+				} catch (Exception ign3) {
+					LOG.info("Threw " + ign3.getMessage() + " during require password update");
+					//ignore
+				}
+			}
+			// Write out an audit log for what we just did
+			writeAuditLog(null,"createADUser",u.getsAMAccountName(),null,null,null);
+		} catch (Exception e) {
+			LOG.info("AD User creation threw exception: " + e.getMessage());
+			throw new RuntimeException(e);
+		}
+		u.setCreated(true);
+		LOG.info("AD User creation succeeded");
+		return u;
 	}
 	
 	//Statically create an AD object from an ADUser object
@@ -350,6 +521,88 @@ public class ProconsulUtils {
 		
 	}
 	
+	// Given an authuser and a target machine, get the associated static AD user (if it exists)
+	//
+	public static ADUser getStaticADUser(AuthUser au, String fqdn) {
+		String userid = null;
+		String password = null;
+		
+		ADUser retval = new ADUser();
+		
+		PCConfig config = PCConfig.getInstance();
+				
+		Connection pcdb = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			pcdb = DatabaseConnectionFactory.getProconsulDatabaseConnection();
+			if (pcdb != null) {
+				ps = pcdb.prepareStatement("select targetuser from static_host where eppn = ? and fqdn = ?");
+				if (ps != null) {
+					ps.setString(1, au.getUid());
+					ps.setString(2,  fqdn);
+					rs = ps.executeQuery();
+					while (rs != null && rs.next()) {
+						// If there's more than one, last one in wins
+						userid = rs.getString("targetuser");
+					}
+				}
+			}
+		} catch (Exception e) {
+			//ignore
+		} finally {
+			try {
+				if (rs != null) {
+					rs.close();
+				} 
+				if (ps != null) {
+					ps.close();
+				}
+				if (pcdb != null) {
+					pcdb.close();
+				}
+			} catch (Exception e) {
+				// ignore
+			}
+		}
+		
+		retval.setsAMAccountName(userid);
+		retval.setAdDomain(config.getProperty("ldap.domain",true));
+		if (config.getProperty("ldap.staticbase", false) != null) {
+			retval.setAdOu(config.getProperty("ldap.staticbase", true));  // use config option if set
+		} else {
+			retval.setAdOu("ou=static,"+config.getProperty("ldap.targetbase",true));  // else static users are in a "static" sub-ou of targetbase by fiat
+		}
+		retval.setCreated(true); // already there
+		
+		retval = ProconsulUtils.setRandomADPassword(retval);  // set random password and add it to the ADUser object
+		
+		return retval;
+	}
+	
+	// Given an authuser, create a randomized AD user with the right POSIX attributes
+	public static ADUser createRandomizedADUser(AuthUser au) {
+		String userid = null;
+		String password = null;
+		try {
+			userid = ProconsulUtils.getRandomSamaccountname();
+			password=ProconsulUtils.getRandomPassword();
+		} catch (Exception e) {
+			LOG.info("Exception in createRandomizedADUser: " + e.getMessage());
+			return null;
+		}
+		PCConfig config = PCConfig.getInstance();
+		ADUser create = new ADUser();
+		create.setsAMAccountName(userid);
+		create.setAdPassword(password);;
+		create.setAdDomain(config.getProperty("ldap.domain", true));
+		create.setAdOu(config.getProperty("ldap.targetbase", true));
+		create.setCreated(false);
+		
+		ADUser retval = ProconsulUtils.createAdUser(create,au);  // create for specific authuser
+		return retval;
+	}
+	
 	// Create an ADUser using random sAMAccountName and password
 	public static ADUser createRandomizedADUser() {
 		String userid = null;
@@ -358,6 +611,7 @@ public class ProconsulUtils {
 			userid = ProconsulUtils.getRandomSamaccountname();
 			password = ProconsulUtils.getRandomPassword();
 		} catch (Exception e) {
+			LOG.info("Exception in createRandomizedADUser:  " + e.getMessage());
 			return null;
 		}
 		PCConfig config = PCConfig.getInstance();
@@ -670,6 +924,33 @@ public class ProconsulUtils {
 				log_targetuser = sess.getTargetUser().getsAMAccountName();
 			}
 			rs = ps.executeQuery();
+			
+			// Excessive debug logging
+			
+			if (sess == null) {
+				LOG.info("Session is null!");
+			}
+			if (sess.getOwner() == null) {
+				LOG.info("Session.owner is null!");
+			}
+			
+			if (sess.getTargetUser() == null) {
+				LOG.info("Sessioon.targetuser is null!");
+			}
+			
+			LOG.info("Session seems to be populated");
+			
+			if (sess.getOwner().getUid() == null) {
+				LOG.info("Session.owner has no uid");
+			} else {
+				LOG.info("Session.owner.uid is " + sess.getOwner().getUid());
+			}
+			
+			if (sess.getTargetUser().getsAMAccountName() == null) {
+				LOG.info("Session.targetuser has no samaccountname");
+			} else {
+				LOG.info("Session.targetuser.samaccountname is " + sess.getTargetUser().getsAMAccountName());
+			}
 			
 			if (rs == null || ! rs.next()) {
 				LOG.info("Could not find session for " + sess.getOwner().getUid() + "," + sess.getFqdn() + "," + sess.getTargetUser().getsAMAccountName());
@@ -2120,6 +2401,58 @@ public class ProconsulUtils {
 		}
 	}
 	
+	public static ArrayList<String> fqdnsForStatic(String eppn) {
+		ArrayList<String> retval = new ArrayList<String>();
+		Connection pcdb = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		
+		try {
+			pcdb = DatabaseConnectionFactory.getProconsulDatabaseConnection();
+			
+			if (pcdb != null) {
+				ps = pcdb.prepareStatement("select fqdn from static_host where upper(eppn) = upper(?)");
+				if (ps != null) {
+					ps.setString(1, eppn);
+				
+					rs = ps.executeQuery();
+					while (rs != null && rs.next()) {
+						if (rs.getString("fqdn") != null && ! rs.getString("fqdn").equals("")) {
+								// 	direct delegation
+								retval.add(rs.getString("fqdn"));
+						}
+					}
+				}
+			}
+			LOG.info("fqdnsForStatic found " + retval.size() + " values");
+			return retval;
+		} catch (Exception e) {
+			return retval;
+		} finally {
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (Exception ign) {
+					//ignore
+				}
+			}
+			if (ps != null) {
+				try {
+					ps.close();
+				} catch (Exception ign) {
+					//ignore
+				}
+			}
+			if (pcdb != null) {
+				try {
+					pcdb.close();
+				} catch (Exception ign) {
+					// ignore
+				}
+			}
+		}
+	}
+	
 	public static ArrayList<String> fqdnsForEppn(String eppn) {
 		ArrayList<String> retval = new ArrayList<String>();
 		Connection pcdb = null;
@@ -2234,9 +2567,11 @@ public class ProconsulUtils {
 		try {
 			pcdb = DatabaseConnectionFactory.getProconsulDatabaseConnection();
 			if (pcdb != null) {
-				ps = pcdb.prepareStatement("insert into active_domain_admins values(?)");
+				ps = pcdb.prepareStatement("insert into active_domain_admins values(?,?,?)");
 				if (ps != null) {
 					ps.setString(1, au.getsAMAccountName());
+					ps.setInt(2,(int) (System.currentTimeMillis()/1000));
+					ps.setInt(3, 0);
 					ps.executeUpdate();
 					return true;
 				} else {
@@ -2273,9 +2608,10 @@ public class ProconsulUtils {
 		try {
 			pcdb = DatabaseConnectionFactory.getProconsulDatabaseConnection();
 			if (pcdb != null) {
-				ps = pcdb.prepareStatement("delete from active_domain_admins where samaccountname = ?");
+				ps = pcdb.prepareStatement("update active_domain_admins set disabletime = ? where samaccountname = ?");
 				if (ps != null) {
-					ps.setString(1, au.getsAMAccountName());
+					ps.setInt(1,(int) (System.currentTimeMillis()/1000));
+					ps.setString(2, au.getsAMAccountName());
 					ps.executeUpdate();
 					return true;
 				} else {

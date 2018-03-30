@@ -1,0 +1,100 @@
+<div id="posix_user">
+	<h1>Proconsul POSIX User Management</h1>
+	
+	<div class="subheading">The following POSIX attribute assignments will be used when creating dynamic users -- users not listed below will not recieve POSIX attributes in their dynamic proxies.</div>
+	
+	<div style="width: 250px">
+		<button name="additem" class="additem action" id="additem">Add POSIX User Mapping</button>
+	</div>
+	
+	<form name="posixform" id="posixform" method="POST" action="#">
+		<input type="hidden" id="pformsubmited" name="pformsubmitted" value="1"/>
+		<table class="displaytable">
+			#set($pct=0)
+			#foreach ($puser in $posixusers )
+				<tr>
+					<th>UserName (ePPN)</th>
+					<th>Uid Number</th>
+					<th>Gid Number</th>
+					<th>Home Directory</th>
+					<th>Login Shell</th>
+				</tr>
+				<tr>
+					<td>
+						<input type="hidden" id="uname$pct" name="uname$pct" value="$puser.getEppn()"/>
+						<span class="populated-value">$puser.getEppn()</span>
+					</td>
+					<td>
+						<input type="hidden" id="uidnumber$pct" name="uidnumber$pct" value="$puser.getUidnumber()"/>
+						<span class="populated-value">$puser.getUidnumber()</span>
+					</td>
+					<td>
+						<input type="hidden" id="gidnumber$pct" name="gidnumber$pct" value="$puser.getGidnumber()"/>
+						<span class="populated-value">$puser.getGidnumber()</span>
+					</td>
+					<td>
+						<input type="hidden" id="homedirectory$pct" name="homedirectory$pct" value="$puser.getHomedirectory()"/>
+						<span class="populated-value">$puser.getHomedirectory()</span>
+					</td>
+					<td> 
+						<input type="hidden" id="loginshell$pct" name="loginshell$pct" value="$puser.getLoginshell()"/>
+						<span class="populated-value">$puser.getLoginshell()</span>
+					</td>
+					<td>
+						<button id="rug$pct" name="rug$pct" class="rugclass action">remove</button>
+					</td>
+				</tr>
+				#set($pct=$pct+1)
+			#end
+		</table>
+	</form>
+</div>
+
+<div id="addposixdiv" name="addposixdiv" title="Add a POSIX User">
+	<form name="addposixform" id="addposixform" method="POST" action="#">
+		<input type="hidden" name="addformsubmitted" id="addformsubmitted" value="1"/>
+		<table>
+			<tr>
+				<th>Username (ePPN)</th>
+				<th>Uid Number</th>
+				<th>Gid Number</th>
+				<th>Home Directory</th>
+				<th>Login Shell</th>
+			</tr>
+			<tr>
+				<td><input type="text" name="user" id="user"/></td>
+				<td><input type="text" name="uidnumber" id="uidnumber"/></td>
+				<td><input type="text" name="gidnumber" id="gidnumber"/></td>
+				<td><input type="text" name="homedirectory" id="homedirectory"/></td>
+				<td><input type="text" name="loginshell" id="loginshell"/></td>
+			</tr>
+			<tr><td span=4><button name="submit" value="submit" id="addposixformsubmit">Submit</button></td></tr>
+		</table>
+	</form>
+</div>
+
+<script type="text/javascript">
+	$( document ).ready(function() {
+		$("#addposixdiv").hide();
+		$("#additem").click(function(e) {
+			e.preventDefault();
+			$("#addposixdiv").dialog({modal: true, width: 600});
+		});
+		rug = $("#posixform").find(".rugclass");
+		rug.each(function(button) {
+			var num = rug[button].name.replace("rug","");
+			$(rug[button]).click(function(e) {
+				e.preventDefault();
+				if (document.getElementById("uidnumber"+num)) {
+					$("#uidnumber"+num).val('');
+					alert("Removing " + $("#uname"+num).val());
+					$("#posixform").submit();
+				} else {
+					alert("Removal failed for " + num);
+				}
+			});
+		});
+	});
+</script>
+
+					

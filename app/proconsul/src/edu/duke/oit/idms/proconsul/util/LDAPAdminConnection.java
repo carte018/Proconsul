@@ -28,6 +28,7 @@ public class LDAPAdminConnection extends LDAPConnection {
 		System.setProperty("com.sun.jndi.ldap.connect.pool.protocol", "plain ssl");
 		System.setProperty("java.naming.factory.initial", "com.sun.jndi.ldap.LdapCtxFactory");
 		environment.put("java.naming.factory.initial", "com.sun.jndi.ldap.LdapCtxFactory");
+		environment.put("java.naming.ldap.version", "3");
 		environment.put("com.sun.jndi.ldap.connect.pool", "true");
 		environment.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
 		environment.put(Context.SECURITY_AUTHENTICATION, "simple");
