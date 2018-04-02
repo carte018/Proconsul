@@ -4,13 +4,16 @@
   <tr>
     <td style="width: 50%; padding-right: 30px">
 
+	#if($isDARuleAdmin || $isLoginRuleAdmin)
       <div class="admin-section">
         <a href="/admin/access_control">Proconsul Access Rules</a>
         <div class="subheader">
           Configure who (based on usernames, group memberships, and/or entitlements) can access Proconsul, and  which of those users can use Proconsul for Domain Admin access
         </div>
       </div>
+    #end
       
+    #if($isTargetSystemAdmin)
       <div class="admin-section">
         <a href="/admin/host_mgt">Proconsul Target Systems</a>
         <div class="subheader">
@@ -18,14 +21,17 @@
         </div>
       </div>
     </td><td>
+    #end
 
+    #if($isGroupAdmin)
       <div class="admin-section">
         <a href="/admin/windows_users">Proconsul/AD Group Configuration</a>
         <div class="subheader">
           Configure AD group memberships dynamic users will have in Windows sessions based on the properties of their owners
         </div>
       </div>
-      
+    #end
+    #if($isTargetProvisioningAdmin)
       <div class="admin-section">
         <a href="/admin/host_and_gateway_details">Target Provisioning</a>
         <div class="subheader">
@@ -33,14 +39,17 @@
         </div>
       </div>
     </td>
+   #end
   </tr> <tr>
     <td>
+    	#if($isPosixAdmin)
     	<div class="admin-section">
     		<a href="/admin/posix_users">Proconsul POSIX User configuration</a>
     		<div class="subheader">
     			Configure POSIX attributes to pass for users acessing Linux machines via Proconsul
     		</div>
     	</div>
+    	#end
     </td>
     <td> </td>
   </tr>

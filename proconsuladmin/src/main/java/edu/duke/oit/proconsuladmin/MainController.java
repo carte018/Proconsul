@@ -41,6 +41,70 @@ public class MainController {
 		return false;
 	}
 	
+	// Granular authorization for individual panels
+	private boolean isDARuleAdmin(HttpServletRequest request) {
+		// Only isAdmin() here
+		return isAdmin(request);
+	}
+	
+	private boolean isLoginRuleAdmin(HttpServletRequest request) {
+		// Both general admins and subadmins may be authorized to grant users login access
+		PCAdminConfig config = PCAdminConfig.getInstance();
+		String alist = config.getProperty("loginadmins", false);
+		if (alist != null) {
+			String[] aa = alist.split(",");
+			for (String u : aa) {
+				if (request.getRemoteUser().equalsIgnoreCase(u)) {
+					return true;
+				}
+			}
+		}
+		return isAdmin(request);
+	}
+	
+	private boolean isTargetSystemAdmin(HttpServletRequest request) {
+		// Target systems may be administered by subadmins or general admins
+		PCAdminConfig config = PCAdminConfig.getInstance();
+		String alist = config.getProperty("targetsystemadmins", false);
+		if (alist != null) {
+			String[] aa = alist.split(",");
+			for (String u : aa) {
+				if (request.getRemoteUser().equalsIgnoreCase(u)) {
+					return true;
+				}
+			}
+		}
+		return isAdmin(request);
+	}
+	
+	private boolean isPosixAdmin(HttpServletRequest request) {
+		// Posix user information may be managed by general admins or subadmins
+		PCAdminConfig config = PCAdminConfig.getInstance();
+		String alist = config.getProperty("posixadmins", false);
+		if (alist != null) {
+			String[] aa = alist.split(",");
+			for (String u : aa) {
+				if (request.getRemoteUser().equalsIgnoreCase(u)) {
+					return true;
+				}
+			}
+		}
+		return isAdmin(request);
+	}
+	
+	private boolean isGroupAdmin(HttpServletRequest request) {
+		// Only general admins can manage group memberships for dynamic user (since DA is just another group
+		// this right amounts to the right to generate DA accounts, albeit in a way that might set off alarms
+		return isAdmin(request);
+	}
+	
+	private boolean isTargetProvisioningAdmin(HttpServletRequest request) {
+		// Target system provisioning includes group membership controls, so this too is only available to 
+		// general admins
+		return isAdmin(request);
+	}
+	
+	
 	@RequestMapping(value="/host_and_gateway_details", method=RequestMethod.POST)
 	public ModelAndView handlePostOfHostAndGatewayDetails(HttpServletRequest request) {
 		ModelAndView retval = new ModelAndView("redirect:https://" + request.getLocalName()+"/admin/host_and_gateway_details");
@@ -50,7 +114,8 @@ public class MainController {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		
-		if (! isAdmin(request)) {
+		/* Granular authorization */
+		if (! isTargetProvisioningAdmin(request)) {
 			ModelAndView eret = new ModelAndView("test");
 			eret.addObject("message","You are not authorized to perform that operation.");
 			return eret;
@@ -164,9 +229,12 @@ public class MainController {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
-		if (! isAdmin(request)) {
+
+		/* Granular authorization */
+		if (! isPosixAdmin(request)) {
 			return(new ModelAndView("test").addObject("message","You are not authorized to perform that operation"));
 		}
+		
 		try {
 			try {
 				conn = DatabaseConnectionFactory.getPCAdminDBConnection();
@@ -230,7 +298,8 @@ public class MainController {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		
-		if (! isAdmin(request)) {
+		/* Granular authorization */
+		if (! isGroupAdmin(request)) {	
 			ModelAndView eret = new ModelAndView("test");
 			eret.addObject("message","You are not authorized to perform that operation.");
 			return eret;
@@ -332,7 +401,7 @@ public class MainController {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		
-		if (! isAdmin(request)) {
+		if (! isTargetSystemAdmin(request)) {
 			ModelAndView eret = new ModelAndView("test");
 			eret.addObject("message","You are not authorized to perform that operation.");
 			return eret;
@@ -515,7 +584,10 @@ public class MainController {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		
-		if (! isAdmin(request)) {
+		/*if (! isAdmin(request)) {*/
+		/* This requires slightly more complex rules */
+		/* Login Rule admins are allowed to submit only partial forms */
+		if (((request.getParameter("daaformsubmitted") != null || request.getParameter("adddaformsubmitted") != null) && ! isDARuleAdmin(request)) || ((request.getParameter("addformsubmitted") != null  || request.getParameter("accessformsubmitted") != null) && ! isLoginRuleAdmin(request))) {
 			ModelAndView eret = new ModelAndView("test");
 			eret.addObject("message","You are not authorized to perform that operation.");
 			return eret;
@@ -660,7 +732,7 @@ public class MainController {
 	@RequestMapping(value="/host_and_gateway_details", method=RequestMethod.GET)
 	public ModelAndView generateHostGatewayDeatils(HttpServletRequest request) {
 		ModelAndView retval = new ModelAndView("gateway");
-		if (! isAdmin(request)) {
+		if (! isTargetProvisioningAdmin(request)) {
 			ModelAndView eret = new ModelAndView("test");
 			eret.addObject("message","You are not authorized to perform that operation.");
 			return eret;
@@ -753,7 +825,7 @@ public class MainController {
 	@RequestMapping(value="/posix_users", method=RequestMethod.GET)
 	public ModelAndView generatePosixUser(HttpServletRequest request) {
 		ModelAndView retval = new ModelAndView("posix_user");
-		if (! isAdmin(request)) {
+		if (! isPosixAdmin(request)) {
 			ModelAndView eret = new ModelAndView("test");
 			eret.addObject("message","You are not authorized to perform that operation.");
 			return eret;
@@ -824,7 +896,7 @@ public class MainController {
 	@RequestMapping(value="/windows_users", method=RequestMethod.GET)
 	public ModelAndView generateWindowsUsers(HttpServletRequest request) {
 		ModelAndView retval = new ModelAndView("windows_users");
-		if (! isAdmin(request)) {
+		if (! isGroupAdmin(request)) {
 			ModelAndView eret = new ModelAndView("test");
 			eret.addObject("message","You are not authorized to perform that operation.");
 			return eret;
@@ -930,7 +1002,7 @@ public class MainController {
 		ModelAndView retval = new ModelAndView("host_mgt");
 		
 		// Authorize
-		if (! isAdmin(request)) {
+		if (! isTargetSystemAdmin(request)) {
 			ModelAndView eret = new ModelAndView("test");
 			eret.addObject("message","You are not authorized to perform that operation.");
 			return eret;
@@ -1105,7 +1177,7 @@ public class MainController {
 		ModelAndView retval = new ModelAndView("access_control");
 	
 		// Authorize
-		if (! isAdmin(request)) {
+		if (! isLoginRuleAdmin(request) && ! isDARuleAdmin(request)) {
 			ModelAndView eret = new ModelAndView("test");
 			eret.addObject("message","You are not authorized to perform that operation.");
 			return eret;
@@ -1262,6 +1334,7 @@ public class MainController {
 		retval.addObject("da_entitlements",aedas);
 		retval.addObject("proconsul_users",aus);
 		retval.addObject("da_users",audas);
+		retval.addObject("isDARuleAdmin",isDARuleAdmin(request));
 		
 		return(retval);
 	}
@@ -1271,6 +1344,15 @@ public class MainController {
 		ModelAndView retval = new ModelAndView("main");
 		
 		// No data to embed -- just return the main vm as is
+		
+		// Actually, now we embed the rights the user has for display management
+		retval.addObject("isDARuleAdmin",isDARuleAdmin(request));
+		retval.addObject("isLoginRuleAdmin",isLoginRuleAdmin(request));
+		retval.addObject("isTargetSystemAdmin",isTargetSystemAdmin(request));
+		retval.addObject("isPosixAdmin",isPosixAdmin(request));
+		retval.addObject("isGroupAdmin",isGroupAdmin(request));
+		retval.addObject("isTargetProvisioningAdmin",isTargetProvisioningAdmin(request));
+		
 		return retval;
 	}
 	
