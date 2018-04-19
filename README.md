@@ -4,7 +4,7 @@ Proconsul is a tool for providing web-based access to Windows RDP
 sessions.  It was designed to address a constellation of issues
 identified at Duke University, some as part of routine security
 reviews, and some as part of development efforts associated with a
-grant from the National Science Foundation (cf. the Acknolwedgments
+grant from the National Science Foundation (cf. the Acknowledgments
 file in this directory).  The key issues Proconsul was designed to
 address include:
 
@@ -174,8 +174,8 @@ few basic steps:
 Proconsul is provided as-is under the MIT License.  No warranty is
 expressed or implied for any purpose.  Some components of the software
 were developed with funding from the national Science Foundation---see
-the Acknoledgements files in the various directories for details.
-Some parts of the sofware are Copyright 2016 Duke University and are
+the Acknowledgements files in the various directories for details.
+Some parts of the software are Copyright 2016 Duke University and are
 distributed under the MIT License.  Other components are included from
 other projects and are copyright their original authors and included
 under their original licenses.
