@@ -1,0 +1,270 @@
+<h1>Proconsul Login Rules</h1>
+
+<div id="access_rules">
+  <div class="subheading">
+    Only users with one or more of the following properties will be allowed to log in to Proconsul
+  </div>
+  
+  <div style="width: 250px">
+      <button name="additem" class="additem action" id="additem">Add Login Access Rule</button>
+  </div>
+
+  <form name="accessform" id="accessform" method="POST" action="#">
+      <input type="hidden" name="accessformsubmitted" value="1"/>
+      <table class="displaytable">
+        #set($pct=0)
+        #foreach($pgrp in $proconsul_groups)
+          <tr>
+            <td class="property">Group Membership</td>
+            <td class="value">
+              <input type="hidden" id="delpgrp$pct" name="delpgrp$pct" value="0"/>
+              <input type="hidden" id="chgpgrp$pct" name="chgpgrp$pct" value="0"/>
+              #set($slen=$pgrp.getGroupurn().length())
+              <input type="hidden" id="pgrp$pct" name="pgrp$pct" value="$pgrp.getGroupurn()" size="$slen"/>
+              <span class="populated-value">$pgrp.getGroupurn()</span>
+            </td>
+            <td>
+              <button id="rbpgrp$pct" name="rbpgrp$pct" class="rbgrpclass action">remove</button>
+            </td>
+          </tr>
+          #set($pct=$pct+1)
+        #end
+        #set($pct=0)
+        #foreach($pent in $proconsul_entitlements)
+          <tr>
+            <td class="property">eduPersonEntitlement</td>
+            <td class="value">
+              <input type="hidden" id="delpent$pct" name="delpent$pct" value="0"/>
+              <input type="hidden" id="chgpent$pct" name="chgpent$pct" value="0"/>
+              #set($slen=$pent.getEntitlement().length())
+              <input type="hidden" id="pent$pct" name="pent$pct" value="$pent.getEntitlement()" />
+              <span class="populated-value">$pent.getEntitlement()</span>
+            </td>
+            <td>
+              <button id="rbpent$pct" name="rbpent$pct" class="rbpentclass action">remove</button>
+            </td>
+          </tr>
+          #set($pct=$pct+1)
+        #end
+        
+        #set($pct=0)
+        #foreach($puser in $proconsul_users)
+          <tr>
+            <td class="property">UserName (ePPN)</td>
+            <td class="value">
+              <input type="hidden" id="delpuser$pct" name="delpuser$pct" value="0"/>
+              <input type="hidden" id="chgpuser$pct" name="chgpuser$pct" value="0"/>
+              #set($slen=$puser.getEppn().length())
+              <input type="hidden" id="puser$pct" name="puser$pct" value="$puser.getEppn()" size="$slen"/>
+              <span class="populated-value">$puser.getEppn()</span>
+            </td>
+            <td>
+              <button id="rbpuser$pct" name="rbpuser$pct" class="rbuserclass action">remove</button>
+            </td>
+          </tr>
+          #set($pct=$pct+1)
+        #end
+      </table>
+    </form>
+ </div>
+ 
+ <div id="da_rules">
+   <h1>Domain Admin Access Rules</h1>
+
+   <div class="subheading">
+     Only users with one or more of the following properties (in addition to one or more of the login access properties above) will be allowed to use Domain Admin privileges via Proconsul
+   </div>
+   
+   <div id="datable" class="tablediv">
+     <div style="width: 300px">
+       <button name="daadditem" class="additem action" id="daadditem">Add Domain Admin Access Rule</button>
+     </div>
+     
+     <form name="daaccessform" id="daaccessform" method="POST" action="#">
+       <input type="hidden" name="daaformsubmitted" value="1"/>
+       <table class="displaytable">
+         #set($pct=0)
+         #foreach($dagrp in $da_groups)
+           <tr>
+             <td class="property">Group Membership</td>
+             <td class="value">
+               <input type="hidden" id="deldagrp$pct" name="deldagrp$pct" value="0"/>
+               <input type="hidden" id="chgdagrp$pct" name="chgdagrp$pct" value="0"/>
+               #set($slen=$dagrp.getGroupurn().length())
+               <input type="hidden" id="dagrp$pct" name="dagrp$pct" value="$dagrp.getGroupurn()" size="$slen"/>
+               <span class="populated-value">$dagrp.getGroupurn()</span>
+             </td>
+             <td>
+               <button id="rbdagrp$pct" name="rbdagrp$pct" class="rbdagrpclass action">remove</button>
+             </td>
+           </tr> 
+           #set($pct=$pct+1)
+          #end
+
+          #set($pct=0)
+          #foreach($daent in $da_entitlements)
+            <tr>
+              <td class="property">eduPersonEntitlement</td>
+              <td class="value">
+                <input type="hidden" id="deldaent$pct" name="deldaent$pct" value="0"/>
+                <input type="hidden" id="chgdaent$pct" name="chgdaent$pct" value="0"/>
+                #set($slen=$daent.getEntitlement().length())
+                <input type="hidden" id="daent$pct" name="daent$pct" value="$daent.getEntitlement()" size="$slen" />
+                <span class="populated-value">$daent.getEntitlement()</span>
+              </td>
+              <td>
+                <button id="rbdaent$pct" name="rbdaent$pct" class="rbdaentclass action">remove</button>
+              </td>
+            </tr>
+            #set($pct=$pct+1)
+          #end
+          
+          #set($pct=0)
+          #foreach($dauser in $da_users)
+            <tr>
+              <td class="property">UserName (eppn)</td>
+              <td class="value">
+                <input type="hidden" id="deldauser$pct" name="deldauser$pct" value="0"/>
+                <input type="hidden" id="chgdauser$pct" name="chgdauser$pct" value="0"/>
+                #set($slen=$dauser.getEppn().length())
+                <input type="hidden" id="dauser$pct" name="dauser$pct" value="$dauser.getEppn()" size="$slen"/>
+                <span class="populated-value">$dauser.getEppn()</span>
+              </td>
+              <td>
+                <button id="rbdauser$pct" name="rbdauser$pct" class="rbdauserclass action">remove</button>
+              </td>
+            </tr>
+            #set($pct=$pct+1)
+          #end
+      </table>
+    </form>
+   </div>
+ </div>
+ 
+ <!--<div id='addformdiv' name='addformdiv' class="addivclass" title="Add a Login Access Rule">-->
+ <div id='addformdiv' name='addformdiv' title="Add a Login Access Rule">
+  <form name='aform' id='aform' method='POST' action='#'>
+    <input type="hidden" name="addformsubmitted" value="1"/>
+    <table>
+      <tr>
+        <td>
+          <select name='typeselector' id='typeselector'>
+            <option value='eppn'>Username</option>
+            <option value='group'>Group URN</option>
+            <option value='entitlement'>Entitlement</option>
+          </select>
+        </td>
+        <td><input type='text' value='value' name='userproperty' id='userproperty'/></td>
+      </tr>
+      <tr>
+        <td><button name='submit' value='submit' class='action' id='aformsubmit'>Submit</button></td>
+      </tr>
+    </table>
+  </form>
+ </div>
+ 
+ <div id='adddadiv' name='adddadiv' title="Add a Domain Admin Access Rule">
+   <form name='daform' id='daform' method='POST' action='#'>
+     <input type="hidden" name="adddaformsubmitted" value="1"/>
+     <table>
+       <tr>
+         <td>
+           <select name='daselector' id='daselector'>
+             <option value='eppn'>Username</option>
+             <option value='group'>Group URN</option>
+             <option value='entitlement'>Entitlement</option>
+           </select>
+         </td>
+         <td><input type='text' value='value' name='daproperty' id='daproperty'/></td>
+       </tr>
+       <tr>
+         <td>
+           <button name='dasubmit' value='dasumbit' class="action" id='daformsubmit'>Submit</button>
+         </td>
+       </tr>
+     </table>
+   </form>
+ </div>
+
+ <script type="text/javascript">
+ $( document ).ready(function() {
+ 	$('#addformdiv').hide();
+ 	$('#adddadiv').hide();
+ 	$("#additem").click(function(e) {
+ 		e.preventDefault();
+ 		//$("#addformdiv").show();
+ 		$("#addformdiv").dialog({modal: true});
+ 	});
+ 	$("#daadditem").click(function(e) {
+ 		e.preventDefault();
+ 		//$("#adddadiv").show();
+ 		$("#adddadiv").dialog({modal: true});
+	});
+	
+	rdabs = $("#daaccessform").find(".rbdauserclass");
+	rdabs.each(function(button) {
+		var num = rdabs[button].name.replace('rbdauser','');
+		$(rdabs[button]).click(function(e) {
+			e.preventDefault();
+			$('#deldauser'+num).val('1');
+			alert("removing " + $('#dauser'+num).val());
+			$('#daaccessform').submit();
+		});
+	});
+	
+	gdabs = $("#daaccessform").find(".rbdagrpclass");
+	gdabs.each(function(button) {
+		var num = gdabs[button].name.replace('rbdagrp','');
+		$(gdabs[button]).click(function(e) {
+			e.preventDefault();
+			$('#deldagrp'+num).val('1');
+			alert("removing " + $('#dagrp'+num).val());
+			$('#daaccessform').submit();
+		});
+	});
+	
+	edabs = $("#daaccessform").find(".rbdaentclass");
+	edabs.each(function(button) {
+		var num = edabs[button].name.replace('rbdaent','');
+		$(edabs[button]).click(function(e) {
+			e.preventDefault();
+			$('#deldaent'+num).val('1');
+			alert("removing " + $('#daent'+num).val());
+			$('#daaccessform').submit();
+		});
+	});
+	
+ 	rbs = $("#accessform").find(".rbuserclass");
+ 	rbs.each(function(button) {
+ 		var num = rbs[button].name.replace('rbpuser','');
+ 		$(rbs[button]).click(function(e) {
+ 			e.preventDefault();
+ 			$('#delpuser'+num).val('1');
+ 			alert("removing " + $('#puser'+num).val());
+ 			$('#accessform').submit();
+ 		});
+ 	});
+ 	gbs = $("#accessform").find(".rbgrpclass");
+ 	gbs.each(function(button) {
+ 		var num = gbs[button].name.replace('rbpgrp','');
+ 		$(gbs[button]).click(function(e) {
+ 			e.preventDefault();
+ 			$('#delpgrp'+num).val('1');
+ 			alert("removing " + $('#pgrp'+num).val());
+ 			$('#accessform').submit();
+		});
+	});
+	ebs = $("#accessform").find(".rbpentclass");
+	ebs.each(function(button) {
+		var num = ebs[button].name.replace('rbpent','');
+		$(ebs[button]).click(function(e) {
+			e.preventDefault();
+			$('#delpent'+num).val('1');
+			alert("removing " + $('#pent'+num).val());
+			$('#accessform').submit();
+		});
+	});
+ 	
+ });
+ </script>
+ 

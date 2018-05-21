@@ -1,0 +1,29 @@
+.testbold {
+	font-size: 200%;
+	font-weight: bold;
+}
+.testnormal {
+	font-size: 100%;
+	font-weight: normal;
+}
+.displaydiv {
+	display: inline;
+}
+.hiddendiv {
+	display: none;
+}
+.errhead {
+	font-size: 200%;
+	font-weight: bold;
+	font-color: #882222;
+}
+.logout {
+	font-size: 100%;
+	color: #ffffff;
+	float: right;
+	margin-top: 60px;
+}
+.logout a:link,a:visited {
+	color: #ffffff;
+	margin-right: 20px;
+}

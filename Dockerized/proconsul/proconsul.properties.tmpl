@@ -1,0 +1,45 @@
+ldap.provider=%ADLDAPURL%
+ldap.binddn=%ADBINDDN%
+ldap.password=%ADBINDCRED%
+ldap.domain=%ADDOMAIN%
+ldap.searchbase=%ADSEARCHBASE%
+ldap.deptbase=%ADDEPTBASE%
+ldap.targetbase=%ADTARGETBASE%
+ldap.orgbase=%ADORGBASE%
+
+# List of LDAP connection URLs for AD servers -- used if DCs cannot be found in the AD directly
+ldap.dcs=%ADLDAPDCS%
+
+# DN of group to use as the Domain Administrators group for Proconsul DA connections
+ldap.dagroup=%ADDAGROUPDN%
+
+# DN of group to add all dynamic users to as proof of proconsul origin
+ldap.defgroupdn=%ADPROCONSULDEFGRP%
+
+# Characteristic substring of serverReferencBL value for DCs in the AD in your site (if applicable -- comment out if not
+ldap.siteDN=%ADSITEPREFIX%
+
+docker.host=%DOCKERHOST%
+docker.image=%RDPDOCKERIMAGE%
+docker.image.large=%RDPLARGEDOCKERIMAGE%
+docker.image.vnclarge=%VNCLARGEDOCKERIMAGE%
+docker.image.vncdefault=%VNCDOCKERIMAGE%
+docker.cpuset=%DOCKERCPUSET%
+
+mysql.socket=/var/lib/mysql/mysql.sock
+
+novnc.home=/var/www/html/vnc-home
+novnc.hostname=%NOVNCHOSTNAME%
+novnc.uri=/novnc/vnc_auto.html
+
+unauthorized.url=unauthorized.jsp
+
+pcdb.driver=com.mysql.jdbc.Driver
+pcdb.url=jdbc:mysql://%MYSQLHOST%/proconsul
+pcdb.user=%MYSQLUSER%
+pcdb.password=%MYSQLPASS%
+
+logout.url=%LOGOUTURL%
+
+# deployment.type=native
+deployment.type=docker

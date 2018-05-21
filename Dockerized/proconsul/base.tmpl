@@ -1,0 +1,71 @@
+{{ $ldapdn := .Env.ADUSER }}
+{{ $ldappw := .Env.ADPASS }}
+{{ $ldapdomain := .Env.ADDOMAIN }}
+{{ $ldapbase := .Env.ADBASE }}
+{{ range $host, $parts := groupBy $ "ID" }}
+{{ range $container := $parts }}
+{{ if $container.State.Running }}
+{{else}}
+#!/bin/bash
+#
+# Shutdown script for Proconsul docker container {{ $container.ID }}
+#
+ts=`date +'%Y-%m-%d %H:%M:%S'`
+# Get the retval from the container 
+retval=`docker -H 127.0.0.1:2375 start {{$container.ID}} > /dev/null; docker -H 127.0.0.1:2375 exec {{$container.ID}} cat /tmp/retval; docker -H 127.0.0.1:2375 stop {{$container.ID}} > /dev/null`
+# Original if:  if [ $retval == 2 -o $retval == 12 ] 
+if [ $retval != 1 -a $retval != 11 -a $retval != 3 ]
+then
+# cleanup the database
+# First, write the audit log
+echo "insert into audit_log values ('$ts',null,'logout','{{$container.Env.WINUSER}}','{{$container.Env.RHOSTNAME}}',null,null);" | mysql -h 127.0.0.1 -u {{$container.Env.MYSQLUSER}} --password={{$container.Env.MYSQLPW}} proconsul
+#
+# Then, remove the relevant session and port from the DB
+#
+echo "delete from sessions where samaccountname = '{{$container.Env.WINUSER}}';" | mysql -h 127.0.0.1 -u {{$container.Env.MYSQLUSER}} --password={{$container.Env.MYSQLPW}} proconsul
+echo "delete from ports where portnum = '{{$container.Env.DISPLAY}}';" | mysql -h 127.0.0.1 -u {{$container.Env.MYSQLUSER}} --password={{$container.Env.MYSQLPW}} proconsul
+#
+# Then remove the dynamic AD user
+#
+export LDAPTLS_REQCERT=never
+ldapdelete -x -H ldaps://{{$ldapdomain}}:636 -D {{$ldapdn}} -w '{{$ldappw}}' CN={{$container.Env.WINUSER}},{{$ldapbase}}
+#
+# sleep for five seconds to allow the deletion to propagate before modifying the database
+#
+# unnecessary since we are not deleting from active_domain_admins now
+##sleep 5
+## Now we update the ending timestamp
+echo "update active_domain_admins set disabletime = `date +%s` where samaccountname = '{{$container.Env.WINUSER}}';" | mysql -h 127.0.0.1 -u {{$container.Env.MYSQLUSER}} --password={{$container.Env.MYSQLPW}} proconsul
+#
+# And then remove any allowances in active_domaind_admins
+# 
+# Suppressed to prevent spurious notifications from monitors
+#
+#echo "delete from active_domain_admins where samaccountname = '{{$container.Env.WINUSER}}';" | mysql -h 127.0.0.1 -u {{$container.Env.MYSQLUSER}} --password={{$container.Env.MYSQLPW}} proconsul
+else
+# Disconnection -- modify database accordingly
+echo "insert into audit_log values ('$ts',null,'disconnect','{{$container.Env.WINUSER}}','{{$container.Env.RHOSTNAME}}',null,null);" | mysql -h 127.0.0.1 -u {{$container.Env.MYSQLUSER}} --password={{$container.Env.MYSQLPW}} proconsul
+#
+# Change db values
+#
+echo "update sessions set running = '0',connected = '0',status='disconnected' where samaccountname = '{{$container.Env.WINUSER}}';" | mysql -h 127.0.0.1 -u {{$container.Env.MYSQLUSER}} --password={{$container.Env.MYSQLPW}} proconsul
+echo "delete from ports where portnum = '{{$container.Env.DISPLAY}}';" | mysql -h 127.0.0.1 -u {{$container.Env.MYSQLUSER}} --password={{$container.Env.MYSQLPW}} proconsul
+#
+# Modify password
+#
+userdn={{$container.Env.WINUSER}},{{$ldapbase}}
+echo "dn: $userdn" > /tmp/{{$container.ID}}.ldif
+echo "changetype: modify" >> /tmp/{{$container.ID}}.ldif
+echo "replace: unicodePwd" >> /tmp/{{$container.ID}}.ldif
+echo "unicodePwd: blahblah$RANDOM$RANDOM$RANDOM" >> /tmp/{{$container.ID}}.ldif
+ldapmdodify  -x -H ldaps://{{$ldapdomain}}:636 -D {{$ldapdn}} -w '{{$ldappw}}' -f /tmp/{{$container.ID}}.ldif
+fi
+
+#
+# Delete the docker container outright
+#
+docker -H 127.0.0.1:2375 rm {{$container.ID}}
+
+{{end}}
+{{end}}
+{{end}}

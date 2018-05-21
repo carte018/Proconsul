@@ -1,0 +1,3 @@
+#!/bin/sh
+mkdir -p /var/www/html/vnc-home/.vnc
+echo $VNCPASSWORD | vncpasswd -f > /var/www/html/vnc-home/.vnc/passwd

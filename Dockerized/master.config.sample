@@ -1,0 +1,291 @@
+# fqdn is the fully-qualified domain name for your server, as used in the primary user-facing URL for the web interfaces.  This may be the 
+# fqdn of the host itself, or it may be a CNAME or VIP (if you're building for a load-balanced configuration)
+#
+fqdn="proconsul-server.my.dns.domain"
+
+# certfile is the absolute pathname (beginning with a "/") of a file on this system containing the PEM-formatted (base64) version of the SSL certificate
+# for this server.  The certificate's subject or SAN needs to match the value of $fqdn.  This certificate will be used both for the SSL interface 
+# in the HTTP configuraiton in your Proconsul container and for the TLS interface offered by the WebSocket proxy in each of the RDP and VNC stack 
+# containers Proconsul will start for individual user sessions on target hosts.
+certfile="/path/to/proconsul-server.my.dns.pem"
+
+# keyfile is the equivalent for the private key for your SSL certificate.  The key should also be in base64 format, and should be *unencrypted*.  There
+# is no mechanism provided for supplying a key decryption key.
+keyfile="/path/to/proconsul-server.my.dns.key"
+
+# adldapurl is the LDAP URL Proconsul will use to make routine queries against your AD domain.  Usually, this will look like
+# ldaps://domain.dns.name:636
+adldapurl="ldaps://my.dom.ain:636"
+
+# adbinddn is the UPN of the user Proconsul should authenticate to your AD as.  If you are planning to use Proconsul to manage domain admin access to 
+# domain controllers (or other systems), this user *MUST* be able to create, modify, and delete domain admin accounts.  Usually, that means making this
+# user a domain admin.
+#
+# If you are only using Proconsul to manage access to machines where domain admin rights are not involved, this user can be less privileged.  In this
+# case, this user must have the ability to create, modify passwords for, and delete users in the OU you will specify as the target OU for Proconsul 
+# dynamic user (see below).  It will also need the ability to add users to any group Proconsul is configured to use for dynamic user authorization.
+adbinddn="proconsul-user@my.dom.ain"
+
+# adbindcred is the password for the user specified by adbinddn.  If you don't specify a value for this property, you will be prompted to enter the
+# password manually during the build of the proconsul Docker image.  Depending on your security posture, automation goals, and the level of 
+# authority granted to the adbinddn user above, you should consider whether it makes sense to populate this value or enter it manually as needed.
+# Once configured,  you should never have to manually enter this password again, so it's worth considering making it a very long, very random one.
+adbindcred="ThisIsThePasswordForTheProconsulADUserThereAreManyLikeItButThisOneBelongsToProconsul"
+
+# addomain is the DNS name for your AD domain
+addomain="my.dom.ain"
+
+# adsearchbase is the LDAP searchbase DN to use in order to search from the root of the AD domain.  Usually, this will be in "dc" format.
+adsearchbase="dc=my,dc=dom,dc=ain"
+
+# Duke has an internal privilege delegation mechanism that relies on Grouper groups, resources, and permissions to model delegated management of 
+# AD OUs in the institutional Active Directory.  Proconsul includes special support for that mechanism.  If you plan to use that mechanism, set
+# usedelegatedadmin to "y" and populate the two subsequent values with the appropriate DNs in your AD.  Almost certainly, you'll want to leave this
+# set to "n" and leave "addeptbase" and "adorgbase" empty unless you're deploying Proconsul at Duke.
+usedelegatedadmin="n"
+
+# addeptbase is only relevant if "usedelegatedadmin" is set to "y".  In that case, addeptbase contains the base DN under which delegatable departmental
+# OUs can be found in the AD.  In almost all cases, you should leave this empty.
+addeptbase=""
+
+# adorgbase is only relevant if "usedelegatedadmin" is set to "y".  In that case, adorgbase contains the base DN under which AD groups populated with
+# delegated AD admins and their managers and authorities reside.  In almost all cases, you should leave this empty.
+adorgbase=""
+
+# Proconsul creates users in the AD it's associated with and assigns them privileges
+# dynamically.  For a variety of reasons, it's useful for those users to always appear in a 
+# unique OU within the AD tree.  Set adtargetbase equal to the DN of the OU where you would 
+# like Proconsul to locate its dynamically-provisioned users.  
+#
+# Note that while it is not required that this be a bespoke OU, it is strongly recommended.
+# 
+# You will need to create this OU (if it does not already exist) in the AD before trying to use
+# Proconsul.  The OU will need to permit the adbinddn user specified above full user control 
+# rights within the OU, and will need to also permit the dockergenuser specified below the same
+# access rights in this OU.
+#
+adtargetbase="OU=proconsul-ou,dc=my,dc=dom,dc=ain""
+
+# adldapdcs contains a comma-separated list of LDAP URLs, one for each of the AD DCs in your domain.  This list is only consulted in the event
+# that Proconsul is unable to identify the domain's DCs by direct inspection of machine objects in the AD.  Proconsul will prefer to auto-detect
+# the AD DCs, and will apply the site restriction you configure (see below) if it does.  In the unlikely event that your AD is minimally functional
+# but Proconsul is unable to retrieve DC information from it, it will use this list of LDAP URLs as the canonical list of domain controllers for 
+# your domain.
+adldapdcs="ldaps://ad-dc-01.my.dom.ain:636,ldaps://ad-dc-02.my.dom.ain:636,ldaps://ad-dc-03.my.dom.ain:636"
+
+# addagroupdn specifies the DN of the group Proconsul should use as the Domain Admins group.  If you use Proconsul to manage Domain Admin access to 
+# hosts (like DCs), this is the group Proconsul will add a dynamic user to to grant it Domain Admin privileges.  Often, this will just be the 
+# canonical Domain Admins group in AD -- "cn=Domain Admins,ou=Users,dc=my,dc=dom,dc=ain".  In some cases, you may have another group that's afforded 
+# domain admin rights, and may prefer (for procedural or policy reasons) to use that group instead.  In either case, you must specify the group
+# DN here.
+#
+# If this group does not already exist, you will need to create it before running the build script -- the build process will not attempt to create
+# the group for you.  Normally, if you are delegating Domain Admin rights, you will be using a Domain Admin service account as adbinddn, but if that 
+# is not the case, this group needs to be writable by the adbinddn you specified above.
+addagroupdn="cn=Domain Admin Group,ou=Org Unit,dc=my,dc=dom,dc=ain"
+
+# adproconsuldefgrp specifies the DN of a group (which must also exist prior to running the build script) to which Proconsul should add all of its
+# dynamic users as they are created.  The group need have no special privileges associated with it, but you may find it useful to add the group to
+# the local RDP users group on hosts you wish to use Proconsul to control access to.  Active Proconsul users at any given time can be identified by 
+# querying your AD for the membership of this group, provided that you make this a bespoke group (which is strongly recommended).
+#
+# If you are not using a Domain Admin service account for adbinddn above, you will need to ensure that that user has sufficient privileges to add 
+# other users to this group.
+adproconsuldefgrp="CN=proconsul-users,ou=Org,ou=Unit,dc=my,dc=dom,dc=ain"
+
+# adsiteprefix contains an (optional) site name (or unique prefix of a site name) to restrict Proconsul to operating within.  Proconsul creates
+# users in your AD and assigns them group memberships dynamically, and needs to ensure that the creations and group membership changes it performs
+# will be visible to the systems it brokers connectivity to by the time it initiates sessions on them.  In order to do this, it must check each 
+# DC that could be in use by a target system to verify that it has received the relevant changes, and block until all the DCs have received all
+# the changes.  If non-empty, this value will restrict those checks to domain controllers that are identified as belonging to the specified site, 
+# or belonging to a site whose name begins with the specified value.  
+#
+# If you don't use sites and services to segregate your AD domain geographically, of if you only have one active site in your domain, you can 
+# probably leave this blank.  Leaving it blank is always safe -- in the worst case, Proconsul will simply have to consult possibly distant DCs 
+# unnecessarily when initiating sessions.  Setting it incorrectly can prevent Proconsul from working at all, but setting it properly can dramatically
+# improve performance in multi-site environments.
+adsiteprefix="US-RDU"
+
+# rdpdockerimage specifies the name to use for the Docker image containing the "default sized" RDP client and associated software.  
+# The build process will create a docker image with this name in your local docker repository, and Proconsul will instantiate containers from it
+# when making "default sized" RDP connections to target systems.  Usually, you'll want to specify a name of the form "<admin>/<imagename>".
+# The default value can be left alone if you want, or you can choose another.
+rdpdockerimage="carte018/rdpstack"
+
+# rdplargedockerimage specifies the name to use for the Docker image containing the "large screen" RDP client and associated software.  Like
+# rdpdockerimage above, you may leave the default value in place, or you may choose another that's more to your liking.  The build process will 
+# construct the docker image automatically.
+rdplargedockerimage="carte018/rdpstacklarge"
+
+# vncdockerimage is the equivalent of rdpdockerimage but for VNC target systems.  Proconsul has the ability to connect to RDP servers 
+# *or* VNC servers.  RDP is typically used for connecting to Windows systems.  VNC is more often used for connecting to *nix systems that
+# may be joined to or reliant upon your AD domain.  The build process will construct the docker image automatically.
+vncdockerimage="carte018/vncstack"
+
+# vnclargedockerimage is likewise the VNC equivalent of rdplargedockerimage.  The default is typically fine, but feel free to change the name to 
+# something else if you desire.  The build script will construct the docker image automatically.
+vnclargedockerimage="carte018/vncstacklarge"
+
+# dockerhost is the IP address of the server that Proconsul should send Docker control instructions to when starting up RDP or VNC Docker containers 
+# to initiate sessions on remote systems.  There is seldom any reason to make this anything *other* than "127.0.0.1", but if you are deploying in 
+# a horizontally-scaled, load-balanced environment with intelligent load balancing capable of routing incoming VNC connections to a different location
+# than incoming HTTPS connections, you *may* want to specify another value here.  In almost all cases, just leave this at the default of "127.0.0.1".
+dockerhost="127.0.0.1"
+
+# dockercpuset specifies the cpuset parameter to pass to the Docker server on the specified dockerhost when initiating a new container.  Docker
+# expects to be told what CPU identifiers it can use.  The default value of "0-1" is appropriate for any server with at least two CPUs, and 
+# will instruct docker to allow each container access to the first and second ("0" and "1") CPU on the system.  
+#
+# If you are on a single-cpu server, you may need to change this to "0".  If you are on a multi-processor server, you may specify any set of cpu 
+# numbers approrpiate for your configuration.  Most of the time, for a dedicated server, you'll want to set this value to include all the CPUs on 
+# your server (eg., "0", "0-1", "0-3", etc...)
+dockercpuset="0-1"
+
+
+# novnchostname specifies the hostname to use in constructing the redirection URL to route users to your NoVNC installation.  Unless you make 
+# some manual adjustments not supported by the build script, your NoVNC installation will need to be on the same machine referenced as dockerhost
+# above.  In almost every case, this will be the same as the host specified by fqdn above, but rare, rather complicated deployments might need to 
+# specify a differnt hostname here.
+novnchostname="proconsul-server.my.dns.domain"
+
+# mysqlhost specifies the IP address of the MySQL server Proconsul should connect to to access its configuration and state database.  
+# In the default configuration, each Proconsul server you build will have its own unique MySQL database.  If you are deploying a "farm" of 
+# load-balanced Proconsul servers, and you want to share state information and configuration across Proconsul instances, you *can* specify the 
+# IP address of a separate MySQL server here -- the build script will not automatically popualate the appropriate schema and user information on
+# that MySQL server, but you may do that manually.  
+#
+# In most cases, you'll want to leave this as the default value, "127.0.0.1" and use the local MySQL server for Proconsul.
+mysqlhost="127.0.0.1"
+
+# proconsuluser specifies the MySQL user Proconsul should use when connecting to its database.  In the local MySQL instance created by the 
+# build script, this user will be created automatically and granted access to all the "proconsul" database tables in the Proconsul schema. 
+# If you are using a shared MySQL instance, you will need to specify a user you've pre-created that has access to the "proconsul" database
+# there.
+#
+# Usually, you may leave this at the default value, "proconsul".
+proconsuluser="proconsul"
+
+# proconsuldbpw specifies the MySQL user password for proconsuluser, above.  If you provide a value here, it will be set as the password for the 
+# proconsuluser user in the local MySQL database, and configured as the password for connecting to the mysqlhost identified above.  If you leave
+# this value blank, you will be required to enter the password during the build process.  You should consider your local security policies when
+# deciding between the convenience of specifying a password in this file and the (potentially better) security of specifying it manually during 
+# the build process.  In either case, the password should be reasonably secure.
+proconsuldbpw="ThisIsMySQLThereAreManyLikeItButThisOneIsMine"
+
+# logouturl specifies the URL that will be anchored to the "logout" link on Proconsul's UI pages.  Depending on how your installation is 
+# handling authentication, this may be a Shibboleth/SAML logout URL or something else.  In any event, GETing this URL should initiate a logout
+# operation.  At Duke, we use a URL that routes the user to the Shibboleth SP's logout endpoint.  At some sites, this may simply be a static 
+# page indicating that the user needs to close his or her browser to effect a logout.
+#
+# Note that this has nothing to do with logging out of sessions on target systems -- that is done the usual way for the target system.  This is 
+# entirely about exiting from the authenticated session within the Proconsul web application.
+logouturl="https://my-proconsul-host.my.domain/Shibboleth.sso/Logout"
+
+# pcadminlist contains a comma-separated list of the usernames of users who should have full administrative rights in the Proconsul Admin UI.
+# A newly-minted Proconsul instance will be totally unconfigured -- your first step after building and starting the appropriate Docker container 
+# will be visit the administrative URL and start configuring access rights and target host definitions.  
+#
+# Only authorized Proconsul administrators are allowed to log in and access the admin interface, so as part of the build process, you need to define
+# at least one Proconsul admin to allow that process to occur.  
+#
+# The values here need to match the values presented by your Apache configuration for the "REMOTE_USER" value when a user logs in.  In the default 
+# case using Shibboleth for authentication, this is typically going to be an eduPersonPrincipalName (ePPN) value.
+#
+# Note that anyone authenticated as a user listed below can grant any user any rights Proconsul can delegate on any system.  Keeping this list as 
+# short as feasible is recommended.
+pcadminlist="admin1@my.idp.scope,admin2@my.idp.scope"
+
+# authmode defines the authentication model used by this Proconsul instance.  For the moment, the only authentication model supported in the build 
+# process is "saml", which will install and configure a Shibboleth SP to provide authentication services for Proconsul.  If you want to use SAML
+# for your Proconsul instance, you can leave the default value, here.  If you set this value to anything else, at the moment, the build scripts will
+# avoid configuring the Shibboleth SP within the Proconsul Docker container, and you may find that your Proconsul instance doesn't function properly.
+#
+# In future, if additional authentication mechanisms are supported (eg., mod_auth_oidc), additional values will be supported here.  For now, leave
+# this as-is.
+authnmode="saml"
+
+# federationmode selects (for saml installations) between two basic models of SAML federation -- bilateral federation (in which Proconsul is 
+# federated bilaterally with a single IDP, usually your local SAML IDP) and multilateral federation (in which Proconsul is part of a multilateral
+# SAML federation like the US InCommon federation).  The two supported values are, then, "bilateral" and "multilateral".
+#
+# In bilateral mode, the build scripts will require that you provide an entity ID for your Proconsul service, the entity ID of your chosen IDP, 
+# a URL from which to retrieve your IDP's metadata, and a signing key for validating your IDP's metadata.  Unsigned metadata is not currently
+# supported in the build process.
+#
+# In multilateral mode, the build scripts will require that you provide an entity ID for your Proconsul service, a URL for a discovery service
+# associated with your multilateral SAML federation, a URL for retrieving your multilateral SAML federation's metadata, and a signing key for
+# validating your federation's signed metadata.  Unsigned metadata is not currently supported in the build process.
+#
+# Note that in either mode, you will be responsible for exchanging the configured relying party metadata for your Proconsul instance to your IDP or 
+# multilateral federation operator.   The build scripts will produce a minimal RP metadata document (without md:ui decoration or many other 
+# metadata components frequently required by multilateral federations) -- you will need to edit that metadata to add whatever is required by your 
+# federation or IDP operator and then negotiate that part of the federating process.
+federationmode="bilateral"
+
+# spentityid specifies the entity ID to use for the Shibboleth SP that will be configured for this Proconsul instance.  This entity ID needs to be 
+# unique to this instance of the Proconsul service, but if you are going to deploy mulitple, load-balanced Proconsul servers, you should use
+# the same entity ID for each of them.
+#
+# Typical entity IDs look something like the default value below, although technically, any properly unique string can be used for this purpose.
+#
+spentityid="https://my.proconsul.server/shibboleth"
+
+# discoveryurl specifies the discovery service URL to use in the multilateral federation case.  In the bilateral federation case, the value is 
+# ignored (and may be left blank).  
+#
+# The default value below is suitable for InCommon-federated relying parties that don't want or need to restrict the federated IDPs they 
+# interoperate with (it's the InCommon federation's default discovery service).
+#
+discoveryurl="https://wayf.incommonfederation.org/DS/WAYF"
+
+# idpentityid specifies the entity ID of the IDP this relying party should be bilaterally federated with.  This value is only required in bilateral
+# federation mode -- it is ignored in the multilateral mode, and may be left blank in that case.
+#
+idpentityid="https://my-idp.dom.ain/shibboleth-idp"
+
+# federationmdurl specifies the URL from which federation metadata (in the multilateral federation case) or IDP metadata (in the bilateral federation
+# case) can be retrieved.  It is required for both bilateral and multilateral configurations.  If you're configuring for bilateral federation
+# and your IDP metadata is only available to you in a static file, you can make a copy of the file in the "proconsul/www/html" directory within this
+# distribution and set your metadata URL to "https://<this server>/<metadata file name>".  Consider asking your IDP operator, though, to provide
+# a dynamic IDP metadata URL instead.  If you're configuring for a multilateral federation, your federation operator should already provide a URL for
+# this purpose. 
+#
+# The default URL below is suitable for use in the US InCommon federation.
+#
+federationmdurl="http://md.incommon.org/InCommon/InCommon-metadata.xml"
+
+# mdsigningkey specifies a file containing the X.509 certificate to be used to validate the signature on downloaded federation metadata.  The build 
+# scripts do not support handling unsigned metadata nor configuring for unvalidated signed metadata.
+#
+# The specified file will be copied into the build tree and included in the Shibboleth SP configuration for your installation as "md_signer.pem".
+#
+# Contact your IDP or federation operator to get the appropriate key, or if you have other relying parties using the same federation model, 
+# you may be able to copy the metadata signing key from an existing relying party configuration.
+#
+mdsigningkey="/path/to/file/containing/mdsigning/key"
+
+#
+# Proconsul relies on a utility called docker-gen by Jason Wilder to perform clean-up when 
+# RDP and VNC docker containers exit.  Docker-gen allows a dynamically-substituted-into script
+# to be executed whenever a Docker container starts or stops on a given server.  Proconsul uses
+# it to run a clean-up script that's dependent on data which can only be retrieved by 
+# inspecting the exited Docker container's startup configuration.
+#
+# Docker-gen requires access to a user credential with sufficient privileges to manage 
+# (specifically, to delete and change passwords for) users in the OU designated above as the 
+# adtargetbase.  
+#
+# This may be the same user specified as the adbinddn above, but it may also be a distinct user.
+# Especially if you are using Proconsul to manage Domain Admin rights, it may be advisable to
+# use a distinct (and less highly privileged) user here in order to limit the scope of 
+# docker-gen's capabilities.
+#
+# The value here should be a UPN value in "user@domain" format.
+#
+dockergenuser="docker-gen-user@my.dom.ain"
+
+#
+# dockergenpw is simply the password for the user specified as dockergenuser above.
+#
+dockergenpw="AnotherFairlySecurePasswordLikeTheFirstOneButThisOneIsUnique"
+

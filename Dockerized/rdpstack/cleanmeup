@@ -1,0 +1,14 @@
+#
+# Cleanup routine for the mysql database for logged out user.
+#
+
+#
+# Free the port, free the target machine
+#
+pnum=`expr $PORTNUM - 5900`
+
+echo "delete from antik.ports where port = $pnum;" | mysql -u antik --password=$MYSQLPW
+
+echo "update antik.hosts set uid=null,displayname=null,inuse=0 where fqdn = '$RHOSTNAME';" | mysql -u antik --password=$MYSQLPW
+
+

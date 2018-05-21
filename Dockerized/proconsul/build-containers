@@ -1,0 +1,863 @@
+#!/usr/bin/bash
+
+#
+# Parse the command line for arguments
+#
+# 
+
+OPTS=`getopt -o nhrqc: --long nosave,help,rebuild,quiet,config: -n "parse-options" -- "$@"`
+
+if [ $? != 0 ] 
+then
+   echo "Failed parsing command line options" >&2
+   exit 1
+fi
+
+eval set -- "$OPTS"
+
+HELP=false
+REBUILD=false
+QUIET=false
+CONFIG=false
+CFILE=""
+NOSAVE=false
+
+while :
+do
+  case "$1" in
+    -h | --help ) HELP=true; shift ;;
+    -r | --rebuild ) REBUILD=true; shift ;;
+    -q | --quiet ) QUIET=true; shift ;;
+    -c | --config ) CONFIG=true; CFILE="$2"; shift; shift ;;
+    -n | --nosave ) NOSAVE=true; shift ;;
+    -- ) shift; break ;;
+    * ) break ;;
+  esac
+done
+
+#
+# Handle --help
+#
+
+if [ "$HELP" == "true" ]
+then
+   echo "$0 [-h|--help] [-r|--rebuild] [-q|--quiet] [-c|--config config-file]"
+   echo "-h|--help:  This help message"
+   echo "-r|--rebuild:  Suppress rebuilding of MySQL data container (for rebuilding containers after initial build)"
+   echo "-q|--quiet:  Suppress unnecessary output - run quietly"
+   echo "-c|--config config-file:  Specify a config file to pre-load answers to configuration questions.  Useful with -q and config.out file"
+   echo "-n|--nosave:  Suppress saving config.out file when complete.  No record will be kept of your responses except in the Docker containers built."
+   echo
+   echo "$0 will write its configuration out to a config.out file in your current working directory if not run with the -n|--nosave flag"
+   exit 0
+fi
+
+
+#
+# Warning about what's going to be required
+#
+
+if [ "$QUIET" == "false" ]
+then
+clear
+if [ "$CONFIG" == "true" ]
+then
+    echo "This script will load configuration information from $CFILE, and may ask you questions regarding items not provided therein.  To answer the questions properly you may need"
+else
+    echo "This script will ask you a number of questions about how to configure your Proconsul environment.  To answer them properly, you will need"
+fi
+echo "the following information and the following files available.  If you don't yet have this information collected or set up in your AD, you should"
+echo "exit out of this script and collect the appropriate information, then re-run this script when you're ready.  The information you'll need"
+echo "will include:"
+echo "  The server name users will use to connect to this server (what appears after the ':' in your Proconsul URL)"
+echo "  A file containing a PEM version of the SSL certificate for your server (with a Subject or SAN matching your server name)"
+echo "  A separate file containing a PEM version of the private key for your SSL certificate, unencrypted"
+echo "  The LDAP URL Proconsul will use to connect to your AD (usually 'ldaps://your.domain.name:636')"
+echo "  The DN of a Domain Admin user (if you are using Proconsul to manage domain admin access) or a User Admin user (if you don't need to proxy"
+echo "      Domain Admin rights via Proconsul) Proconsul will use to authenticate to your AD."
+echo "  The password for that Domain Admin or User Admin user."
+echo "  The name of your AD domain and the LDAP searchbase for your domain's top level (usually something like 'dc=your,dc=domain,dc=tld')"
+echo "  The DN of an OU in your AD (preferably reserved for this purpose) where Proconsul will create its dynamic users."
+echo "  The DNS names of all the DCs in your AD domain (or, at a minimum, all the DCs in your site within the domain)."
+echo "  The DN of the group Proconsul should use as the Domain Admins group for your AD.  Usually, this will be 'cn=Domain Admins,ou=Users,dc=your,dc=domain'"
+echo "  The DN of an already-extant group in your AD to which Proconsul will add all of its dynamically-created users automatically.  This is"
+echo "      typically best if it's a bespoke group.  Different sites use this group membership for different purposes, but Proconsul will populate it"
+echo "      automatically and manage membership in it automatically."
+echo "  If your AD domain comprises multiple sites, you will need the name (or a unique prefix of the name) for your local site."
+echo "  The names of the Docker images to build to contain the default RDP client stack, the large-screen RDP client stack, the default VNC client"
+echo "      stack, and the large VNC client stack.  These names must be unique among your local Docker images."
+echo "  The IP address or name of the host where Docker containers will be started.  This should almost always be '127.0.0.1'"
+echo "  The 'cpuset' setting for starting Docker containers on your host.  Normally, this is the list of cpuids on the host.  If you are unsure"
+echo "      what to use for this setting, either use '0' (to use a single core of your CPU for Docker containers) or start another Docker container"
+echo "      on your host with default settings and see what the 'cpuset' value reported by 'docker inspect' is."
+echo "  The host name portion of the URLs Proconsul should use to redirect users to your noVNC installation.  Normally, this is the same your server name."
+echo "  The hostname for your MySQL server (for use in JDBC MySQL connect strings).  Usually '127.0.0.1' is appropriate."
+echo "  The MySQL username and password to set up for Proconsul to access its MySQL database.  Typically the username 'proconsul' is appropriate."
+echo "  The URL to use for the 'logout' link ont he Proconsul main page.  Redirecting to this link should allow users to log out of any session"
+echo "      held by the Proconsul server's Apache daemon as well as any external SSO session."
+echo "  The REMOTE_USER values Proconsul will see for users you wish to have full administrative rights to manage the configuration of your"
+echo "      Proconsul instance.  Keeping this list small is recommended."
+echo "  Various configuration parameters for setting up SAML federation trust for your Proconsul instance, including:"
+echo "      The authentication mode you will be using.  Currently, only "saml" is supported."
+echo "      The federation mode you will be using (either 'bilateral' or 'multilateral')."
+echo "      An entity ID to use for the Proconsul service's SAML endpoint."
+echo "      A discovery URL (for multilateral federation) or IDP entity ID (for bilataeral federation)."
+echo "      A URL and signing key for retrieving and validating the signature of your federation (for multilateral cases) or IDP (for bilateral cases) metadata"
+echo ""
+echo "If you plan to use the Duke-style delegated OU administrator functionality in Proconsul, you will additionally need:"
+echo "  The LDAP base DN for the OU where delegatable departmental resources reside"
+echo "  The LDAP base DN for the OU under which groups conferring delegated admin rights reside"
+echo "If you do not plan to use the delegated OU functionality, you can safely enter blank values for those options."
+echo ""
+fi
+
+if [ "$CONFIG" == "true" -a ! -z "$CFILE" ]
+then
+  echo 
+  echo "Using configuration in file:  $CFILE"
+  echo "You will only be asked to provide information not found in that file"
+fi
+
+if [ "$QUIET" == "false" ]
+then
+if [ "$REBUILD" == "false" ]
+then
+echo "Press return to continue, or interrupt (Ctrl-c) to make further arrangements and run again later.  IF YOU CONTINUE, ANY EXISTING DATA IN THE LOCAL PROCONSUL DATABASE WILL BE DELETED -- USE THE \"-r\" FLAG IF THIS IS A REBUILD!!"
+else
+echo "Press return to continue, or interrupt to make further arrangements and run again later.  If you continue, existing data in your local Proconsul database will be preserved.  If this is an initial build, you will need to build the MySQL database manually or run this script without the \"-r\" flag."
+fi
+
+read continue
+fi
+
+if [  "$CONFIG" == "true" ]
+then
+  # Load the config file and report the values before continuing if not quiet mode
+  source $CFILE
+  if [ "$QUIET" == "false" ]
+  then
+     echo "Using the following settings from the configuration file $CFILE :"
+     echo
+     if [ ! -z "$fqdn" ]
+     then
+         echo "Fully-qualified hostname for Proconsul server:  $fqdn"
+     fi
+     if [ ! -z "$certfile" ]
+     then
+         echo "File containing your SSL certificate:  $certfile"
+     fi
+     if [ ! -z "$keyfile" ]
+     then
+         echo "File containing your SSL private key:  $keyfile"
+     fi
+     if [ ! -z "$adldapurl" ]
+     then
+         echo "LDAP URL for your AD domain:  $adldapurl"
+     fi
+     if [ ! -z "$adbinddn" ]
+     then
+         echo "AD bind DN (UPN) for Proconsul to use:  $adbinddn"
+     fi
+     if  [ ! -z "$adbindcred" ]
+     then
+         echo "AD password for Proconsul user:  <configured>"
+     else
+         echo "You will have to enter the AD password for the Proconsul user manually"
+     fi
+     if [ ! -z "$addomain" ]
+     then
+        echo "DNS name of your AD domain:  $addomain"
+     fi
+     if [ ! -z "$adsearchbase" ]
+     then
+        echo "LDAP search base for domain:  $adsearchbase"
+     fi
+     if [ "$usedelegatedadmin" == "y" ]
+     then
+        echo "WILL be using Duke-style delegated OU administration support"
+        echo "Base DN for delegated departmental resources:  $addeptbase"
+        echo "Base DN for groups conferring delegated departmental OU rights:  $adorgbase"
+    else
+        echo "WILL NOT be using Duke-style delegated OU administration support"
+    fi
+    if [ ! -z "$adtargetbase" ]
+    then
+        echo "OU in which Proconsul will create its dynamic users:  $adtargetbase"
+    fi
+    if [ ! -z "$adldapdcs" ]
+    then
+        echo "Fallback list of LDAP URLs for AD DCs:  $adldapdcs"
+    fi
+    if [ ! -z "$addagroupdn" ]
+    then
+        echo "DA group Proconsul will add dynamic domain admins to: $addagroupdn"
+    fi
+    if [ ! -z "$adproconsuldefgrp" ]
+    then
+        echo "Group Proconsul will use to identify dynamic users as its own:  $adproconsuldefgrp"
+    fi
+    if [ ! -z "$adsiteprefix" ]
+    then
+        echo "Only DCs in site(s) beginning with this prefix will be consulted by Proconsul:  $adsiteprefix"
+    fi
+    if [ ! -z "$rdpdockerimage" ]
+    then
+        echo "Normal sized RDP stack docker image name:  $rdpdockerimage"
+    fi
+    if [ ! -z "$rdplargedockerimage" ]
+    then
+        echo "Large screen RDP stack docker image name:  $rdplargedockerimage"
+    fi
+    if [ ! -z "$vncdockerimage" ]
+    then
+        echo "Normal sized VNC stack docker image name:  $vncdockerimage"
+    fi
+    if [ ! -z "$vnclargedockerimage" ]
+    then
+        echo "Large screen VNC stack docker image name: $vnclargedockerimage"
+    fi
+    if [ ! -z "$dockerhost" ]
+    then
+        echo "IP address of Docker server where RDP/VNC images will be started as needed:  $dockerhost"
+    fi
+    if [ ! -z "$dockercpuset" ]
+    then
+        echo "Proconsul spawned containers will run on cpuset: $dockercpuset"
+    fi
+    if [ ! -z "$novnchostname" ]
+    then
+        echo "NOVNC client will be retrieved from $novnchostname"
+    fi
+    if [ ! -z "$mysqlhost" ]
+    then
+        echo "IP address for MySQL connections:  $mysqlhost"
+    fi
+    if [ ! -z "$proconsuluser" ]
+    then
+        echo "Proconsul will connect to the MySQL database as:  $proconsuluser"
+    fi
+    if [ ! -z "$proconsuldbpw" ]
+    then
+        echo "Proconsul DB user password:  <configured>"
+    else
+        echo "You will have to enter the Proconsul database user password manually during configuration"
+    fi
+    if [ ! -z "$logouturl" ]
+    then
+        echo "Logout links on Proconsul pages will point to:  $logouturl"
+    fi
+    if [ ! -z "$pcadminlist" ]
+    then
+        echo "The following users will be pre-configured as Proconsul admins for setting up authorization configuration:  $pcadminlist"
+    fi
+    if [ ! -z "$authnmode" ]
+    then
+        echo "Authentication of users and admins will be accomplished using:  $authnmode"
+    fi
+    if [ ! -z "$federationmode" ]
+    then
+        echo "This SAML endpoint will be federated in $federationmode mode"
+    fi
+    if [ ! -z "$spentityid" ]
+    then
+        echo "The Proconsul instance will use the SAML entityID:  $spentityid"
+    fi
+    if [ ! -z "$discoveryurl" ]
+    then
+        echo "SAML identity provider discovery will be accomplished using the discovery service at: $discoveryurl"
+    fi
+    if [ ! -z "$idpentityid" ]
+    then
+        echo "Users will authenticate via the IDP with entityID:  $idpentityid"
+    fi
+    if [ ! -z "$federationmdurl" ]
+    then
+        echo "Signed federation/IDP metadata will be retrieved from:  $federationmdurl"
+    fi
+    if [ ! -z "$mdsigningkey" ]
+    then
+        echo "IDP/Federation metadata signatures will be validated using the key in: $mdsigningkey"
+    fi
+
+
+    
+    echo 
+    echo "If these settings are correct, press Return to begin your build.  If you need to make adjustments, interrupt (Ctrl-C) and re-run."
+    read continue
+  fi
+fi
+
+
+#
+# Ask some questions and populate some files
+#
+
+if [ -z "$fqdn" ]
+then
+clear
+echo "Enter the fully-qualified hostname for this Proconsul server.  This name will be used as the ServerName value for the Apache server."
+read fqdn
+fi
+
+cat custom.conf.tmpl | sed 's/%SERVERNAME%/'$fqdn'/g' > custom.conf
+
+if [ -z "$certfile" ]
+then
+clear
+echo "Enter the name of the file containing your SSL certificate."
+read certfile
+fi
+if [ -z "$keyfile" ]
+then
+clear
+echo "Enter the name of the file containing your SSL private key."
+read keyfile
+fi
+     #
+     # Generate base file names
+     #
+     if echo $certfile | grep '^/' > /dev/null
+     then
+        cp $certfile . 2>&1
+     fi
+     if echo $keyfile | grep '^/' > /dev/null
+     then
+       cp $keyfile . 2>&1
+     fi
+     certbase=`basename $certfile`
+     keybase=`basename $keyfile`
+
+
+certfile=`echo "$certfile" | sed 's/\//\\\\\//g'`
+certfile=`echo "$certfile" | sed 's/\\$/\\\\$/g'`
+certfile=`echo "$certfile" | sed 's/&/\\\\&/g'`
+
+keyfile=`echo "$keyfile" | sed 's/\//\\\\\//g'`
+keyfile=`echo "$keyfile" | sed 's/\\$/\\\\$/g'`
+keyfile=`echo "$keyfile" | sed 's/&/\\\\&/g'`
+
+cat Dockerfile.tmpl | sed 's/%SERVERNAME%/'$fqdn'/g' | sed 's/%CERTFILE%/'$certbase'/g' | sed 's/%KEYFILE%/'$keybase'/g' > Dockerfile
+
+# Create some data-only containers
+#
+if [ "$REBUILD" == "false" ]
+then
+# Data container for mysql data -- add options here if you need them (eg., for NFS storage)
+#
+docker volume rm proconsul-mysql-data 2>/dev/null
+docker volume create proconsul-mysql-data
+else
+echo "Skipping rebuild of mysql data container on rebuild"
+fi
+
+# Data container to use for /var/spool/docker in other containers -- add options here as needed
+docker volume rm proconsul-spool-data 2>/dev/null
+docker volume create proconsul-spool-data
+
+# Data container to use for logs in other containers -- add options here as needed
+docker volume rm proconsul-log-data 2>/dev/null
+docker volume create proconsul-log-data
+
+# Data container to use for /var/lib/tomcat7/webapps (WAR and unpacked WAR) -- add options here as needed
+docker volume rm proconsul-webapps-data 2>/dev/null
+docker volume create proconsul-webapps-data
+
+# Data container for /etc/shibboleth
+if [ "$REBUILD" == "false" ]
+then
+docker volume rm proconsul-shibboleth-data 2>/dev/null
+docker volume create proconsul-shibboleth-data
+else
+echo "Skipping rebuild of Shibboleth data container for rebuild"
+fi
+
+# Data container for /etc/proconsul (where configs are stored)
+docker volume rm proconsul-etc-data
+docker volume create proconsul-etc-data
+
+# Data container for /opt/docker-gen (where docker-gen and its configuration live)
+docker volume rm proconsul-docker-gen
+docker volume create proconsul-docker-gen
+
+#
+# Build the config file(s)
+#
+if [ "$QUIET" == "false" ]
+then
+clear
+echo "Now we need to configure Proconsul for use in your AD environment."
+echo ""
+fi
+if [ -z "$adldapurl" ]
+then
+echo "Enter the LDAP url for connecting to your AD domain (usually 'ldaps://your.domain:636' works)"
+read adldapurl
+fi
+if [ -z "$adbinddn" ]
+then
+echo ""
+echo "Enter the bind DN for a DA or UA user in your AD domain.  This will become Proconsul's administrative user. (use 'sAMAccountName@domain' format)"
+read adbinddn
+fi
+if [ -z "$adbindcred" ]
+then
+echo ""
+echo "Enter the password for $adbinddn"
+read adbindcred
+fi
+if [ -z "$addomain" ]
+then
+clear
+echo "Enter the DNS-style name of your AD domain (eg. 'my.domain.tld')"
+read addomain
+fi
+if [ -z "$adsearchbase" ]
+then
+echo ""
+echo "Enter the LDAP searchbase to use to search your entire AD domain (usually 'dc=my,dc=domain,dc=tld')"
+read adsearchbase
+fi
+if [ -z "$usedelegatedadmin" ]
+then
+echo ""
+echo "Will you be deploying the Duke-style delegated OU admin functionality in Proconsul? (y/n)"
+read usedelegatedadmin
+fi
+if [ "$usedelegatedadmin" = "y" ]
+then
+   if [ -z "$addeptbase" ]
+   then
+   echo ""
+   echo "Enter the base DN for searching for departmental OU resources in your AD"
+   read addeptbase
+   fi
+   if [ -z "$adorgbase" ]
+   then
+   echo ""
+   echo "Enter the DN of the OU in your AD where groups conveying delegated departmental OU administrative rights reside"
+   read adorgbase
+   fi
+else
+   addeptbase=""
+   adorgbase=""
+fi
+if [ -z "$adtargetbase" ]
+then
+echo ""
+echo "Enter the DN of the OU where Proconsul should create its dynamic users.  The administrative AD account Proconsul uses must either be a Domain Admin"
+echo "     account or have full rights in this OU (along with other privileges)"
+read adtargetbase
+fi
+if [ -z "$adldapdcs" ]
+then
+echo ""
+echo "Enter a comma-separated list of the ldap URLs for each of the DCs in your AD domain.  This list is used by Proconsul if and when it is unable to"
+echo "     determine the full list of DCs from the AD itself.  Values are typically of the form 'ldaps://dc.my.domain:636'."
+read adldapdcs
+fi
+if [ -z "$addagroupdn" ]
+then
+echo ""
+echo "Enter the DN of the group Proconsul should use as the domain administrators' group in your AD.  Usually, this is just"
+echo "     'cn=domain admins,ou=users,dc=my,dc=domain,dc=tld', but occasionally, sites may use a different DA group for Proconsul users."
+read addagroupdn
+fi
+if [ -z "$adproconsuldefgrp" ]
+then
+echo ""
+echo "Enter the DN of an existing AD group to which Proconsul should add all of its dynamic users to indicate to other software that they are Proconsul"
+echo "     dynamically-created users.  It is recommended that this be a bespoke group."
+read adproconsuldefgrp
+fi
+if [ -z "$adsiteprefix" ]
+then
+echo ""
+echo "If your domain uses sites, enter the site name (or a unique prefix of it) for your local site.  If you don't use sites, leave this blank."
+read adsiteprefix
+fi
+if [ -z "$rdpdockerimage" ]
+then
+echo ""
+echo "Enter the name to use for the Docker image containing the RDP client stack for default-sized displays (eg. your-id/rdpstack)"
+read rdpdockerimage
+fi
+if [ -z "$rdplargedockerimage" ]
+then
+echo ""
+echo "Enter the name to use for the Docker image containing the RDP client stack for large-sized displays (eg. your-id/rdpstacklarge)"
+read rdplargedockerimage
+fi
+if [ -z "$vncdockerimage" ]
+then
+echo ""
+echo "Enter the name to use for the Docker image containing the VNC client stack for default-sized displays (eg. your-id/vncstack)"
+read vncdockerimage
+fi
+if [ -z "$vnclargedockerimage" ]
+then
+echo ""
+echo "Enter the name to use for the Docker image containing the VNC client stack for large-sized displays (eg. your-id/vncstack)"
+read vnclargedockerimage
+fi
+if [ -z "$dockerhost" ]
+then
+echo ""
+echo "Enter the IP address of the host Proconsul should start subsidiary Docker containers on.  Almost always, this will be '127.0.0.1'"
+read dockerhost
+fi
+if [ -z "$dockercpuset" ]
+then
+echo ""
+echo "Enter the cpuset identifier for Docker on your docker host.  If you don't know what this is, it should be safe to enter '0', although"
+echo "     you will then restrict your Docker containers to running on a single cpu core.  Typically, for a host with N cpus, you might use"
+echo "     '0-X' where X = N-1.  For example, on a 2-cpu host, you might use '0-1' while on a 4-cpu host you might use '0-3'"
+read dockercpuset
+fi
+if [ -z "$novnchostname" ]
+then
+echo ""
+echo "Enter the hostname part of the URL to use for retrieving your NoVNC installation.  Usually this will match the hostname of your server."
+read novnchostname
+fi
+#
+# rfb.js has to be updated
+cat www/html/novnc/core/rfb.js.tmpl | sed 's/%SERVERNAME%/'$fqdn'/g' > www/html/novnc/core/rfb.js
+if [ -z "$mysqlhost" ]
+then 
+echo ""
+echo "Enter the IP address on which to contact your MySQL server.  Usually, this is just '127.0.0.1'"
+read mysqlhost
+fi
+if [ -z "$proconsuluser" ]
+then
+echo ""
+echo "Enter MYSQL user to use for access to Proconsul database (usually 'proconsul' -- it will be created shortly)"
+read proconsuluser
+fi
+if [ -z "$proconsuldbpw" ]
+then
+echo "Enter password for mysql user $proconsuluser"
+read proconsuldbpw
+fi
+mysqluser=$proconsuluser
+mysqlpass=$proconsuldbpw
+if [ -z "$logouturl" ]
+then
+echo ""
+echo "Enter the URL to use for logging out of Proconsul.  Typically, visiting this URL should give the user the option of logging out of any local session"
+echo "     established by your Apache server when the user logged in as well as any SSO session associated with your authentication service."
+read logouturl
+fi
+if [ -z "$pcadminlist" ]
+then
+echo ""
+echo "Now we must complete the configuration of the Proconsul Admin interface for your system with one final question:"
+echo ""
+echo "Enter a comma-separated list of the REMOTE_USER values that will be presented to the Proconsul Admin web app by users you wish to have full"
+echo "     administrative rights in your Proconsul instance.  These users will be authorized to designate what users can log in to Proconsul, what"
+echo "     users can exercise domain admin rights via Proconsul, what hosts they can log into with domain admin rights, and other properties of the "
+echo "     system.  Keeping this list as short as feasible is recommended.  Typical values for SAML sites look like ePPN values."
+read pcadminlist
+fi
+if [ -z "$authnmode" ]
+then
+  echo ""
+  echo "Enter the authentication mode to use for your Proconsul instance.  Currently, only \"saml\" is supported."
+  read authnmode
+fi
+if [ -z "$federationmode" ]
+then
+  echo ""
+  echo "Enter the mode in which your SAML endpoint will be federated.  Options are:"
+  echo "     \"bilataral\" - Proconsul will send users directly to a single IDP for authentication, and may only be federated with that IDP."
+  echo "     \"multilateral\" - This SAML endpoint will be registered in a multilateral federation, such as InCommon."
+  read federationmode
+fi
+if [ -z "$spentityid" ]
+then
+  echo ""
+  echo "Enter an entity ID (unique to this Proconsul service, but not necessarily this host, if you are configuring a load-balanced service)"
+  echo "that will be used as the SAML identifier for this Proconsul service.  Common values look something like URLs, eg. "
+  echo "  \"https://my-proconsul-host.dom.ain/shibboleth\""
+  echo "although any sufficiently-unique string can be used."
+  read spentityid
+fi
+if [ "$authnmode" == "saml" -a "$federationmode" == "multilateral" -a -z "$discoveryurl" ]
+then
+  echo ""
+  echo "Since you are federating mutilaterally with SAML, you must specify a discovery service URL to allow your users to select their"
+  echo " appropriate IDP during the authentication process.  Enter the discovery service URL to use with your federation."
+  read discoveryurl
+fi
+if [ "$authnmode" == "saml" -a "$federationmode" == "bilateral" -a -z "$idpentityid" ]
+then
+  echo ""
+  echo "Since you are federating bilaterally with SAML, you must specify the entity ID of the IDP to which your Proconsul instance will"
+  echo "send users during authentication.  Enter the entity ID of your IDP."
+  read idpentityid
+fi
+if [ -z "$federationmdurl" ]
+then
+   echo ""
+   echo "Enter the URL from which signed metadata for your IDP (if you are configuring for bilateral federation) or your fedeartion"
+   echo "(if you are configuring for multilateral federation) can be retrieved."
+   read federationmdurl
+fi
+if [ -z "$mdsigningkey" ]
+then
+  echo ""
+  echo "In order to validate the signature on retrieved metadata, we need a copy of the public key certificate associated with the"
+  echo "signer of your IDP or federation metadata.  Enter the full pathname of a file containing that certificate."
+  read mdsigningkey
+fi
+echo ""
+echo ""
+if [ -z "$dockergenuser" ]
+then
+  echo ""
+  echo "Proconsul relies on docker-gen to handle clean-up in both its database and the AD after RDP or VNC session containers exit.  Enter the UPN of the existing user docker-gen should perform its AD operations as in the $adtargetbase OU."
+  read dockergenuser
+fi
+if [ -z "$dockergenpw" ]
+then
+  echo ""
+  echo "Enter the password for the $dockergenuser user in your AD domain."
+  read dockergenpw
+fi
+
+#
+# Now localize the configuration files
+#
+
+#
+# Fix any values that contain slashes to prep for our sed runs
+#
+
+adldapurl=`echo "$adldapurl" | sed 's/\//\\\\\//g'`
+adldapurl=`echo "$adldapurl" | sed 's/&/\\\\&/g'`
+
+adbindcred=`echo "$adbindcred" | sed 's/\//\\\\\//g'`
+adbindcred=`echo "$adbindcred" | sed 's/\\$/\\\\$/g'`
+adbindcred=`echo "$adbindcred" | sed 's/&/\\\\&/g'`
+
+dockergenpw=`echo "$dockergenpw" | sed 's/\//\\\\\//g'`
+dockergenpw=`echo "$dockergenpw" | sed 's/\\$/\\\\$/g'`
+dockergenpw=`echo "$dockergenpw" | sed 's/&/\\\\&/g'`
+
+adldapdcs=`echo "$adldapdcs" | sed 's/\//\\\\\//g'`
+rdpdockerimage=`echo "$rdpdockerimage" | sed 's/\//\\\\\//g'`
+rdplargedockerimage=`echo "$rdplargedockerimage" | sed 's/\//\\\\\//g'`
+vncdockerimage=`echo "$vncdockerimage" | sed 's/\//\\\\\//g'`
+vnclargedockerimage=`echo "$vnclargedockerimage" | sed 's/\//\\\\\//g'`
+logouturl=`echo "$logouturl" | sed 's/\//\\\\\//g'`
+logouturl=`echo "$logouturl" | sed 's/&/\\\\&/g'`
+
+spentityid=`echo "$spentityid" | sed 's/\//\\\\\//g'`
+spentityid=`echo "$spentityid" | sed 's/&/\\\\&/g'`
+discoveryurl=`echo "$discoveryurl" | sed 's/\//\\\\\//g'`
+discoveryurl=`echo "$discoveryurl" | sed 's/&/\\\\&/g'`
+idpentityid=`echo "$idpentityid" | sed 's/\//\\\\\//g'`
+idpentityid=`echo "$idpentityid" | sed 's/&/\\\\&/g'`
+federationmdurl=`echo "$federationmdurl" | sed 's/\//\\\\\//g'`
+federationmdurl=`echo "$federationmdurl" | sed 's/&/\\\\&/g'`
+
+cat run-docker-gen.tmpl | sed "s/%DOCKERGENUSER%/$dockergenuser/" | sed "s/%DOCKERGENPW%/$dockergenpw/" | sed "s/%ADDOMAIN%/$addomain/" | sed "s/%TARGETOU%/$adtargetbase/" > run-docker-gen
+
+
+cat proconsul.properties.tmpl | sed "s/%ADLDAPURL%/$adldapurl/" | sed "s/%ADBINDDN%/$adbinddn/" | sed "s/%ADBINDCRED%/$adbindcred/" |
+    sed "s/%ADDOMAIN%/$addomain/" | sed "s/%ADSEARCHBASE%/$adsearchbase/" | sed "s/%ADDEPTBASE%/$addeptbase/" |
+    sed "s/%ADTARGETBASE%/$adtargetbase/" | sed "s/%ADORGBASE%/$adorgbase/" | sed "s/%ADLDAPDCS%/$adldapdcs/" |
+    sed "s/%ADDAGROUPDN%/$addagroupdn/" | sed "s/%ADPROCONSULDEFGRP%/$adproconsuldefgrp/" |
+    sed "s/%ADSITEPREFIX%/$adsiteprefix/" | sed "s/%RDPDOCKERIMAGE%/$rdpdockerimage/" |
+    sed "s/%RDPLARGEDOCKERIMAGE%/$rdplargedockerimage/" | sed "s/%VNCDOCKERIMAGE%/$vncdockerimage/" |
+    sed "s/%VNCLARGEDOCKERIMAGE%/$vnclargedockerimage/" | sed "s/%DOCKERHOST%/$dockerhost/" |
+    sed "s/%DOCKERCPUSET%/$dockercpuset/" | sed "s/%NOVNCHOSTNAME%/$novnchostname/" |
+    sed "s/%MYSQLHOST%/$mysqlhost/" | sed "s/%MYSQLUSER%/$mysqluser/" | sed "s/%MYSQLPASS%/$mysqlpass/" |
+    sed "s/%LOGOUTURL%/$logouturl/" | sed "s/%PCADMINLIST%/$pcadminlist/" > proconsul.properties
+
+cat proconsuladmin.properties.tmpl | sed "s/%PCADMINLIST%/$pcadminlist/" | sed "s/%MYSQLHOST%/$mysqlhost/" | sed "s/%MYSQLUSER%/$mysqluser/" | sed "s/%MYSQLPASS%/$mysqlpass/" > proconsuladmin.properties
+
+#
+# Copy the metadata signing key from $mdsigningkey to metadata_signing.key in this directory
+# before running the Docker build.
+#
+cp $mdsigningkey ./md_signer.pem
+
+# And handle the shibboleth config files (in case they're needed)
+#
+if [ "$federationmode" == "bilateral" ]
+then
+  cp shibboleth2.xml.bilateral.tmpl shibboleth2.xml.tmpl
+else
+  cp shibboleth2.xml.multilateral.tmpl shibboleth2.xml.tmpl
+fi
+
+cat shibboleth2.xml.tmpl | sed "s/%SPENTITYID%/$spentityid/g" | sed "s/%IDPENTITYID%/$idpentityid/g" | sed "s/%FEDERATIONMDURL%/$federationmdurl/g" | sed "s/%DISCOVERYURL%/$discoveryurl/g" > shibboleth2.xml
+
+#
+# Build the proconsuladmin war file and copy it into this directory
+#
+cd proconsuladmin
+mvn clean
+mvn install
+cp target/proconsuladmin*war ../proconsuladmin.war
+cd ..
+
+#
+# Build the proconsul war file and copy it into this directory
+#
+cd proconsul
+mvn clean
+mvn install
+cp target/proconsul*war ../proconsul.war
+cd ..
+
+# Build the container itself
+
+docker build -t carte018/proconsul .
+
+#
+# Add the docker-gen code and the docker-gen configuration
+#
+
+docker run -v proconsul-docker-gen:/mnt carte018/proconsul /bin/bash -c 'cd /mnt; wget https://github.com/jwilder/docker-gen/releases/download/0.7.4/docker-gen-linux-i386-0.7.4.tar.gz; tar xvzf docker-gen-linux-i386-0.7.4.tar.gz'
+
+docker run -v proconsul-docker-gen:/mnt carte018/proconsul /bin/bash -c "cp /opt/docker-gen/run-docker-gen /mnt/"
+
+docker run -v proconsul-docker-gen:/mnt carte018/proconsul /bin/bash -c "chmod 700 /mnt/run-docker-gen"
+
+docker run -v proconsul-docker-gen:/mnt carte018/proconsul /bin/bash -c "cp /opt/docker-gen/proconsul.cfg /mnt/"
+
+docker run -v proconsul-docker-gen:/mnt carte018/proconsul /bin/bash -c "cp /opt/docker-gen/base.tmpl /mnt/"
+
+#
+# Check to see if there is already a shibd configuration on the host and either use it or create
+# one from scratch (unless we're in REBUILD mode, then simply skip all of this)
+if [ "$REBUILD" == "false" ]
+then
+if [ -e /etc/shibboleth/sp-key.pem ]
+then
+  echo "Using shibboleth config in /etc/shibboleth"
+  docker run -v proconsul-shibboleth-data:/mnt -v /etc/shibboleth:/etc/shibboleth carte018/proconsul /bin/bash -c 'cp /etc/shibboleth/* /mnt/'
+else
+  echo "Creating new /etc/shibboleth keys"
+  docker run -v proconsul-shibboleth-data:/mnt carte018/proconsul /bin/bash -c 'cp /etc/shibboleth/* /mnt'
+  docker run -v proconsul-shibboleth-data:/etc/shibboleth carte018/proconsul /usr/sbin/shib-keygen
+  echo "Shibboleth SP certificate appears below -- make a note of it and share it with your federation partner(s)"
+  docker run -v proconsul-shibboleth-data:/etc/shibboleth carte018/proconsul cat /etc/shibboleth/sp-cert.pem
+  echo "Copy-and-paste the above certificate data to register your relying party with your IDP or federation.  Press enter to continue with configuration."
+  read cont2
+fi
+else
+  echo "Skipping Shibboleth reconfiguration for rebuild"
+fi
+
+#
+# Pre-populate the log directories
+#
+
+docker run -v proconsul-log-data:/var/log carte018/proconsul mkdir -p /var/log/supervisor
+docker run -v proconsul-log-data:/var/log carte018/proconsul mkdir -p /var/log/tomcat7
+docker run -v proconsul-log-data:/var/log carte018/proconsul chown tomcat7 /var/log/tomcat7
+docker run -v proconsul-log-data:/var/log carte018/proconsul mkdir -p /var/log/apache2
+docker run -v proconsul-log-data:/var/log carte018/proconsul mkdir -p /var/log/httpd
+docker run -v proconsul-log-data:/var/log carte018/proconsul mkdir -p /var/log/shibboleth
+docker run -v proconsul-log-data:/var/log carte018/proconsul mkdir -p /var/log/mysql
+docker run -v proconsul-log-data:/var/log carte018/proconsul chown mysql:adm /var/log/mysql
+
+
+#
+# Populate the Mysql data tree if not a rebuild
+#
+if [ "$REBUILD" == "false" ]
+then
+  docker run -v proconsul-mysql-data:/var/lib/mysql carte018/proconsul /bin/bash -c "chown mysql:adm /var/lib/mysql; /usr/bin/mysql_install_db --user=mysql --ldata=/var/lib/mysql; /etc/init.d/mysql start;mysql --execute='create database proconsul';mysql proconsul < /tmp/proconsul.db.schema; mysql --execute='grant all privileges on proconsul.* to '\'$proconsuluser\''@'\''localhost'\'' identified by '\'$proconsuldbpw\'"
+fi
+
+
+#
+# Drop in the proconsul war file
+#
+
+  docker run -v proconsul-webapps-data:/var/lib/tomcat7/webapps carte018/proconsul /bin/bash -c "cp /mnt/proconsul.war /var/lib/tomcat7/webapps/proconsul.war"
+
+#
+# And the proconsuladmin war file
+#
+
+  docker run -v proconsul-webapps-data:/var/lib/tomcat7/webapps carte018/proconsul /bin/bash -c "cp /mnt/proconsuladmin.war /var/lib/tomcat7/webapps/proconsuladmin.war"
+
+
+#
+# Add the localized proconsul config file
+#
+
+  docker run -v proconsul-etc-data:/etc/proconsul carte018/proconsul /bin/bash -c "cp /mnt/proconsul.properties /etc/proconsul/proconsul.properties"
+
+#
+# And the admin config file
+#
+  docker run -v proconsul-etc-data:/etc/proconsul carte018/proconsul /bin/bash -c "cp /mnt/proconsuladmin.properties /etc/proconsul/proconsuladmin.properties"
+
+#
+# And when we're done, write out the configuration save file
+# if allowed
+if [ "$NOSAVE" == "false" ]
+then
+:>config.out
+#
+# Unpollute the polluted strings
+#
+logouturl=`echo $logouturl | sed 's/\\\//g'`
+rdpdockerimage=`echo $rdpdockerimage | sed 's/\\\//g'`
+rdplargedockerimage=`echo $rdplargedockerimage | sed 's/\\\//g'`
+vncdockerimage=`echo $vncdockerimage | sed 's/\\\//g'`
+vnclargedockerimage=`echo $vnclargedockerimage | sed 's/\\\//g'`
+spentityid=`echo $spentityid | sed 's/\\\//g'`
+discoveryurl=`echo $discoveryurl | sed 's/\\\//g'`
+idpentityid=`echo $idpentityid | sed 's/\\\//g'`
+federationmdurl=`echo $federationmdurl | sed 's/\\\//g'`
+adldapdcs=`echo $adldapdcs | sed 's/\\\//g'`
+adbindcred=`echo $adbindcred | sed 's/\\\//g'`
+adldapurl=`echo $adldapurl | sed 's/\\\//g'`
+keyfile=`echo $keyfile | sed 's/\\\//g'`
+certfile=`echo $certfile | sed 's/\\\//g'`
+
+#adbindcred=`echo $adbindcred | sed 's/\\$/\\\\$/g'`
+
+echo "fqdn=\"$fqdn\"" >> config.out
+echo "certfile=\"$certfile\"" >> config.out
+echo "keyfile=\"$keyfile\"" >> config.out
+echo "adldapurl=\"$adldapurl\"" >> config.out
+echo "adbinddn=\"$adbinddn\"" >> config.out
+echo "adbindcred='$adbindcred'" >> config.out
+echo "addomain=\"$addomain\"" >> config.out
+echo "adsearchbase=\"$adsearchbase\"" >> config.out
+echo "usedelegatedadmin=\"$usedelegatedadmin\"" >> config.out
+echo "addeptbase=\"$addeptbase\"" >> config.out
+echo "adorgbase=\"$adorgbase\"" >> config.out
+echo "adtargetbase=\"$adtargetbase\"" >> config.out
+echo "adldapdcs=\"$adldapdcs\"" >> config.out
+echo "addagroupdn=\"$addagroupdn\"" >> config.out
+echo "adproconsuldefgrp=\"$adproconsuldefgrp\"" >> config.out
+echo "adsiteprefix=\"$adsiteprefix\"" >> config.out
+echo "rdpdockerimage=\"$rdpdockerimage\"" >> config.out
+echo "rdplargedockerimage=\"$rdplargedockerimage\"" >> config.out
+echo "vncdockerimage=\"$vncdockerimage\"" >> config.out
+echo "vnclargedockerimage=\"$vnclargedockerimage\"" >> config.out
+echo "dockerhost=\"$dockerhost\"" >> config.out
+echo "dockercpuset=\"$dockercpuset\"" >> config.out
+echo "novnchostname=\"$novnchostname\"" >> config.out
+echo "mysqlhost=\"$mysqlhost\"" >> config.out
+echo "proconsuluser=\"$proconsuluser\"" >> config.out
+echo "proconsuldbpw=\"$proconsuldbpw\"" >> config.out
+echo "logouturl=\"$logouturl\"" >> config.out
+echo "pcadminlist=\"$pcadminlist\"" >> config.out
+echo "authnmode=\"$authnmode\"" >> config.out
+echo "federationmode=\"$federationmode\"" >> config.out
+echo "spentityid=\"$spentityid\"" >> config.out
+echo "discoveryurl=\"$discoveryurl\"" >> config.out
+echo "idpentityid=\"$idpentityid\"" >> config.out
+echo "federationmdurl=\"$federationmdurl\"" >> config.out
+echo "mdsigningkey=\"$mdsigningkey\"" >> config.out
+fi

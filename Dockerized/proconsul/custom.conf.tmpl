@@ -1,0 +1,20 @@
+TimeOut 600
+
+<VirtualHost *:443>
+  ServerName %SERVERNAME%
+
+  SSLEngine on
+  SSLCertificateFile /etc/ssl/certs/%SERVERNAME%.pem
+  SSLCertificateKeyFile /etc/ssl/private/%SERVERNAME%.key
+
+  SSLCACertificateFile /etc/ssl/certs/signing-chain.crt
+
+  DocumentRoot /var/www/html
+
+  # Logs
+  #ErrorLog "| /usr/sbin/rotatelogs /var/log/httpd/idms-icm-dev-01.error_log-%Y%m%d 86400 -300"
+  #CustomLog "| /usr/sbin/rotatelogs /var/log/httpd/idms-icm-dev-01.access_log-%Y%m%d 86400 -300" combined
+  ErrorLog "/var/log/httpd/%SERVERNAME%.error_log"
+  CustomLog "/var/log/httpd/%SERVERNAME%.access_log" combined
+
+</VirtualHost>

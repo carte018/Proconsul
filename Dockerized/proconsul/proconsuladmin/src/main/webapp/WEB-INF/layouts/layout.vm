@@ -1,0 +1,19 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="resources/css/admin.css">
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <title>Proconsul Admin</title>
+  </head>
+
+  <body>
+    <div id="header">
+      <img src="resources/img/dukelogo-white.png" id="dukelogo" alt="duke logo">
+      <div id="pagetitle"><a href="/admin/">Proconsul Admin</a></div>
+    </div>
+    <div id="main">
+      $screen_content
+    </div>
+  </body>
+</html>

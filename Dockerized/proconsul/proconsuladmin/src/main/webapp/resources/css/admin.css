@@ -1,0 +1,211 @@
+a{
+  color: #0577b1;
+  text-decoration: none;
+  border-bottom: 1px dotted #0577b1;
+}
+
+a img{
+  height: 0.70em;
+}
+
+a:hover, a:active{
+  color: #001a57;
+  border-bottom: 1px solid #001a57;
+}
+
+h1, h2, h3, h4, h5{
+  margin: 0; 
+  font-weight: normal;
+  font-family: Georgia, serif;
+  color: #001a57;
+}
+
+h1{
+  font-size: 170%;
+  line-height: 175%;
+}
+
+h1 img{
+  height: 20px;
+}
+
+h2{
+  color: #666;
+  font-family: "Open Sans", sans-serif;
+  font-size: 130%;
+}
+
+h4{
+  color: #666;
+  font-family: "Open Sans", sans-serif;
+  font-weight: bold;
+}
+
+.subheading {
+  font-size: 14px;
+  font-weight: normal;
+  font-family: sans-serif;
+  margin-bottom: 10px;
+}
+
+.error{
+  color: #cc3300;
+  font-weight: bold;
+  margin-bottom: 1em;
+}
+
+body{
+  margin: 0;
+  padding: 0;
+  font-family: "Open Sans", sans-serif;
+  color: #666;
+}
+
+#header{
+  background: #001a57;
+}
+
+#header, #main{padding: 17px 40px}
+
+@media screen and (max-width: 480px) {
+  #header, #main{padding: 10px}
+}
+
+img#dukelogo{
+  height: 50px;
+}
+
+div#pagetitle{
+  display: inline;
+  color: #ffd960;
+  margin-left: 0.4em;
+  font-size: 2em;
+}
+
+div#pagetitle a{
+  border: none;
+}
+
+div#pagetitle a:hover{
+  color: #0577b1;
+  border-bottom: 1px solid #0577b1;
+}
+
+button.action{
+  font-family: "Open Sans", sans-serif;
+  margin-top: 1em;
+  width: 100%;
+  background: #001a57;
+  color: #f7f7f7;
+  border: 1px solid #b3b0b0;
+  border-radius: 5px;
+  padding: 0.5em;
+  font-size: 110%;
+}
+
+button.action .fa, button.passive .fa{
+  color: #0577b1;
+  width: 2em;
+}
+
+button.passive{
+  font-family: "Open Sans", sans-serif;
+  margin-top: 1em;
+  width: 100%;
+  background: #fff;
+  border: 2px solid #b3b0b0;
+  color: #4a4a4a;
+  border-radius: 5px;
+  padding: 0.5em;
+  font-size: 110%;
+}
+
+button.action:hover{
+  background: #0577b1;
+  border: 1px solid #b3b0b0;
+}
+
+button.action:hover .fa{
+  color: #fff;
+}
+
+button.passive:hover{
+  color: #4a4a4a;
+  background: #d8d8d8;
+  border: 2px solid #b3b0b0;
+}
+
+button.inline{
+  width: 200px;
+  display: inline-block;
+  margin-right: 1em;
+}
+
+@media screen and (max-device-width: 480px) {
+  button.action, button.passive, button.inline{
+    width: 100%;
+    font-size: 3em;
+  }
+
+}
+
+table.displaytable{
+  width: 100%;
+  margin-top: 1em;
+  border-spacing: 0;
+  border: 2px solid #ddd;
+}
+
+table.displaytable tr:nth-child(even) td{
+  background-color: #ddd;
+}
+
+table.displaytable td, table.displaytable th{
+  padding: 7px;
+  vertical-align: top;
+}
+
+table.displaytable th{
+  text-align: left;
+}
+
+table.displaytable > input{
+  width: 320px;
+  margin-bottom: 1em;
+}
+
+table.displaytable input{
+  font-size: 120%;
+  background: #fff;
+}
+
+table.displaytable input[type="text"]{
+  border: 1px solid #d1d1d1;
+  box-shadow: inset 1px 1px 5px #ddd;
+  padding: 3px;
+}
+
+table.displaytable button{
+  margin: 0;
+}
+
+span.populated-value{
+  font-family: monospace;
+  font-size: 1.2em;
+}
+
+.admin-section a{
+  margin-bottom: 5px;
+}
+
+.admin-section{
+  margin-bottom: 15px;
+}
+
+.admin-section .subheader{
+  padding-top: 7px
+}
+
+.hidden{
+	display: none;
+}

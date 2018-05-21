@@ -1,0 +1,288 @@
+<div id="host_map">
+  <h1>Proconsul Host Mappings</h1>
+  
+  <div class="subheading">
+    Users with the following properties will be allowed to log in to the following Windows machines
+  </div>
+  
+  <div style="width: 250px">
+    <button name="additem" class="additem action" id="additem">Add Host Mapping Rule</button>
+  </div>
+
+  <div id="table" class="tablediv">
+    <form name="accessform" id="accessform" method="POST" action="#">
+      <input type="hidden" name="accessformsubmitted" value="1"/>
+      <table class="displaytable">
+        <tr>
+          <th colspan="1">Entities matching...</th>
+          <th colspan="2">Can access...</th>
+        </tr>
+        
+        #set($pct=0)
+        #foreach( $heppn in $userhosts )
+          <tr>
+            <td>UserName (eduPersonPrincipalName):<br>
+              <input type="hidden" id="uname$pct" name="uname$pct" value="$heppn.getEppn()">
+              <span class="populated-value">$heppn.getEppn()</span>
+            </td>
+
+            #if( $heppn.getFqdn() )
+              #set($slen=$heppn.getFqdn().length())
+    	        <td>Hostname:<br>
+    		       <input type="hidden" id="deluhost$pct" name="deluhost$pct" value="0"/>
+    		       <input type="hidden" id="chguhost$pct" name="chguhost$pct" value="0"/>
+    		       <input type="hidden" id="uhost$pct" name="uhost$pct" value="$heppn.getFqdn()" size="$slen" />
+               <span class="populated-value">$heppn.getFqdn()</span>
+    		      </td>
+	          #else
+		          #set($slen=$heppn.getOudn().length())
+		          <td>Orgunit DN:<br>
+    		        <input type="hidden" id="deluou$pct" name="deluou$pct" value="0"/>
+    		        <input type="hidden" id="chguou$pct" name="chguou$pct" value="0"/>
+    		        <input type="hidden" id="uou$pct" name="uou$pct" value="$heppn.getOudn()" size="$slen" />
+                <span class="populated-value">$heppn.getOudn()</span>
+              </td>
+	          #end
+
+            <td>
+              <button id="rbu$pct" name="rbu$pct" class="rbuclass action">remove</button>
+            </td>
+          </tr>
+          #set($pct=$pct+1)
+        #end
+        
+        #set($pct=0)
+        #foreach( $hgrp in $grouphosts )
+          <tr>
+            <td>Group Membership:<br>
+              <input type="hidden" id="hgrp$pct" name="hgrp$pct" value="$hgrp.getGroupurn()"/>
+              <span class="populated-value">$hgrp.getGroupurn()</span>
+            </td>
+
+            #if( $hgrp.getFqdn() )
+              #set($slen=$hgrp.getFqdn().length())
+    	        <td>Hostname:<br>
+   			        <input type="hidden" id="delghost$pct" name="delghost$pct" value="0"/>
+    		        <input type="hidden" id="chgghost$pct" name="chgghost$pct" value="0"/>
+    		        <input type="hidden" id="ghost$pct" name="ghost$pct" value="$hgrp.getFqdn()" size="$slen" />
+                <span class="populated-value">$hgrp.getFqdn()</span>
+    		      </td>
+	          #else
+		          #set($slen=$hgrp.getOudn().length())
+		          <td>Orgunit DN:<br>
+    		        <input type="hidden" id="delgou$pct" name="delgou$pct" value="0"/>
+    		        <input type="hidden" id="chggou$pct" name="chggou$pct" value="0"/>
+    		        <input type="hidden" id="gou$pct" name="gou$pct" value="$hgrp.getOudn()" size="$slen"/>
+                <span class="populated-value">$hgrp.getOudn()</span>
+
+    		      </td>
+	          #end
+            
+            <td>
+              <button id="rbg$pct" name="rbg$pct" class="rbgclass action">remove</button>
+            </td>
+          </tr>
+          #set($pct=$pct+1)
+        #end
+        
+        #set($pct=0)
+        #foreach( $hent in $entitlementhosts )
+          <tr>
+            <td>Entitlement (eduPersonEntitlement):<br>
+              <input type="hidden" name="hent$pct" id="hent$pct" value="$hent.getEntitlement()"/>
+              <span class="populated-value">$hent.getEntitlement()</span>
+            </td>
+
+            #if( $hent.getFqdn() )
+              #set($slen=$hent.getFqdn().length())
+    	        <td>Hostname:<br>
+   			        <input type="hidden" id="delehost$pct" name="delehost$pct" value="0"/>
+    		        <input type="hidden" id="chgehost$pct" name="chgehost$pct" value="0"/>
+    		        <input type="text" id="ehost$pct" name="ehost$pct" value="$hent.getFqdn()" size="$slen" />
+    		      </td>
+	            
+            #else
+		          #set($slen=$hent.getOudn().length())
+		          <td>Orgunit DN:<br>
+    		        <input type="hidden" id="deleou$pct" name="deleou$pct" value="0"/>
+    		        <input type="hidden" id="chgeou$pct" name="chgeou$pct" value="0"/>
+    		        <input type="text" id="eou$pct" name="eou$pct" value="$hent.getOudn()" size="$slen" />
+    		      </td>
+	          #end
+            
+            <td>
+              <button id="rbe$pct" name="rbe$pct" class="rbeclass action">remove</button>
+            </td>
+          </tr>
+          #set($pct=$pct+1)
+        #end
+      </table>
+    </form>
+   </div>
+ </div>
+ 
+ <div id="access_rules">
+   <h1>Domain Admin Hosts</h1>
+
+   <div class="subheading">
+     Users with Domain Admin rights will be allowed to use them to log in to the following hosts
+   </div>
+   
+   
+   <div style="width: 250px">
+     <button name="adddaitem" class="additem action" id="adddaitem">Add DA host</button>
+   </div>
+
+   <div id="dahosts">
+     <form name="daform" id="daform" method="POST" action="#">
+        <input type="hidden" name="daformsubmitted" value="1"/>
+        <table class="displaytable">
+         
+          #set($pct=0)
+          #foreach( $dah in $dahosts )
+            <tr>
+              #set($slen=$dah.length())
+    	        <td>Hostname</td>
+    	   	     <td class="value">
+    	   	       <input type="hidden" id="deldah$pct" name="deldah$pct" value="0"/>
+    	   	       <input type="hidden" id="chgdah$pct" name="chgdah$pct" value="0"/>
+    	   	       <input type="hidden" id="dah$pct" name="dah$pct" value="$dah" size="$slen" />
+                 <span class="populated-value">$dah</span>
+    	   	     </td>
+              <td>
+                <button id="rdh$pct" name="rdh$pct" class="rdhclass action">remove</button>
+              </td>
+            </tr>
+            #set($pct=$pct+1)
+          #end
+
+        </table>
+       </form>
+   </div>
+
+   <div id="addhostdiv" name="addhostdiv" title="Add a Proconsul Host Mapping">
+	   <form name="aform" id="aform" method="POST" action="#">
+   	   <input type="hidden" name="aformsubmitted" id="aformsubmitted" value="1"/>
+		   <table>
+			   <tr>
+				   <td>
+             <select id="lhsselector" name="lhsselector">
+               <option value='eppn'>Username</option>
+               <option value='group'>Group Membership</option>
+               <option value='entitlement'>Entitlement</option>
+             </select>
+           </td>
+				   <td><input type="text" name="lhs" id="lhs" value="value"/></td>
+			   </tr>
+			   <tr>
+				   <td>
+             <select id="rhsselector" name="rhsselector">
+               <option value='fqdn'>Hostname</option>
+               <option value='oudn'>AD OU</option>
+             </select>
+           </td>
+				   <td><input type="text" name="rhs" id="rhs" value="value"/></td>
+			   </tr>
+			   <tr>
+				   <td span=4>
+             <button name='submit' value='submit' id='aformsubmit' class='action'>Submit</button>
+           </td>
+			   </tr>
+		   </table>
+	   </form>
+   </div>
+
+   <div id="adddadiv" name="adddadiv" title="Add a Domain Admin Host">
+	   <form name="daaform" id="daaform" method="POST" action="#">
+   		<input type="hidden" name="daaformsubmitted" id="daaformsubmitted" value="1"/>
+		  <table>
+			  <tr>
+				  <td>Hostname</td>
+				  <td><input type="text" name="darhs" id="darhs" value="value"/></td>
+			  </tr>
+			  <tr>
+				  <td span=2><button name='submit' value='submit' id='daaformsubmit' class='action'>Submit</button></td>
+			  </tr>
+		  </table>
+	  </form>
+   </div>
+
+<script type="text/javascript">
+ $( document ).ready(function() {
+ 	$("#addhostdiv").hide();
+ 	$("#adddadiv").hide();
+ 	$("#additem").click(function(e) {
+ 		e.preventDefault();
+ 		$("#addhostdiv").dialog({modal: true, width: 600});
+ 	});
+ 	$("#adddaitem").click(function(e) {
+ 		e.preventDefault();
+ 		$("#adddadiv").dialog({modal: true, width: 600});
+ 	});
+ 	
+ 	rdau = $("#daform").find(".rdhclass");
+ 	rdau.each(function(button) {
+ 		var num = rdau[button].name.replace("rdh","");
+ 		$(rdau[button]).click(function(e) {
+ 			e.preventDefault();
+ 			if (document.getElementById("deldah"+num)) {
+ 				$("#deldah"+num).val('1');
+ 				alert("Removing " + $("#dah"+num).val());
+ 				$("#daform").submit();
+ 			}
+ 		});
+ 	});
+ 	
+ 	rbu = $("#accessform").find(".rbuclass");
+ 	rbu.each(function(button) {
+ 		var num = rbu[button].name.replace("rbu","");
+ 		$(rbu[button]).click(function(e) {
+ 			e.preventDefault();
+ 			if (document.getElementById("deluhost"+num)) {
+ 				$("#deluhost"+num).val('1');
+ 				alert("Removing " +$("#uhost"+num).val());
+ 				$("#accessform").submit();
+ 			} else {
+ 				$("#deluou"+num).val('1');
+ 				alert("Removing " + $("#uou"+num).val());
+ 				$("#accessform").submit();
+ 			}
+ 		});
+ 	});
+ 	
+ 	rbg = $("#accessform").find(".rbgclass");
+ 	rbg.each(function(button) {
+ 		var num = rbg[button].name.replace("rbg","");
+ 		$(rbg[button]).click(function(e) {
+ 			e.preventDefault();
+ 			if (document.getElementById("delghost"+num)) {
+ 				$("#delghost"+num).val('1');
+ 				alert("Removing " + $("#ghost"+num).val());
+ 				$("#accessform").submit();
+ 			} else {
+ 				$("#delgou"+num).val('1');
+ 				alert("Removing " + $("#gou"+num).val());
+ 				$("#accessform").submit();
+ 			}
+ 		});
+ 	});
+ 	
+ 	rbe = $("#accessform").find(".rbeclass");
+ 	rbe.each(function(button) {
+ 		var num = rbe[button].name.replace("rbe","");
+ 		$(rbe[button]).click(function(e) {
+ 			e.preventDefault();
+ 			if (document.getElementById("delehost"+num)) {
+ 				$("#delehost"+num).val('1');
+ 				alert("Removing " + $("#ehost"+num).val());
+ 				$("#accessform").submit();
+ 			} else {
+ 				$("#deleou"+num).val('1');
+ 				alert("Removing " + $("#eou"+num).val());
+ 				$("#accessform").submit();
+ 			}
+ 		});
+ 	});
+ 	
+ });
+ </script>

@@ -1,0 +1,207 @@
+#!/usr/bin/bash
+
+#
+# Parse the command line for arguments
+#
+# 
+
+OPTS=`getopt -o nhrqc: --long nosave,help,rebuild,quiet,config: -n "parse-options" -- "$@"`
+
+if [ $? != 0 ] 
+then
+   echo "Failed parsing command line options" >&2
+   exit 1
+fi
+
+eval set -- "$OPTS"
+
+HELP=false
+REBUILD=false
+QUIET=false
+CONFIG=false
+CFILE=""
+NOSAVE=false
+
+while :
+do
+  case "$1" in
+    -h | --help ) HELP=true; shift ;;
+    -r | --rebuild ) REBUILD=true; shift ;;
+    -q | --quiet ) QUIET=true; shift ;;
+    -c | --config ) CONFIG=true; CFILE="$2"; shift; shift ;;
+    -n | --nosave ) NOSAVE=true; shift ;;
+    -- ) shift; break ;;
+    * ) break ;;
+  esac
+done
+
+#
+# Handle --help
+#
+
+if [ "$HELP" == "true" ]
+then
+   echo "$0 [-h|--help] [-r|--rebuild] [-q|--quiet] [-c|--config config-file]"
+   echo "-h|--help:  This help message"
+   echo "-r|--rebuild:  Suppress rebuilding of MySQL data container (for rebuilding containers after initial build)"
+   echo "-q|--quiet:  Suppress unnecessary output - run quietly"
+   echo "-c|--config config-file:  Specify a config file to pre-load answers to configuration questions.  Useful with -q and config.out file"
+   echo "-n|--nosave:  Suppress saving config.out file when complete.  No record will be kept of your responses except in the Docker containers built."
+   echo
+   echo "$0 will write its configuration out to a config.out file in the proconsul subdirectory if not run with the -n|--nosave flag"
+   exit 0
+fi
+
+#
+# If a configuration file is specified, use it
+#
+
+if [ "$CONFIG" == "true" ]
+then
+  source $CFILE
+fi
+
+#
+# First, get the cert in the needful places
+#
+if [ -n "$keyfile" ]
+then
+  cat $keyfile > rdpstack/self.pem
+  cat $keyfile > rdpstack-large/self.pem
+  cat $keyfile > vncstack/self.pem
+  cat $keyfile > vncstack-large/self.pem
+else
+  echo "Enter the full pathname of the file containing your SSL private key."
+  read keyfile
+  cat $keyfile > rdpstack/self.pem
+  cat $keyfile > rdpstack-large/self.pem
+  cat $keyfile > vncstack/self.pem
+  cat $keyfile > vncstack-large/self.pem
+fi
+
+if [ -n "$certfile" ]
+then
+  cat $certfile >> rdpstack/self.pem
+  cat $certfile >> rdpstack-large/self.pem
+  cat $certfile >> vncstack/self.pem
+  cat $certfile >> vncstack-large/self.pem
+else
+  echo "Enter the full pathname of the file containing your SSL certificate."
+  read certfile
+  cat $certfile >> rdpstack/self.pem
+  cat $certfile >> rdpstack-large/self.pem
+  cat $certfile >> vncstack/self.pem
+  cat $certfile >> vncstack-large/self.pem
+fi
+
+#
+# Start by building the rdp/vnc containers as directed
+#
+if [ -n "$rdpdockerimage" ]
+then
+ cd rdpstack
+ docker build -t $rdpdockerimage .
+ cd ..
+else
+ cd rdpstack
+ docker build -t carte018/rdpstack .
+ cd ..
+fi
+
+if [ -n "$rdplargedockerimage" ]
+then
+  cd rdpstack-large
+  docker build -t $rdplargedockerimage .
+  cd ..
+else
+  cd rdpstack-large
+  docker build -t carte018/rdpstacklarge .
+  cd ..
+fi
+
+if [ -n "$vncdockerimage" ]
+then
+  cd vncstack
+  docker build -t $vncdockerimage .
+  cd ..
+else
+  cd vncstack
+  docker build -t carte018/vncstack .
+  cd ..
+fi
+
+if [ -n "$vnclargedockerimage" ]
+then
+  cd vncstack-large
+  docker build -t $vnclargedockerimage .
+  cd ..
+else
+  cd vncstack-large
+  docker build -t carte018/vncstacklarge .
+  cd ..
+fi
+
+# Write out the configuration file to use in building the proconsul container
+#
+echo "fqdn=\"$fqdn\"" >> proconsul/config.in
+echo "certfile=\"$certfile\"" >> proconsul/config.in
+echo "keyfile=\"$keyfile\"" >> proconsul/config.in
+echo "adldapurl=\"$adldapurl\"" >> proconsul/config.in
+echo "adbinddn=\"$adbinddn\"" >> proconsul/config.in
+echo "adbindcred='$adbindcred'" >> proconsul/config.in
+echo "addomain=\"$addomain\"" >> proconsul/config.in
+echo "adsearchbase=\"$adsearchbase\"" >> proconsul/config.in
+echo "usedelegatedadmin=\"$usedelegatedadmin\"" >> proconsul/config.in
+echo "addeptbase=\"$addeptbase\"" >> proconsul/config.in
+echo "adorgbase=\"$adorgbase\"" >> proconsul/config.in
+echo "adtargetbase=\"$adtargetbase\"" >> proconsul/config.in
+echo "adldapdcs=\"$adldapdcs\"" >> proconsul/config.in
+echo "addagroupdn=\"$addagroupdn\"" >> proconsul/config.in
+echo "adproconsuldefgrp=\"$adproconsuldefgrp\"" >> proconsul/config.in
+echo "adsiteprefix=\"$adsiteprefix\"" >> proconsul/config.in
+echo "rdpdockerimage=\"$rdpdockerimage\"" >> proconsul/config.in
+echo "rdplargedockerimage=\"$rdplargedockerimage\"" >> proconsul/config.in
+echo "vncdockerimage=\"$vncdockerimage\"" >> proconsul/config.in
+echo "vnclargedockerimage=\"$vnclargedockerimage\"" >> proconsul/config.in
+echo "dockerhost=\"$dockerhost\"" >> proconsul/config.in
+echo "dockercpuset=\"$dockercpuset\"" >> proconsul/config.in
+echo "novnchostname=\"$novnchostname\"" >> proconsul/config.in
+echo "mysqlhost=\"$mysqlhost\"" >> proconsul/config.in
+echo "proconsuluser=\"$proconsuluser\"" >> proconsul/config.in
+echo "proconsuldbpw=\"$proconsuldbpw\"" >> proconsul/config.in
+echo "logouturl=\"$logouturl\"" >> proconsul/config.in
+echo "pcadminlist=\"$pcadminlist\"" >> proconsul/config.in
+echo "authnmode=\"$authnmode\"" >> proconsul/config.in
+echo "federationmode=\"$federationmode\"" >> proconsul/config.in
+echo "spentityid=\"$spentityid\"" >> proconsul/config.in
+echo "discoveryurl=\"$discoveryurl\"" >> proconsul/config.in
+echo "idpentityid=\"$idpentityid\"" >> proconsul/config.in
+echo "federationmdurl=\"$federationmdurl\"" >> proconsul/config.in
+echo "mdsigningkey=\"$mdsigningkey\"" >> proconsul/config.in
+echo "dockergenuser=\"$dockergenuser\"" >> proconsul/config.in
+echo "dockergenpw=\"$dockergenpw\"" >> proconsul/config.in
+
+# And run the proconsul build
+cd proconsul
+FLAGS=""
+if [ "$REBUILD" == "true" ]
+then
+  FLAGS="$FLAGS -r"
+fi
+if [ "$QUIET" == "true" ]
+then
+  FLAGS="$FLAGS -q"
+fi
+if [ "$NOSAVE" == "true" ]
+then
+  FLAGS="$FLAGS -n"
+fi
+
+FLAGS="$FLAGS -c config.in"
+
+./build-containers $FLAGS
+
+cd ..
+
+echo "You may now use the run3.sh script to start Proconsul."
+

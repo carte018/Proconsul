@@ -1,0 +1,215 @@
+<div id="host_map">
+  <h1>Proconsul Host Groups</h1>
+
+  <div class="subheading">
+    Typically, Windows systems require a group membership for RDP use;  Proconsul will assign group memberships to  dynamic users for this purpose as follows:
+  </div>
+
+  <div style="width: 250px">
+    <button name="addgrp" id="addgrp" class="addgrp action">Add Host Access Group</button>
+  </div>
+
+  <form name="groupform" id="groupform" method="POST" action="#">
+      <input type="hidden" id="groupformsubmitted" name="groupformsubmitted" value="1"/>
+      <table class="displaytable">
+        <tr>
+          <th colspan="2">When accessing...</th>
+          <th colspan="2">User will be made a member of...</th>    
+        </tr>
+        
+        
+        #set($pct=0)
+        #foreach($hag in $hostaccessgroups) 
+          <tr>
+            #if($hag.getFqdn())
+	            <td>HostName</td>
+	            #set($llen=$hag.getFqdn().length())
+  	          <td>
+                <input type="hidden" name="hostfqdn$pct" id="hostfqdn$pct" value="$hag.getFqdn()" size="$llen"/>
+                <span class="populated-value">$hag.getFqdn()</span>
+              </td>
+              #set($slen=$hag.getGroupdn().length())
+    		      <td class="value">
+    		        <input type="hidden" id="delhgrp$pct" name="delhgrp$pct" value="0"/>
+    		        <input type="hidden" id="chghgrp$pct" name="chghgrp$pct" value="0"/>
+    		        <input type="hidden" id="hgrp$pct" name="hgrp$pct" value="$hag.getGroupdn()" size="$slen"/>
+                <span class="populated-value">$hag.getGroupdn()</span>
+    	        </td>
+
+              <td>
+                <button id="rug$pct" name="rug$pct" class="rugclass action">remove</button>
+              </td>
+            #else
+  	          <td>Hosts in the OU</td>
+  	          #set($llen=$hag.getOu().length())
+  	          <td>
+                <input type="hidden"name="oudn$pct" id="oudn$pct" value="$hag.getOu()" size="$llen"/>
+                <span class="populated-value">$hag.getOu()</span>
+              </td>
+  	          #set($slen=$hag.getGroupdn().length())
+  	          <td class="value">
+  	            <input type="hidden" id="delogrp$pct" name="delogrp$pct" value="0"/>
+  	            <input type="hidden" id="chgogrp$pct" name="chgogrp$pct" value="0"/>
+  	            <input type="hidden" id="ogrp$pct" name="ogrp$pct" value="$hag.getGroupdn()" size="$slen"/>
+                <span class="populated-value">$hag.getGroupdn()</span>
+  	          </td>
+	            <td>
+		            <button id="rog$pct" name="rog$pct" class="rogclass action">remove</button>
+	            </td>
+            #end
+          </tr>
+          #set($pct=$pct+1)
+        #end
+      </table>
+    </form>
+</div>
+
+<div id="gw_map">
+  <h1>Proconsul RDP Gateway Configuration</h1>
+  
+  <div class="subheading">
+    Some Windows systems require the use of a special RDP gateway;  Proconsul will employ gateways as follows to access specific hosts
+  </div>
+  
+  <div style="width: 250px">
+    <button name="addgw" class="addgw button action" id="addgw">Add RDP Gateway Config</button>
+  </div>
+
+  <form name="gwform" id="gwform" method="POST" action="#">
+      <input type="hidden" name="gwformsubmitted" id="gwformsubmitted" value="1"/>
+      <table class="displaytable">
+        <tr>
+          <th>When accessing HostName...</th>
+          <th>Proconsul will use the gateway...</th>
+          <th colspan="2">And (for gateway access) make the user a member of...</th>
+        </tr>
+        
+        #set($pct=0)
+        #foreach($hgw in $hostgateway) 
+          <tr>
+	          #set($llen=$hag.getFqdn().length())
+  	        <td>
+              <input type="hidden" id="tfqdn$pct" name="tfqdn$pct" value="$hgw.getFqdn()" size="$llen"/>
+              <span class="populated-value">$hgw.getFqdn()</span>
+            </td>
+
+            #set($slen=$hag.getGateway().length())
+    		    <td class="value">
+    		      <input type="hidden" id="delgw$pct" name="delgw$pct" value="0"/>
+    		      <input type="hidden" id="chggw$pct" name="chggw$pct" value="0"/>
+    		      <input type="hidden" id="hgw$pct" name="hgw$pct" value="$hgw.getGateway()" size="$slen" />
+              <span class="populated-value">$hgw.getGateway()</span>
+    		    </td>
+		        #set($slen=$hag.getGroupdn().length())
+			      <td class="value">
+			        <input type="hidden" id="hgwg$pct" name="hgwg$pct" value="$hgw.getGroupdn()" size="$slen" />
+              <span class="populated-value">$hgw.getGroupdn()</span>
+		        </td>
+	
+            <td>
+              <button id="rgw$pct" name="rgw$pct" class="rgwclass action">remove</button>
+            </td>
+          </tr>
+          #set($pct=$pct+1)
+        #end
+      </table>
+    </form>
+</div>
+
+<div id="addhostmapdiv" name="addhostmapdiv" title="Add a Proconsul Host Group">
+	<form name="ahform" id="ahform" method="POST" action="#">
+		<input type="hidden" name="addhostmapformsubmitted" id="addhostmapeformsubmitted" value="1"/>
+		<table>
+			<tr>
+				<td>
+          <select id="lhsselector" name="lhsselector">
+            <option value='fqdn'>Host Name</option>
+            <option value='ou'>Org Unit</option>
+          </select>
+        </td>
+				<td><input type="text" name="lhs" id="lhs" value="value"/></td>
+			</tr>
+			<tr>
+				<td><input type="text" name="rhs" id="rhs" value="AD Group DN"/></td>
+			</tr>
+			<tr>
+				<td span=4><button name='submit' value='submit' id='addhostmapsubmit' class="action">Submit</button></td>
+			</tr>
+		</table>
+	</form>
+</div>
+
+<div id="addgwdiv" name="addgwdiv" title="Add a Proconsul RDP Gateway Mapping">
+	<form name="agwform" id="agwform" method="POST" action="#">
+		<table>
+			<tr>
+				<td><input type="text" name="lhs" id="lhs" value="Target Host FQDN"/></td>
+			</tr>
+			<tr>
+				<td><input type="text" name="rhs" id="rhs" value="RDP GW FQDN"/></td>
+			</tr>
+			<tr>
+				<td><input type="text" name="other" id="other" value="RDP GW AD Group DN"/></td>
+			<tr>
+				<td span=4><button name='submit' value='submit' id='agwformsubmit' class="action">Submit</button></td>
+			</tr>
+		</table>
+		<input type="hidden" name="addgwformsubmitted" id="addgwformsubmitted" value="1"/>
+	</form>
+</div>
+
+
+<script type="text/javascript">
+ $( document ).ready(function() {
+ 	$("#addhostmapdiv").hide();
+ 	$("#addgwdiv").hide();
+ 	$("#addgrp").click(function(e) {
+ 		e.preventDefault();
+ 		$("#addhostmapdiv").dialog({modal: true, width: 600});
+ 	});
+ 	$("#addgw").click(function(e) {
+ 		e.preventDefault();
+ 		$("#addgwdiv").dialog({modal: true, width: 600});
+ 	});
+ 	
+ 	rug = $("#groupform").find(".rugclass");
+ 	rug.each(function(button) {
+ 		var num = rug[button].name.replace("rug","");
+ 		$(rug[button]).click(function(e) {
+ 			e.preventDefault();
+ 			if (document.getElementById("delhgrp"+num)) {
+ 				$("#delhgrp"+num).val('1');
+ 				alert("Removing " +$("#hgrp"+num).val());
+ 				$("#groupform").submit();
+ 			} 
+ 		});
+ 	});
+ 	rog=$("#groupform").find(".rogclass");
+ 	rog.each(function(button) {
+ 		var num = rog[button].name.replace("rog","");
+ 		$(rog[button]).click(function(e) {
+ 			e.preventDefault();
+ 			if (document.getElementById("delogrp"+num)) {
+ 				$("#delogrp"+num).val('1');
+ 				alert("Removing " + $("#ogrp"+num).val());
+ 				$("#groupform").submit();
+ 			}
+ 		});
+ 	});
+ 	
+ 	rgw=$("#gwform").find(".rgwclass");
+ 	rgw.each(function(button) {
+ 		var num = rgw[button].name.replace("rgw","");
+ 		$(rgw[button]).click(function(e) {
+ 			e.preventDefault();
+ 			if (document.getElementById("delgw"+num)) {
+ 				$("#delgw"+num).val('1');
+ 				alert("Removing " + $("#hgwg"+num).val());
+ 				$("#gwform").submit();
+ 			}
+ 		});
+ 	});
+ 	
+ 	
+ });
+ </script>
