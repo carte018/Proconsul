@@ -387,7 +387,7 @@ You may find it helpful to periodically dump the contents of your Proconsul data
 outside your Dockerized environment for purposes of backup.  One easy way to do this is to run 
 the following command on the host you're running the Dockerized Proconsul instance on:
 
-`docker exec -i -t \`docker ps | grep carte018/proconsul | grep 'Up' | awk '{print $NF}'\` mysqldump -u mysql-user -p -A > backup-file-name.sql
+``docker exec -i -t `docker ps | grep carte018/proconsul | grep 'Up' | awk '{print $NF}'` mysqldump -u mysql-user -p -A > backup-file-name.sql``
 
 You'll need to replace `mysql-user` with the username you specified in your configuration as
 the MySQL user for Proconsul to create and use, and you'll be prompted for its password when
