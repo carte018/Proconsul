@@ -129,45 +129,79 @@ Proconsul consists of four separate components:
   containers.  Docker-gen and the required custom configuration and
   scripts are included in the "docker-gen" directory.
 
-## Installation
+## **NEW**:  Dockerized Installation
 
-Full documentation for the installation of Proconsul at a new site has
+Proconsul now offers, in addition to the standard, manually installation process, a fully-
+dockerized installation process.  The Dockerized installation process is significantly
+less labor-intensive than the manual process, and is probably the quickest and simplest way
+to get a Proconsul instance up and running in your AD environment.  It still requires 
+some preparation of your AD domain, and some initial configuration, but the bulk of the 
+build process for all the relevant Docker containers, the Proconsul and Proconsul Admin code,
+and the set-up of the Java environment/web server environment is largely scripted.
+
+If you're interested in using the Dockerized deployment, you'll want to move into the 
+`Dockerized` diretory under this directory and review the `README.md` file there for 
+instructions on setting up your AD, preparing your Docker server, and configuring the 
+Dockerized build process.  
+
+The current packaging of Proconsul for a fully Dockerized deployment assumes you will be 
+using SAML to handle user authentication, and configures and deploys a Shibboleth SP as part
+of the docker image build process. In future, the Dockerized build process may include additional authentication options, but for now, if you wish to authenticate users in a different way,you'll need to use the manual build process and make your own arrangements for authentication.
+
+Unless you're planning to develop extensions to Proconsul itself or you need to use a non-
+SAML authentication mechanism, it's strongly recommended that you use the Dockerized 
+deployment rather than attempt a fully manual installation.  If you must perform a full
+manual installation, the Installation instructions below may get you started in the right 
+direction -- inspecting the build scripts under the Dockerized deployment tree should 
+provide more insight into everything that's needed to successfully build and install the 
+software manually.  The `README.md` file in the `Dockerized` directory will also provide
+insight into the workings of the Dockerized installation, from which you may infer 
+the bulk of what's required to perform a fully manual installation.
+
+## Manual Installation
+
+Full documentation for the manual installation of Proconsul at a new site has
 yet to be developed, but at a very high level, the process involves a
 few basic steps:
 
-1. Establish a Java container server for the environment and build and
-   deploy the Proconsul application on the server.  Proconsul assumes
+1. Build the Proconsul and Proconsul Admin applications from the source code provided.
+   Both applications are now configured as Maven projects, so assuming you have a working
+   Maven installation on your system, you should be able to cd into the proconsul or
+   proconsuladmin directory and run `mvn install` to build the appropriate war file(s).
+
+2. Establish a Java container server for the environment and deploy
+   the application war files on the server.  Proconsul assumes
    that user authentication is being performed by the container or
    something logically "in front of" it. The source code does not
    handle end-user authentication, and simply expects a user
    identifier to be available as part of the HTTP request it receives.
 
-2. Build and deploy the RDP client Docker container on your server,
+3. Build and deploy the RDP client Docker container on your server,
    and edit the proconsul.properties configuration file for your
-   container *and* your AD domain environment.
+   container *and* your AD domain environment.  
 
-3. Build and deploy docker-gen along with the custom docker-gen
+4. Build and deploy docker-gen along with the custom docker-gen
    configuration included herein on your server.
 
-4. Run the "proconsul.db.schema" SQL script on your MySQL server or
+5. Run the "proconsul.db.schema" SQL script on your MySQL server or
    (if you prefer to use another database provider) configure
    databases and tables according that that schema in your preferred
    database environment, and configure Proconsul to find the
    appropriate database.
 
-5. Configure your AD with the groups, OUs, and users required by
+6. Configure your AD with the groups, OUs, and users required by
    Proconsul.  For the moment, the best way to determine what those
    are is to review the Proconsul source code, or contact the authors
    for more information.
 
-6. Configure the Proconsul datbase with explicit user->host,
-   user->orgUnit, user->group, group->host, group->orgUnit, and
-   group->group mappings in its various tables.  An administrative UI
-   is in the design phase currently for Proconsul's database that will
-   afford a much easier mechanism for managing the applications
-   somewhat complex authorization mechanisms.  Until that is released,
-   configuration can still be accomplished through direct modification
-   of Proconsul's SQL tables.
+7. An administrative UI is now available as the "proconsuladmin" application.
+   You can use it to configure the Proconsul database with explicit user->host,
+   user->orgUnit, user->group, group->host, group->orgUnit, and 
+   group->group mappings, as well as to configure POSIX attributes for specific 
+   users and control access to both the application itself and the 
+   Domain Admin functionality within it.  For instructions on using the 
+   administrative interface, consult the README.md file in the `Dockerized`
+   directory.
 
 ## Questions
 
