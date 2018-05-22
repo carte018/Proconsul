@@ -95,7 +95,7 @@ you'll start by cloning the Proconsul project from GitHub:
 `git clone https://github.com/carte018/proconsul`
 
 To use the simplified Dockerized installation process, you'll then want to "cd" into
-the `docker` subdirectory, where you'll find a copy of this README file.
+the `Dockerized` subdirectory, where you'll find a copy of this README file.
 
 ## Step 3:  Preparing your AD to support Proconsul
 
