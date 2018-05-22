@@ -265,7 +265,7 @@ For reference, the settings (in brief) are:
 ## Step 6:  Build your Docker containers
 
 For a first-time build, on a newly deployed Docker engine server with no prior 
-configuration and no pre-build Docker images, become "root" on your Proconsul server 
+configuration and no pre-built Docker images, become "root" on your Proconsul server 
 and run the "build" script in this directory.  You can check the syntax by running:
 
 `build --help`
