@@ -190,7 +190,7 @@ The Dockerized deployment process automatically installs a Shibboleth SP and eit
 copies in a host-level configuration (if one is already available) or creates a new 
 entity configuration, complete with the necessary keys, etc.  You will need to decide
 before setting up your configuration whether your Proconsul instance is going to be 
-federated multilaterally (via a federation liek InCommon) or bilaterally (with a 
+federated multilaterally (via a federation like InCommon) or bilaterally (with a 
 single, usually institutional identity provider).  Both modes are suppported.  In 
 either case, you will need to select a unique SAML entity ID for your Proconsul
 service.  In the bilateral federation case, you will need to collect the SAML entityId
