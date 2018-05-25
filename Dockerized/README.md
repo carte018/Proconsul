@@ -339,7 +339,7 @@ be required, depending on your federation operator and/or IDP operator.
 ## Step 8: Start the Proconsul instance
 
 At this point, you're ready to start your Proconsul instance.  You may do this using the
-`run6.sh` script provided in this directory.
+`run3.sh` script provided in this directory.
 
 ## Step 9: Configure Proconsul itself
 
