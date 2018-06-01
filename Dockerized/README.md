@@ -80,12 +80,25 @@ need to open depends on the number of simultaneous clients you wish to support -
 client will require two adjacent port numbers starting at 5900 (eg., a single client
 will use ports 5900 and 5901, while five concurrent clients will use ports 5900 - 5909).
 At Duke, we typically configure individual Proconsul servers to handle up to 50 
-concurrent sessions, so we allow traffic in on ports 5900 - 5999.  
+concurrent sessions, so we allow traffic in on ports 5900 - 5999.  (Note:  Depending on 
+your Docker installation, this may be handled automatically for you by the Docker daemon.)
 
 There is no requirement to allow incoming traffic on TCP port 3306 (the MySQL port), 
 but if you wish to interact with the Proconsul database remotely (eg., to inspect its
 current list of active sessions and/or accounts for monitoring purposes) you may 
 want to do so.
+
+Finally, because the installation process actually rebuilds the Proconaul and ProconulAdmin
+Java applications dynamically, your server will need a Java SDK and the Maven package manager
+installed.  Installation processes will vary for these tools, but for example, for a RedHat-derived
+system, you'd typically execute:
+
+`yum install java`
+`yum install maven`
+
+to accomplish this.   If desired, the java and maven packages can be removed following completion of 
+the installation, but you may find it preferable to retain the installations to simplify rebuilding 
+during upgrades.
 
 ## Step 2:  Retrieving the Dockerized installation tree
 
