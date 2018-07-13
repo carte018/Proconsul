@@ -127,3 +127,8 @@ ADD proconsuladmin.war /mnt/proconsuladmin.war
 
 ADD proconsul.properties /mnt/proconsul.properties
 ADD proconsuladmin.properties /mnt/proconsuladmin.properties
+ 
+#
+# And load the ldap client for updating the AD out of docker-gen
+
+RUN apt-get -y install ldap-utils
