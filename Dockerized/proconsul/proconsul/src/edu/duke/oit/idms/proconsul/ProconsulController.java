@@ -1033,8 +1033,10 @@ public class ProconsulController {
 		}
 		model.addObject("roleGroups",rolegroups);
 		ArrayList<DisplayOu> delegatedous = new ArrayList<DisplayOu>();
-		for (String ou : ProconsulUtils.delegatedOusForUser(testUser)) {
-			delegatedous.add(new DisplayOu(ou.replaceAll(",.*", "").replaceAll(".*=", ""),ou));
+		if (ProconsulUtils.delegatedOusForUser(testUser) != null) {
+			for (String ou : ProconsulUtils.delegatedOusForUser(testUser)) {
+				delegatedous.add(new DisplayOu(ou.replaceAll(",.*", "").replaceAll(".*=", ""),ou));
+			}
 		}
 		model.addObject("delegatedOUs",delegatedous);
 		
