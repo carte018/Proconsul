@@ -31,7 +31,7 @@ public class AuthUser {
 				}
 			}
 		}
-		String e = (String) req.getAttribute("entitlements");
+		String e = (String) req.getAttribute("entitlement");
 		String[] es = null;
 		if (e != null) {
 			es = e.split(";");
