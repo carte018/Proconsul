@@ -12,7 +12,12 @@
 #
 ts=`date +'%Y-%m-%d %H:%M:%S'`
 # Get the retval from the container 
-retval=`docker start {{$container.ID}} > /dev/null; docker exec {{$container.ID}} cat /tmp/retval; docker stop {{$container.ID}} > /dev/null`
+#retval=`docker start {{$container.ID}} > /dev/null; docker exec {{$container.ID}} cat /tmp/retval; docker stop {{$container.ID}} > /dev/null`
+mkdir -p /tmp/{{$container.ID}}
+docker cp {{$container.ID}}:/tmp/retval /tmp/{{$container.ID}}
+retval=`cat /tmp/{{$container.ID}}/retval`
+# Adjust in case of reconnect disconnection
+for i in `docker ps | grep -v NAMES | awk '{print $NF}'`; do if docker top $i | grep xfreerdp | grep {{$container.Env.WINUSER}}; then retval=3; fi; done
 #
 # If the retval from the RDP client does not indicate a "disconnect", remove the user from the AD
 # and remove the session from the Proconsul database.

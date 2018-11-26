@@ -12,7 +12,12 @@
 #
 ts=`date +'%Y-%m-%d %H:%M:%S'`
 # Get the retval from the container 
-retval=`docker -H 127.0.0.1:2375 start {{$container.ID}} > /dev/null; docker -H 127.0.0.1:2375 exec {{$container.ID}} cat /tmp/retval; docker -H 127.0.0.1:2375 stop {{$container.ID}} > /dev/null`
+#retval=`docker -H 127.0.0.1:2375 start {{$container.ID}} > /dev/null; docker -H 127.0.0.1:2375 exec {{$container.ID}} cat /tmp/retval; docker -H 127.0.0.1:2375 stop {{$container.ID}} > /dev/null`
+mkdir -p /tmp/{{$container.ID}}
+docker -H 127.0.0.1:2375 cp {{$container.ID}}:/tmp/retval /tmp/{{$container.ID}}
+retval=`cat /tmp/{{$container.ID}}/retval`
+# Adjust in case of reconnect disconnection
+for i in `docker -H 127.0.0.1:2375 ps | grep -v NAMES | awk '{print $NF}'`; do if docker -H 127.0.0.1:2375 top $i | grep xfreerdp | grep {{$container.Env.WINUSER}}; then retval=3; fi; done
 # Original if:  if [ $retval == 2 -o $retval == 12 ] 
 if [ $retval != 1 -a $retval != 11 -a $retval != 3 ]
 then
