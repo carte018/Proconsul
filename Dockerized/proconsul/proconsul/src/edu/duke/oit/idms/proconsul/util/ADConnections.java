@@ -53,22 +53,22 @@ public class ADConnections {
 					SearchResult sr = results.next();
 					if (localSite != null && sr.getAttributes().get("serverReferenceBL").get().toString().matches(localSite)) { 
 						String dcfqdn = (String) sr.getAttributes().get("dnsHostName").get();
-						LOG.info("Adding " + dcfqdn + " to DC list");
+						ProconsulUtils.debug(LOG,"Adding " + dcfqdn + " to DC list");
 						if (adurls == null) {
 							adurls = "ldaps://"+dcfqdn+":636";
 						} else {
 							adurls = adurls + "," + "ldaps://"+dcfqdn+":636";
 						}
 					} else {
-						LOG.info("Discarding " + sr.getAttributes().get("dnsHostName").get() + " on no match to reference BL " + sr.getAttributes().get("serverReferenceBL").get());
+						ProconsulUtils.debug(LOG,"Discarding " + sr.getAttributes().get("dnsHostName").get() + " on no match to reference BL " + sr.getAttributes().get("serverReferenceBL").get());
 					}
 				}
-				LOG.info("adurls after DNS search is " + adurls);
+				ProconsulUtils.debug(LOG,"adurls after DNS search is " + adurls);
 			} else {
-				LOG.info("adurls cannot be set from AD search due to missing AD connection");
+				ProconsulUtils.debug(LOG,"adurls cannot be set from AD search due to missing AD connection");
 			}
 		} catch (Exception e) {
-			LOG.info("Exception thrown during LDAP search for DCs - " + e.getMessage());
+			ProconsulUtils.error(LOG,"Exception thrown during LDAP search for DCs - " + e.getMessage());
 			// ignore
 		} finally {
 			if (results != null) {
@@ -91,7 +91,7 @@ public class ADConnections {
 			adurls = config.getProperty("ldap.dcs", true);
 		}
 		
-		LOG.info("adurls after property get is " + adurls);
+		ProconsulUtils.debug(LOG,"adurls after property get is " + adurls);
 		
 		connections = new ArrayList<LDAPAdminConnection>();
 		
@@ -101,7 +101,7 @@ public class ADConnections {
 			String target = urlarray[i];
 			
 			connections.add(LDAPAdminConnection.getInstance(target));
-			LOG.info("Added connection to " + target);
+			ProconsulUtils.debug(LOG,"Added connection to " + target);
 		}
 	}
 	public void close() {

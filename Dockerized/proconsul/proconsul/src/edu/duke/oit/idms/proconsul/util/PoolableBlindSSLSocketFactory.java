@@ -17,7 +17,7 @@ public class PoolableBlindSSLSocketFactory extends BlindSSLSocketFactory
 	
 	@Override
 	public int compare(SocketFactory o1, SocketFactory o2) {
-		LOG.info("Called compare on socketfactory in blind socket override");
+		ProconsulUtils.debug(LOG,"Called compare on socketfactory in blind socket override");
 		if (o1.getClass().getName().equalsIgnoreCase(o2.getClass().getName())) {
 			return 0;
 		} else {
@@ -27,7 +27,7 @@ public class PoolableBlindSSLSocketFactory extends BlindSSLSocketFactory
 	
 	public int compare(String o1, String o2) {
 		// TODO Auto-generated method stub
-		LOG.info("Called compare in blind socket override");
+		ProconsulUtils.debug(LOG,"Called compare in blind socket override");
 		if (o1.equalsIgnoreCase(o2)) {
 			return 0;
 		} else {

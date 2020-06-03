@@ -9,4 +9,11 @@
     <servlet-name>proconsul-dispatcher</servlet-name>
     <url-pattern>/</url-pattern>
   </servlet-mapping>
+        <!--  Configure a listener class to handle more graceful clean-up and init  -->
+        <listener>
+                <listener-class>
+                        edu.duke.oit.idms.proconsul.ServletMaintainer
+                </listener-class>
+        </listener>
+  
 </web-app>
