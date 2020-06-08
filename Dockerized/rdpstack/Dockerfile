@@ -74,6 +74,8 @@ RUN yum install -y git patch
 WORKDIR /tmp
 RUN git clone https://github.com/FreeRDP/FreeRDP
 WORKDIR /tmp/FreeRDP
+RUN git fetch --all --tags
+RUN git checkout tags/2.1.1 -b 2.1.1-master
 ADD nla-patch /tmp/nla-patch
 #RUN patch -p1 < /tmp/nla-patch
 RUN yum clean all
