@@ -76,30 +76,21 @@ RUN git clone https://github.com/FreeRDP/FreeRDP
 WORKDIR /tmp/FreeRDP
 RUN git fetch --all --tags
 RUN git checkout tags/2.1.1 -b 2.1.1-master
-ADD nla-patch /tmp/nla-patch
+#ADD nla-patch /tmp/nla-patch
 #RUN patch -p1 < /tmp/nla-patch
+
 RUN yum clean all
-RUN yum install -y make
-RUN yum install -y cmake
-RUN yum install -y gcc
-RUN yum install -y zlib-devel
-RUN yum install -y zlib
-RUN yum install -y xorg-x11-server-devel
-RUN yum install -y xorg-x11-proto-devel
-RUN yum install -y libXcursor-devel
-RUN yum install -y openssl-devel
-RUN yum install -y openssl
-RUN yum install -y gcc-c++
-RUN yum install -y avahi-glib
-RUN yum install -y avahi-glib-devel
-RUN yum install -y libXv-devel
-RUN yum install -y libXi-devel
-RUN yum install -y alsa-lib
-RUN yum install -y alsa-lib-devel
+RUN yum install -y epel-release
+RUN yum localinstall -y --nogpgcheck https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm
+RUN yum install -y gcc cmake ninja-build openssl-devel libX11-devel libXext-devel libXinerama-devel libXcursor-devel libXi-devel \ 
+libXdamage-devel libXv-devel libxkbfile-devel alsa-lib-devel cups-devel ffmpeg-devel glib2-devel libusb-devel xorg-x11-server-devel \
+openssl-devel openssl gcc-c++ avahi-glib avahi-glib-devel
 WORKDIR /tmp/FreeRDP
-RUN cmake -DCMAKE_BUILD_TYPE=Release -DWITH_SSE2=ON
-RUN make
-RUN make install
+RUN cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCHANNEL_URBDRC=OFF
+RUN cmake --build .
+RUN cmake --build . --target install
+
+
 
 WORKDIR /var/www/html/vnc-home
 ADD self.pem /var/www/html/vnc-home/self.pem
