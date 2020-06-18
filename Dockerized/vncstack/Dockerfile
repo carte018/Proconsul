@@ -74,7 +74,6 @@ RUN yum install -y nmap-ncat
 WORKDIR /var/www/html/vnc-home
 ADD self.pem /var/www/html/vnc-home/self.pem
 RUN yum install -y mariadb
-ADD cleanmeup /tmp/cleanmeup
 RUN yum install -y net-tools
 #
 # This sets the default time zone to EST - YMMV
