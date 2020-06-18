@@ -49,7 +49,7 @@ public class LDAPAdminConnection extends LDAPConnection {
 	}
 	private void addMap(LDAPAdminConnection c) {
 		String url = environment.get(Context.PROVIDER_URL);
-		LOG.info("Adding cached connection to " + url);
+		ProconsulUtils.debug(LOG,"Adding cached connection to " + url);
 		if (! connMap.containsKey(url)) {
 			connMap.put(url,c);
 		}
@@ -60,17 +60,12 @@ public class LDAPAdminConnection extends LDAPConnection {
 			conn.addMap(conn);
 		}
 		for (String key : connMap.keySet()) {
-			LOG.info("ConnMap contains: " + key);
+			ProconsulUtils.log(LOG,"ConnMap contains: " + key);
 		}
 		return conn;
 	}
 	protected static LDAPAdminConnection getInstance(String target) {
-		/*if (!connMap.containsKey(target)) {
-			LOG.info("New admin connection with target " + target);
-			conn.addMap(new LDAPAdminConnection(target));
-		}
-		LOG.info("Returning admin connection with target " + target);
-		return connMap.get(target);*/
+
 		if (conn == null || !connMap.containsKey(target)) {
 			conn = new LDAPAdminConnection(target);
 			conn.addMap(conn);
@@ -78,7 +73,7 @@ public class LDAPAdminConnection extends LDAPConnection {
 			conn = connMap.get(target);
 		}
 		for (String key : connMap.keySet()) {
-			LOG.info("connMap contains: " + key);
+			ProconsulUtils.log(LOG,"connMap contains: " + key);
 		}
 		return conn;
 	}

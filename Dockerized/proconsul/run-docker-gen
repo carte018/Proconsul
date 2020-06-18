@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ADUSER="user@dom.ain" ADPASS="AuSerPass" ADDOMAIN='dom.ain' ADBASE='ou=something,ou=else,dc=dom,dc=ain' /opt/docker-gen/docker-gen -config /opt/docker-gen/proconsul.cfg -endpoint tcp://127.0.0.1:2375 > /tmp/docker-gen.output 2>&1 &

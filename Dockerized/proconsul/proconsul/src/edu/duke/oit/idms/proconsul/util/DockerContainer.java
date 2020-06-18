@@ -202,10 +202,10 @@ public class DockerContainer {
 			throw new ContainerInitException("cpuset is required for initialization");
 		}
 		
-		LOG.info("Calling docker api");
+		ProconsulUtils.debug(LOG,"Calling docker api");
 		docker = DockerClientBuilder.getInstance("http://" + dockerHost + ":2375/v1.19").build();
 		// docker = DockerClientBuilder.getInstance("http://localhost:2375").build();
-		LOG.info("Docker connection established");
+		ProconsulUtils.debug(LOG,"Docker connection established");
 		if (docker == null) {
 			throw new ContainerInitException("Connection to docker executive failed");
 		}
@@ -224,7 +224,7 @@ public class DockerContainer {
 		//	command.withPortBindings(portBindings.toArray(new PortBinding[portBindings.size()]));
 		//	System.out.println("Exposed port bindings");
 		}
-		LOG.info("Creating new container");
+		ProconsulUtils.debug(LOG,"Creating new container");
 		if (size != null && size.equals("large")) 
 			command = docker.createContainerCmd(config.getProperty("docker.image.large", true)).withPrivileged(privileged).withCpuset(cpuset).withNetworkMode("host").withPortBindings(portBindings.toArray(new PortBinding[portBindings.size()]));
 		else if (size != null && size.equals("vnclarge"))
@@ -233,8 +233,9 @@ public class DockerContainer {
 			command = docker.createContainerCmd(config.getProperty("docker.image.vncdefault", true)).withPrivileged(privileged).withCpuset(cpuset).withNetworkMode("host").withPortBindings(portBindings.toArray(new PortBinding[portBindings.size()]));
 		else	
 			command = docker.createContainerCmd(imageName).withPrivileged(privileged).withCpuset(cpuset).withNetworkMode("host").withPortBindings(portBindings.toArray(new PortBinding[portBindings.size()]));
-		LOG.info("New container created");
+		ProconsulUtils.log(LOG,"New container created");
 		if (command == null) {
+			ProconsulUtils.error(LOG, "Failed creating new container");
 			throw new ContainerInitException("Creation of new container failed");
 		}
 		if (volumeMappings != null && ! volumeMappings.isEmpty()) {
@@ -248,20 +249,21 @@ public class DockerContainer {
 				count ++;
 			}
 			command.withVolumes(vols).withBinds(vbinds);
-			LOG.info("Set " + count + " volume binds");
+			ProconsulUtils.debug(LOG,"Set " + count + " volume binds");
 		}
 		if (environment != null && ! environment.isEmpty()) {
 			command.withEnv(environment.toArray(new String[1]));
-			LOG.info("Set environment values");
+			ProconsulUtils.debug(LOG,"Set environment values");
 		}
 		if (cmd != null && ! cmd.equalsIgnoreCase("")) {
 			String[] cmdparts = cmd.split(" ");
 			command.withCmd(cmdparts);
-			LOG.info("Set cmd to " + cmd);
+			ProconsulUtils.debug(LOG,"Set cmd to " + cmd);
 		}
 		container = command.exec();
-		LOG.info("Execed");
+		ProconsulUtils.debug(LOG,"Execed");
 		if (container == null) {
+			ProconsulUtils.error(LOG,"Failed to create new container with specified arguments");
 			throw new ContainerInitException("Failed to create container with arguments");
 		}
 		docker.startContainerCmd(container.getId()).exec();

@@ -27,6 +27,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.duke.oit.idms.proconsul.CheckedOutCred;
 import edu.duke.oit.idms.proconsul.DisplayFQDN;
 import edu.duke.oit.idms.proconsul.Status;
 import edu.duke.oit.idms.proconsul.cfg.PCConfig;
@@ -41,21 +42,75 @@ public class ProconsulUtils {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(ProconsulUtils.class);
 	
+	// Wrapper routines for generating log entries using loggers from other classes.
+	//
+	// We supply four classes of log:
+	//
+	//	audit:  Logged at the ERROR level *AND* written out to the audit trail DB table
+	//  error:  Logged at the ERROR level but not reported into the audit trail
+	//  log:    Logged at the INFO level as an informational log
+	//  debug:  Logged at the DEBUG level as an informational log
+	//
+	// Audits and errors are always logged.  Log and debug messages are controllable with 
+	// configuration (which by default suppresses them).
+	//
+	// For each of the utility routines, we take a string to log along with a Logger object to
+	// log through.
+	//
+	//
+	// The audit routine is more complex than the rest, owing to its needing additional tagged
+	// information to populate into the audit trail (where appropriate)
+	
+	public static void audit(Logger logger, String event, String authUser, String targetHost, String targetUser, String targetGroup, String clientIp) {
+		// First, write out the audit trail entry.  This is of prime importance.
+		
+		ProconsulUtils.writeAuditLog(authUser, event, targetUser, targetHost, targetGroup, clientIp);
+		
+		// Regardless, perform a log operation with the same information
+		//
+		logger.error(event + "(user=" + authUser + ",targethost="+targetHost+",targetuser="+targetUser+",targetgroup="+targetGroup+",clientip="+clientIp+")");
+		
+	}
+	
+	public static void error(Logger logger, String event) {
+		// Write out the error log entry
+		logger.error(event);
+	}
+	
+	public static void log(Logger logger, String event) {
+		// If the log level is >= INFO, write the log entry
+		PCConfig config = PCConfig.getInstance();
+		String loglevel = config.getProperty("loglevel", false);
+		if (loglevel != null && (loglevel.equalsIgnoreCase("info") || loglevel.equalsIgnoreCase("debug"))) {
+			logger.info(event);
+		}
+	}
+	
+	public static void debug(Logger logger, String event) {
+		// if the log level is DEBUG write the log entry
+		PCConfig config = PCConfig.getInstance();
+		String loglevel = config.getProperty("loglevel",  false);
+		if (loglevel != null && loglevel.equalsIgnoreCase("debug")) {
+			logger.debug(event);
+		}
+	}
+	
 	public static boolean isSamaccountnameAvailable(String sam, LDAPAdminConnection lac) {
 		DirContext dc = null;
 		NamingEnumeration<SearchResult> result = null;
 		try {
 			dc = lac.getConnection();
 			if (dc == null) {
-				LOG.info("DC value is null in isSamaccountnameAvailable");
+				debug(LOG,"DC value is null in isSamaccountnameAvailable");
 			}
 			if (sam == null) {
-				LOG.info("SAM is null in isSamaccountnameAvailable");
+				debug(LOG,"SAM is null in isSamaccountnameAvailable");
 			}
 			if (sam.equals("")) {
-				LOG.info("SAM is empty but not null in isSamaccountnameAvailable");
+				debug(LOG,"SAM is empty but not null in isSamaccountnameAvailable");
 			}
-			if (dc == null || sam == null || sam.equals("")) { 
+			if (dc == null || sam == null || sam.equals("")) {
+				error(LOG,"Unable to check sAMAccountName availability for sAMAccountName=" + sam);
 				return true;  //for specific server, "true" is "fail"
 			}
 			SearchControls sc = new SearchControls();
@@ -109,27 +164,27 @@ public class ProconsulUtils {
 			
 			results = dc.search(searchBase,  "samaccountname="+sam,sc);
 			if (results == null) {
-				LOG.info("Returning true becasue of null results return");
+				debug(LOG,"Returning true becasue of null results return");
 				return true;
 			}
 			if (results == null || ! results.hasMore()) {
-				LOG.info("Returning true from isSamaccountnameavailable()");
+				debug(LOG,"Returning true from isSamaccountnameavailable()");
 				return true;
 			} else {
-				LOG.info("Returning false from isSamaccountnameavailable()");
+				debug(LOG,"Returning false from isSamaccountnameavailable()");
 				return false;
 			}
 		} catch (PartialResultException p) {
 			// ignore partial result exceptions since we do not follow referrals in AD
 			if (results == null || ! results.hasMoreElements()) {
-				LOG.info("Partial result returning true from isSamaccountnameavailable()");
+				debug(LOG,"Partial result returning true from isSamaccountnameavailable()");
 				return true;
 			} else {
-				LOG.info("Partial result returning false from isSamaccountnameavaialble() for " + sam);
+				debug(LOG,"Partial result returning false from isSamaccountnameavaialble() for " + sam);
 				return false;
 			}
 		} catch (NamingException e) {
-			LOG.info("Throwing exception from isSamaccountnameavailable()");
+			error(LOG,"Throwing exception from isSamaccountnameavailable()");
 			throw new RuntimeException("Failed looking up samaccountname in AD: " + e.getMessage() + " - throwable " + e.toString() + ":");
 		} finally {
 			if (results != null) {
@@ -159,10 +214,10 @@ public class ProconsulUtils {
 			retval += "-eas";
 		}
 		if (count < 10) {
-			LOG.info("Random available samaccountname is " + retval);
+			log(LOG,"Random available samaccountname is " + retval);
 			return retval;
 		} else {
-			LOG.info("Unable to find unused sAMAccountName value after 10 tries");
+			error(LOG,"Unable to find unused sAMAccountName value after 10 tries");
 			throw new RuntimeException("Unable to find unused sAMAccountName value");
 			
 		}
@@ -178,6 +233,9 @@ public class ProconsulUtils {
 	
 	// Statically remove an AD object
 	public static ADUser deleteAdUser(ADUser u) {
+		return deleteAdUser(u,null,null);
+	}
+	public static ADUser deleteAdUser(ADUser u, AuthUser au, String clientip) {
 		if (u == null || u.getsAMAccountName() == null || u.getsAMAccountName().equalsIgnoreCase("") || u.getAdDomain() == null || u.getAdDomain().equals("")) {
 			return null; // at least we tried
 		}
@@ -200,8 +258,11 @@ public class ProconsulUtils {
 					lac.getConnection().destroySubcontext(dnToRemove);
 				}
 			}
-			writeAuditLog(null,"ADuserDelete",u.getsAMAccountName(),null,null,null);
-			LOG.info("Deleted ad user " + u.getsAMAccountName());
+			//writeAuditLog(null,"ADuserDelete",u.getsAMAccountName(),null,null,null);
+			if (au != null)
+				audit(LOG,"Deleted ad user " + u.getsAMAccountName(),au.getUid(),null,u.getsAMAccountName(),null,clientip);
+			else
+				audit(LOG,"Deleted ad user " + u.getsAMAccountName(),null,null,u.getsAMAccountName(),null,clientip);
 			return u;
 		} catch (Exception e) {
 			return null;
@@ -217,7 +278,7 @@ public class ProconsulUtils {
 		// avoids having to carry around POSIX attributes in the AD User object when they're not useful in many (most?) situations.
 		//
 		if (u == null || u.getsAMAccountName() == null || u.getsAMAccountName().equals("") || u.getAdDomain() == null || u.getAdDomain().equals("")) {
-			LOG.info("createAdUser: empty samaccountname");
+			error(LOG,"createAdUser: empty samaccountname");
 			return null;
 		}
 		
@@ -231,7 +292,7 @@ public class ProconsulUtils {
 			sc = new SearchControls();
 			sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
 		} catch (Exception e) {
-			LOG.info("createAdUser: Search scope creation failed");
+			error(LOG,"createAdUser: Search scope creation failed");
 			return null;
 		}
 		
@@ -310,19 +371,19 @@ public class ProconsulUtils {
 				try {
 					if (isSamaccountnameAvailable(u.getsAMAccountName(),lac) && ! userCreated) {
 						lac.getConnection().createSubcontext(dn,ba);
-						LOG.info("Initial account creation completed on " + lac.getConnection().getEnvironment().get(DirContext.PROVIDER_URL));
+						debug(LOG,"Initial account creation completed on " + lac.getConnection().getEnvironment().get(DirContext.PROVIDER_URL));
 						userCreated = true;  // user should be created everywhere we need eventually -- just propagation to deal with
 						Thread.sleep(4000);  // 4-second delay for propagation to catch up
 					} else {
 							while (isSamaccountnameAvailable(u.getsAMAccountName(),lac)) {
-								LOG.info("Waiting for propagation again...user=" + u.getsAMAccountName() + " host=" + lac.getConnection().getEnvironment().get(DirContext.PROVIDER_URL));
+								debug(LOG,"Waiting for propagation again...user=" + u.getsAMAccountName() + " host=" + lac.getConnection().getEnvironment().get(DirContext.PROVIDER_URL));
 								// blocking loop to wait for propagation
 								Thread.sleep(1000);
 							}
-							LOG.info("Propagation wins!");
+							debug(LOG,"Propagation wins!");
 					}
 				} catch (Exception ign) {
-					LOG.info("Threw " + ign.getMessage() + " while creating AD user - " + u.getsAMAccountName());
+					error(LOG,"Threw " + ign.getMessage() + " while creating AD user - " + u.getsAMAccountName());
 					// ignore
 				}
 			}
@@ -336,7 +397,7 @@ public class ProconsulUtils {
 				try {
 					lac.getConnection().modifyAttributes(dn, mi);
 				} catch (Exception ign2) {
-					LOG.info("Threw " + ign2.getMessage() + " changing password for user");
+					error(LOG,"Threw " + ign2.getMessage() + " changing password for user");
 					//ignore
 				}
 			}
@@ -349,18 +410,19 @@ public class ProconsulUtils {
 				try {
 					lac.getConnection().modifyAttributes(dn,  mhp);
 				} catch (Exception ign3) {
-					LOG.info("Threw " + ign3.getMessage() + " during require password update");
+					error(LOG,"Threw " + ign3.getMessage() + " during require password update");
 					//ignore
 				}
 			}
 			// Write out an audit log for what we just did
-			writeAuditLog(au.getUid(),"createADUser",u.getsAMAccountName(),null,null,clientaddr);
+			audit(LOG,"createADUser",au.getUid(),null,u.getsAMAccountName(),null,clientaddr);
+			//writeAuditLog(au.getUid(),"createADUser",u.getsAMAccountName(),null,null,clientaddr);
 		} catch (Exception e) {
-			LOG.info("AD User creation threw exception: " + e.getMessage());
+			error(LOG,"AD User creation threw exception: " + e.getMessage());
 			throw new RuntimeException(e);
 		}
 		u.setCreated(true);
-		LOG.info("AD User creation succeeded");
+		log(LOG,"AD User creation succeeded");
 		return u;
 	}
 	
@@ -371,7 +433,7 @@ public class ProconsulUtils {
 	
 	public static ADUser createAdUser(ADUser u) {
 		if (u == null || u.getsAMAccountName() == null || u.getsAMAccountName().equals("") || u.getAdDomain() == null || u.getAdDomain().equals("")) {
-			LOG.info("createAdUser: empty samaccountname");
+			error(LOG,"createAdUser: empty samaccountname");
 			return null;
 		}
 		
@@ -385,7 +447,7 @@ public class ProconsulUtils {
 			sc = new SearchControls();
 			sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
 		} catch (Exception e) {
-			LOG.info("createAdUser: Search scope creation failed");
+			error(LOG,"createAdUser: Search scope creation failed");
 			return null;
 		}
 		
@@ -412,19 +474,19 @@ public class ProconsulUtils {
 				try {
 					if (isSamaccountnameAvailable(u.getsAMAccountName(),lac) && ! userCreated) {
 						lac.getConnection().createSubcontext(dn,ba);
-						LOG.info("Initial account creation completed on " + lac.getConnection().getEnvironment().get(DirContext.PROVIDER_URL));
+						debug(LOG,"Initial account creation completed on " + lac.getConnection().getEnvironment().get(DirContext.PROVIDER_URL));
 						userCreated = true;  // user should be created everywhere we need eventually -- just propagation to deal with
 						Thread.sleep(4000);  // 4-second delay for propagation to catch up
 					} else {
 							while (isSamaccountnameAvailable(u.getsAMAccountName(),lac)) {
-								LOG.info("Waiting for propagation again...user=" + u.getsAMAccountName() + " host=" + lac.getConnection().getEnvironment().get(DirContext.PROVIDER_URL));
+								debug(LOG,"Waiting for propagation again...user=" + u.getsAMAccountName() + " host=" + lac.getConnection().getEnvironment().get(DirContext.PROVIDER_URL));
 								// blocking loop to wait for propagation
 								Thread.sleep(1000);
 							}
-							LOG.info("Propagation wins!");
+							debug(LOG,"Propagation wins!");
 					}
 				} catch (Exception ign) {
-					LOG.info("Threw " + ign.getMessage() + " while creating AD user - " + u.getsAMAccountName());
+					error(LOG,"Threw " + ign.getMessage() + " while creating AD user - " + u.getsAMAccountName());
 					// ignore
 				}
 			}
@@ -438,7 +500,7 @@ public class ProconsulUtils {
 				try {
 					lac.getConnection().modifyAttributes(dn, mi);
 				} catch (Exception ign2) {
-					LOG.info("Threw " + ign2.getMessage() + " changing password for user");
+					error(LOG,"Threw " + ign2.getMessage() + " changing password for user");
 					//ignore
 				}
 			}
@@ -451,18 +513,19 @@ public class ProconsulUtils {
 				try {
 					lac.getConnection().modifyAttributes(dn,  mhp);
 				} catch (Exception ign3) {
-					LOG.info("Threw " + ign3.getMessage() + " during require password update");
+					error(LOG,"Threw " + ign3.getMessage() + " during require password update");
 					//ignore
 				}
 			}
 			// Write out an audit log for what we just did
-			writeAuditLog(null,"createADUser",u.getsAMAccountName(),null,null,null);
+			audit(LOG,"createADUser",u.getsAMAccountName(),null,null,null,null);
+			// writeAuditLog(null,"createADUser",u.getsAMAccountName(),null,null,null);
 		} catch (Exception e) {
-			LOG.info("AD User creation threw exception: " + e.getMessage());
+			error(LOG,"AD User creation threw exception: " + e.getMessage());
 			throw new RuntimeException(e);
 		}
 		u.setCreated(true);
-		LOG.info("AD User creation succeeded");
+		log(LOG,"AD User creation succeeded");
 		return u;
 	}
 	
@@ -473,7 +536,7 @@ public class ProconsulUtils {
 		try {
 			password = ProconsulUtils.getRandomPassword();
 		} catch (Exception e) {
-			LOG.info("Unable to set random password -- returning original ADUser");
+			error(LOG,"Unable to set random password -- returning original ADUser");
 			return adu;  // leave it alone if we can't set a password
 		}
 		// We have a password -- set it in the object and in the AD.
@@ -494,7 +557,7 @@ public class ProconsulUtils {
 				// Search for the user
 				results = adc.search(config.getProperty("ldap.searchbase", true),"(sAMAccountName="+adu.getsAMAccountName()+")",sc);
 				if (results == null || ! results.hasMore()) {
-					LOG.info("Unable to find AD user during password randomization");
+					error(LOG,"Unable to find AD user during password randomization");
 					return adu;
 				}
 				AdDn = results.next().getNameInNamespace();
@@ -509,7 +572,7 @@ public class ProconsulUtils {
 					try {
 						lac.getConnection().modifyAttributes(AdDn, mi);
 					} catch (Exception ign2) {
-						LOG.info("Threw " + ign2.getMessage() + " during randomization of password");
+						error(LOG,"Threw " + ign2.getMessage() + " during randomization of password");
 						//ignore
 					}
 				}
@@ -520,7 +583,7 @@ public class ProconsulUtils {
 			}
 			
 		} catch (Exception e) {
-			LOG.info("Failed setting random password in AD -- returning original ADUser");
+			error(LOG,"Failed setting random password in AD -- returning original ADUser");
 			return adu;
 		}
 		
@@ -593,7 +656,7 @@ public class ProconsulUtils {
 			userid = ProconsulUtils.getRandomSamaccountname();
 			password=ProconsulUtils.getRandomPassword();
 		} catch (Exception e) {
-			LOG.info("Exception in createRandomizedADUser: " + e.getMessage());
+			error(LOG,"Exception in createRandomizedADUser: " + e.getMessage());
 			return null;
 		}
 		PCConfig config = PCConfig.getInstance();
@@ -616,7 +679,7 @@ public class ProconsulUtils {
 			userid = ProconsulUtils.getRandomSamaccountname();
 			password = ProconsulUtils.getRandomPassword();
 		} catch (Exception e) {
-			LOG.info("Exception in createRandomizedADUser:  " + e.getMessage());
+			error(LOG,"Exception in createRandomizedADUser:  " + e.getMessage());
 			return null;
 		}
 		PCConfig config = PCConfig.getInstance();
@@ -933,34 +996,31 @@ public class ProconsulUtils {
 			rs = ps.executeQuery();
 			
 			// Excessive debug logging
-			
-			if (sess == null) {
-				LOG.info("Session is null!");
-			}
+
 			if (sess.getOwner() == null) {
-				LOG.info("Session.owner is null!");
+				debug(LOG,"Session.owner is null!");
 			}
 			
 			if (sess.getTargetUser() == null) {
-				LOG.info("Session.targetuser is null!");
+				debug(LOG,"Session.targetuser is null!");
 			}
 			
-			LOG.info("Session seems to be populated");
+			debug(LOG,"Session seems to be populated");
 			
 			if (sess.getOwner().getUid() == null) {
-				LOG.info("Session.owner has no uid");
+				debug(LOG,"Session.owner has no uid");
 			} else {
-				LOG.info("Session.owner.uid is " + sess.getOwner().getUid());
+				debug(LOG,"Session.owner.uid is " + sess.getOwner().getUid());
 			}
 			
 			if (sess.getTargetUser().getsAMAccountName() == null) {
-				LOG.info("Session.targetuser has no samaccountname");
+				debug(LOG,"Session.targetuser has no samaccountname");
 			} else {
-				LOG.info("Session.targetuser.samaccountname is " + sess.getTargetUser().getsAMAccountName());
+				debug(LOG,"Session.targetuser.samaccountname is " + sess.getTargetUser().getsAMAccountName());
 			}
 			
 			if (rs == null || ! rs.next()) {
-				LOG.info("Could not find session for " + sess.getOwner().getUid() + "," + sess.getFqdn() + "," + sess.getTargetUser().getsAMAccountName());
+				log(LOG,"Could not find session for " + sess.getOwner().getUid() + "," + sess.getFqdn() + "," + sess.getTargetUser().getsAMAccountName());
 				ps2 = pcdb.prepareStatement("insert into sessions values(?,?,?,?,?,?,?,?,?,NULL,?,?,?,?)");
 			
 				ps2.setString(1,sess.getFqdn());
@@ -1013,7 +1073,8 @@ public class ProconsulUtils {
 					ps2.setNull(13,  java.sql.Types.VARCHAR);
 				}
 				ps2.executeUpdate();
-				writeAuditLog(log_eppn,"startSession",log_targetuser,log_targethost,null,clientaddr);
+				audit(LOG,"startSession",log_eppn,log_targethost,log_targetuser,null,clientaddr);
+				//writeAuditLog(log_eppn,"startSession",log_targetuser,log_targethost,null,clientaddr);
 				return;
 			} else {
 				// on update, no need to reset type or ou/role -- it was set on create...
@@ -1065,22 +1126,27 @@ public class ProconsulUtils {
 				ps2.executeUpdate();
 				switch(sess.getStatus()) {
 				case STARTING:
-					writeAuditLog(log_eppn,"starting",log_targetuser,sess.getFqdn(),null,clientaddr);
+					audit(LOG,"starting",log_eppn,sess.getFqdn(),log_targetuser,null,clientaddr);
+					//writeAuditLog(log_eppn,"starting",log_targetuser,sess.getFqdn(),null,clientaddr);
 					break;
 				case CONNECTED:
-					writeAuditLog(log_eppn,"connected",log_targetuser,sess.getFqdn(),null,clientaddr);
+					audit(LOG,"connected",log_eppn,sess.getFqdn(),log_targetuser,null,clientaddr);
+					//writeAuditLog(log_eppn,"connected",log_targetuser,sess.getFqdn(),null,clientaddr);
 					break;
 				case DISCONNECTED:
-					writeAuditLog(log_eppn,"disconnected",log_targetuser,sess.getFqdn(),null,clientaddr);
+					audit(LOG,"disconnected",log_eppn,sess.getFqdn(),log_targetuser,null,clientaddr);
+					//writeAuditLog(log_eppn,"disconnected",log_targetuser,sess.getFqdn(),null,clientaddr);
 					break;
 				case TERMINATING:
-					writeAuditLog(log_eppn,"terminating",log_targetuser,sess.getFqdn(),null,clientaddr);
+					audit(LOG,"terminating",log_eppn,sess.getFqdn(),log_targetuser,null,clientaddr);
+					//writeAuditLog(log_eppn,"terminating",log_targetuser,sess.getFqdn(),null,clientaddr);
 					break;
 				}
 				return;
 			}
 		} catch (Exception e) {
-		throw new RuntimeException(e);
+			error(LOG,"Throwing exception: " + e.getMessage() + " writing session to DB");
+			throw new RuntimeException(e);
 		} finally {
 			if (ps2 != null) {
 				try {
@@ -1120,9 +1186,11 @@ public class ProconsulUtils {
 		try {
 			pcdb = DatabaseConnectionFactory.getProconsulDatabaseConnection();
 			if (pcdb == null) {
+				error(LOG,"Failed database connection deleting port number " + portnum);
 				throw new RuntimeException("Failed database connection deleting port number " + portnum);
 			}
 		} catch (Exception e) {
+			error(LOG,"Caught exception " + e.getMessage() + " during databaase connection for deletePortFromDB");
 			throw new RuntimeException(e);
 		}
 		try {
@@ -1159,9 +1227,11 @@ public class ProconsulUtils {
 		try {
 			pcdb = DatabaseConnectionFactory.getProconsulDatabaseConnection();
 			if (pcdb == null) {
+				error(LOG,"Failed database connection deleting session");
 				throw new RuntimeException("Failed database connection deleting session");
 			}
 		} catch (Exception e) {
+			error(LOG,"Exception " + e.getMessage() + " during database connection for session deletion");
 			throw new RuntimeException(e);
 		}
 		try {
@@ -1196,8 +1266,159 @@ public class ProconsulUtils {
 		ProconsulUtils.deletePortFromDB(sess.getNovncPort());
 	}
 	
+	// Explicitly add a workstation restriction to a user object
+	public static ADUser addWorkstationToAdUser(String fqdn, ADUser u) {
+		return addWorkstationToADUser(fqdn,u,null,null);
+	}
+	
+	public static ADUser addWorkstationToADUser(String fqdn, ADUser u, AuthUser au, String clientip) {
+		PCConfig config = PCConfig.getInstance();
+		
+		String orgBase = config.getProperty("ldap.orgbase", true);
+		
+		fqdn = fqdn.replaceAll(" ", "");  // strip spaces from fqdn input
+		
+		if (! fqdn.matches("^[A-Za-z0-9.,_-]+")) {
+			error(LOG,"illegal host restriction string ignored in session for target user " + u.getsAMAccountName());
+			return u;
+		}
+		
+		// ADConnections adc = new ADConnections();
+		ADConnections adc = ADConnectionsFactory.getInstance();
+		NamingEnumeration<SearchResult> results = null;
+		NamingEnumeration<SearchResult> sr = null;
+		SearchControls sc = new SearchControls();
+		sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
+		DirContext dc = null;
+		DirContext dc2 = null;
+		DirContext dc3 = null;
+		try {
+			dc = LDAPConnectionFactory.getAdminConnection();
+			if (dc == null) {
+				return u;
+			}
+		} catch (Exception e) {
+			return u;
+		}
+		
+		try {
+			results = dc.search(config.getProperty("ldap.searchbase", true), "samaccountname="+u.getsAMAccountName(),sc);
+			if (results == null || ! results.hasMore()) {
+				return u;
+			}
+			String userDn = results.next().getNameInNamespace();
+
+			// Acquire the SMB name from the AD for the fqdn and gateway fqdn we have
+			String uws = "";
+			try {
+				dc2 = LDAPConnectionFactory.getAdminConnection();
+				SearchControls scon = new SearchControls();
+				scon.setSearchScope(SearchControls.SUBTREE_SCOPE);
+				String basedn = config.getProperty("ldap.searchbase", true);
+				sr = dc2.search(basedn, "(&(objectcategory=computer)(dnshostname="+fqdn+"))",scon);
+				while (sr != null && sr.hasMore()) {
+					String n = (String) sr.next().getAttributes().get("cn").get();
+					uws = n;
+				}
+			} catch (Exception e) {
+				// ignore
+			}
+
+			// Add the userWorkstations value to the user if one exists
+			if (uws.equals("")) {
+				error(LOG,"No workstation name found for " + fqdn);
+				return u;
+			}
+			
+			// Microsoft in their infinite wisdom makes this a single-valued attribute with a 
+			// comma-separated list of values in it.  Go figure.
+			
+			String pre = "";
+			try {
+				dc3 = LDAPConnectionFactory.getAdminConnection();
+				SearchControls scon = new SearchControls();
+				scon.setSearchScope(SearchControls.OBJECT_SCOPE);
+				sr = dc3.search(userDn,"(userWorkstations=*)",scon);
+				while (sr != null && sr.hasMore()) {
+					pre = (String) sr.next().getAttributes().get("userWorkstations").get();
+				}
+			} catch (Exception e) {
+				// ignore
+			}
+			if (pre.equals("")) {
+				pre = uws;
+			} else {
+				pre = pre + "," + uws;
+			}
+			
+			ModificationItem[] mods = new ModificationItem[1];
+			if (pre.contains(",")) {
+				mods[0] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE, new BasicAttribute("userWorkstations",pre));
+			} else {
+				mods[0] = new ModificationItem(DirContext.ADD_ATTRIBUTE, new BasicAttribute("userWorkstations",pre));
+			}
+
+			
+			for (LDAPAdminConnection lac : adc.connections) {
+				try {
+					lac.getConnection().modifyAttributes(userDn, mods);
+					if (au != null)
+						audit(LOG,"limitWS",au.getUid(),uws,u.getsAMAccountName(),null,clientip);
+					else
+						audit(LOG,"limitWS",null,uws,u.getsAMAccountName(),null,clientip);
+					//writeAuditLog(null,"limitWS",u.getsAMAccountName(),null,uws,null);
+				} catch (Exception ign) {
+					error(LOG,"Threw exception " + ign.getMessage() + " on addWsRestriction for " + u.getsAMAccountName() + "," + uws);
+					// ignore
+				}
+			}
+		} catch (Exception e) {
+			return u;
+		} finally {
+			if (results != null) {
+				try {
+					results.close();
+				} catch (Exception e) {
+					//ignore
+				}
+			}
+			if (sr != null) {
+				try {
+					sr.close();
+				} catch (Exception e) {
+					// ignore
+				}
+			}
+			if (adc != null) {
+				try {
+					adc.close();
+				} catch (Exception e) {
+					// ignore
+				}
+			}
+			if (dc != null) {
+				try {
+					dc.close();
+				} catch (Exception e) {
+					// ignore
+				}
+			}
+			if (dc2 != null) {
+				try {
+					dc2.close();
+				} catch (Exception e) {
+					// ignore
+				}
+			}
+		}
+		return u;
+	}
+	
 	// Add appropriate userWorkstations constraint to the user based on session information
 	public static ADUser addWorkstationsToADUser(ProconsulSession sess, ADUser u) {
+		return addWorkstationsToADUser(sess,u,null);
+	}
+	public static ADUser addWorkstationsToADUser(ProconsulSession sess, ADUser u, String clientip) {
 		PCConfig config = PCConfig.getInstance();
 		
 		String orgBase = config.getProperty("ldap.orgbase", true);
@@ -1262,7 +1483,7 @@ public class ProconsulUtils {
 
 			// Add the userWorkstations value to the user if one exists
 			if (uws.equals("")) {
-				LOG.info("no name found for " + sess.getFqdn() + " and/or " + sess.getGatewayfqdn());
+				error(LOG,"No worsktation name found for " + sess.getFqdn() + " and/or " + sess.getGatewayfqdn());
 				return u;
 			}
 			
@@ -1273,10 +1494,13 @@ public class ProconsulUtils {
 			for (LDAPAdminConnection lac : adc.connections) {
 				try {
 					lac.getConnection().modifyAttributes(userDn, mods);
-					LOG.info("Added " + uws + " host restriction");
-					writeAuditLog(null,"limitWS",u.getsAMAccountName(),null,uws,null);
+					if (sess.getOwner() != null)
+						audit(LOG,"limitWS",sess.getOwner().getUid(),uws,u.getsAMAccountName(),null,clientip);
+					else
+						audit(LOG,"limitWS",null,uws,u.getsAMAccountName(),null,clientip);
+					//writeAuditLog(null,"limitWS",u.getsAMAccountName(),null,uws,null);
 				} catch (Exception ign) {
-					LOG.info("Threw exception " + ign.getMessage() + " on addWsRestriction for " + u.getsAMAccountName() + "," + uws);
+					error(LOG,"Threw exception " + ign.getMessage() + " on addWsRestriction for " + u.getsAMAccountName() + "," + uws);
 					// ignore
 				}
 			}
@@ -1324,6 +1548,9 @@ public class ProconsulUtils {
 	
 	// Add a group specified by a URN to a user identified by an ADUser object
 	public static ADUser addGroupToADUser(String urn, ADUser u) {
+		return addGroupToADUser(urn,u,null,null);
+	}
+	public static ADUser addGroupToADUser(String urn, ADUser u, AuthUser au, String clientip) {
 		PCConfig config = PCConfig.getInstance();
 		
 		String orgBase = config.getProperty("ldap.orgbase", true);
@@ -1374,10 +1601,13 @@ public class ProconsulUtils {
 			for (LDAPAdminConnection lac : adc.connections) {
 				try {
 					lac.getConnection().modifyAttributes(groupDN, mods);
-					LOG.info("Added " + groupDN + " membership");
-					writeAuditLog(null,"addGroup",u.getsAMAccountName(),null,urn,null);
+					if (au != null) 
+						audit(LOG,"addGroup",au.getUid(),null,u.getsAMAccountName(),urn,clientip);
+					else
+						audit(LOG,"addGroup",null,null,u.getsAMAccountName(),urn,clientip);
+					//writeAuditLog(null,"addGroup",u.getsAMAccountName(),null,urn,null);
 				} catch (Exception ign) {
-					LOG.info("Threw exception " + ign.getMessage() + " on addGroup for " + u.getsAMAccountName() + "," + urn);
+					error(LOG,"Threw exception " + ign.getMessage() + " on addGroup for " + u.getsAMAccountName() + "," + urn);
 					// ignore
 				}
 			}
@@ -1439,7 +1669,7 @@ public class ProconsulUtils {
 		ResultSet rs = null;
 		// Check that the authuser is a member of some groups
 		if (au.getMemberships() == null || au.getMemberships().isEmpty()) {
-			LOG.info("User " + au.getUid() + " has no membership and thus is not a delegate");
+			debug(LOG,"User " + au.getUid() + " has no membership and thus is not a delegate");
 			return false;
 		}
 		try {
@@ -1475,7 +1705,7 @@ public class ProconsulUtils {
 				return false;  // fail closed
 			}
 		} catch (Exception e) {
-			LOG.info("Failed to validate delegated admin rights for " + fqdn + "by user " + au.getUid() + " due to exception " + e.getMessage());
+			error(LOG,"Failed to validate delegated admin rights for " + fqdn + "by user " + au.getUid() + " due to exception " + e.getMessage());
 			return false;
 		} finally {
 			if (rs != null) {
@@ -1501,6 +1731,69 @@ public class ProconsulUtils {
 			}
 		}
 	}
+	public static boolean canUseCO(AuthUser au) {
+		boolean retval = false;
+		PreparedStatement ps = null;
+		PreparedStatement ps2 = null;
+		PreparedStatement ps3 = null;
+		Connection pcdb = null;
+		Connection pcdb2 = null;
+		Connection pcdb3 = null;
+		ResultSet rs = null;
+		ResultSet rs2 = null;
+		ResultSet rs3 = null;
+		
+		if (au.getUid() == null || au.getUid().equalsIgnoreCase("")) {
+			error(LOG,"Userid not available - no CO access allowed");
+			return false;
+		} else {
+			try {
+				pcdb2 = DatabaseConnectionFactory.getProconsulDatabaseConnection();
+				if (pcdb2 != null) {
+					ps2 = pcdb2.prepareStatement("select eppn from access_user where eppn = ? and type = 'co'");
+					if (ps2 != null) {
+						ps2.setString(1,  au.getUid());
+						rs2 = ps2.executeQuery();
+						if (rs2 != null && rs2.next()) {
+							log(LOG,"User " + au.getUid() + " is directly authorized to use CheckOut feature");
+							return true;
+						}
+					}
+				}
+			} catch (Exception e) {
+				return false; // if we except on checking, fail
+			} finally {
+				if (rs2 != null) {
+					try {
+						rs2.close();
+					} catch (Exception ign) {
+						// ignore
+					}
+				}
+				if (ps2 != null) {
+					try {
+						ps2.close();
+					} catch (Exception ign) {
+						// ignore
+					}
+				}
+				if (pcdb2 != null) {
+					try {
+						pcdb2.close();
+					} catch (Exception ign) {
+						// ignore
+					}
+				}
+			}
+			
+			// For now, only explicit authorizations are available 
+			// Later add groups and entitlements to this space
+			//
+			
+			return false;
+		}
+		
+	}
 	public static boolean canUseDA(AuthUser au) {
 		// Can the user use the DA panel?
 		boolean retval = false;
@@ -1517,7 +1810,7 @@ public class ProconsulUtils {
 		// Check direct user authorization
 		if (au.getUid() == null || au.getUid().equalsIgnoreCase("")) {
 			// No user ID.  We don't allow DA access without an explicit userid to audit.  Go away
-			LOG.info("Userid is not available, and thus, no DA access allowed");
+			error(LOG,"Userid is not available, and thus, no DA access allowed");
 			return false;
 		} else {
 			// Maybe the user is explicitly authorized -- check, with fall-thru
@@ -1529,7 +1822,7 @@ public class ProconsulUtils {
 						ps2.setString(1, au.getUid());
 						rs2 = ps2.executeQuery();
 						if (rs2 != null && rs2.next()) {
-							LOG.info("User " + au.getUid() + " is directly authorized to use DA privileges");
+							log(LOG,"User " + au.getUid() + " is directly authorized to use DA privileges");
 							return true;
 						}
 					}
@@ -1576,7 +1869,7 @@ public class ProconsulUtils {
 							ps3.setString(1,checkEntitlement);
 							rs3 = ps3.executeQuery();
 							if (rs3 != null && rs3.next()) {
-								LOG.info("DA authorized via entitlement " + checkEntitlement + " for user " + au.getUid());
+								log(LOG,"DA authorized via entitlement " + checkEntitlement + " for user " + au.getUid());
 								return true;
 							}
 						}
@@ -1610,7 +1903,7 @@ public class ProconsulUtils {
 		}
 		// Check AuthUser memberships -- fail if we get here and don't get authorized.
 		if (au.getMemberships() == null || au.getMemberships().isEmpty()) {
-			LOG.info("User " + au.getUid() +" has no memberships and thus is not a DA");
+			log(LOG,"User " + au.getUid() +" has no memberships and thus is not a DA");
 			return false;
 		}
 		try {
@@ -1622,13 +1915,13 @@ public class ProconsulUtils {
 					while (retval == false && iter != null && iter.hasNext()) {
 						String checkMembership = iter.next();
 						ps.setString(1, checkMembership);
-						LOG.info("DA check testing " + checkMembership);
+						debug(LOG,"DA check testing " + checkMembership);
 						rs = ps.executeQuery();
 						if (rs != null && rs.next()) {
-							LOG.info("DA authorized via " + checkMembership);
+							log(LOG,"DA authorized via " + checkMembership);
 							return true; // if we find a group, we're in
 						} else {
-							LOG.info(checkMembership + " does not authorize DA use");
+							debug(LOG,checkMembership + " does not authorize DA use");
 						}
 					}
 					return false;
@@ -1680,7 +1973,7 @@ public class ProconsulUtils {
 		// Check for explicit authorization by userid (with fall-thru)
 		if (au.getUid() == null || au.getUid().equalsIgnoreCase("")) {
 			// Fail if we don't have a uid value for the user for auditing purposes
-			LOG.info("Userid missing -- cannot proceed");
+			error(LOG,"Userid missing -- cannot proceed");
 			return false;
 		}
 		try {
@@ -1691,7 +1984,7 @@ public class ProconsulUtils {
 					ps2.setString(1, au.getUid());
 					rs2 = ps2.executeQuery();
 					if (rs2 != null && rs2.next()) {
-						LOG.info("User " + au.getUid() + " is explicitly authorized to use Proconsul");
+						log(LOG,"User " + au.getUid() + " is explicitly authorized to use Proconsul");
 						return true;
 					}
 				}
@@ -1736,7 +2029,7 @@ public class ProconsulUtils {
 							ps3.setString(1,checkEntitlement);
 							rs2 = ps3.executeQuery();
 							if (rs3 != null && rs3.next()) {
-								LOG.info("User " + au.getUid() + " is authorized for Proconsul use via entitlement " + checkEntitlement);
+								log(LOG,"User " + au.getUid() + " is authorized for Proconsul use via entitlement " + checkEntitlement);
 								return true;
 							}
 						}
@@ -1772,7 +2065,7 @@ public class ProconsulUtils {
 		// access.  Only need one.
 		if (au.getMemberships() == null || au.getMemberships().isEmpty()) {
 			// no ticky, no washy
-			LOG.info("User " + au.getUid() + " has no memberships");
+			error(LOG,"User " + au.getUid() + " has no memberships");
 			return false;
 		}
 		try {
@@ -1836,7 +2129,7 @@ public class ProconsulUtils {
 		}
 		for (String nextdn : managedOUs) {
 			if (! retval.contains(groupDnForOu(nextdn))) {
-				LOG.info("Adding groupDN " + groupDnForOu(nextdn) + " to list for ou " + nextdn);
+				debug(LOG,"Adding groupDN " + groupDnForOu(nextdn) + " to list for ou " + nextdn);
 				retval.add(groupDnForOu(nextdn));
 			}
 		}
@@ -1854,7 +2147,7 @@ public class ProconsulUtils {
 		
 		if (au.getMemberships() == null || au.getMemberships().isEmpty()) {
 			// No groups, no admin
-			LOG.info("User " + au.getUid() + " is a member of no groups, so no delegation possible");
+			error(LOG,"User " + au.getUid() + " is a member of no groups, so no delegation possible");
 			return null;
 		}
 		
@@ -1870,7 +2163,7 @@ public class ProconsulUtils {
 					while (rs != null && rs.next()) {
 						// for every matched row...
 						if (rs.getString("ou") != null) {
-							LOG.info("Adding orgunit " + rs.getString("ou") + " to list for " + au.getUid());
+							debug(LOG,"Adding orgunit " + rs.getString("ou") + " to list for " + au.getUid());
 							retval.add(rs.getString("ou")); // add the OU for this group
 						}
 					}
@@ -2033,7 +2326,7 @@ public class ProconsulUtils {
 		Connection pcdb = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
-		LOG.info("Checking gateway requirement for " + fqdn);
+		debug(LOG,"Checking gateway requirement for " + fqdn);
 		try {
 			pcdb = DatabaseConnectionFactory.getProconsulDatabaseConnection();
 			if (pcdb != null) {
@@ -2075,7 +2368,7 @@ public class ProconsulUtils {
 		Connection pcdb = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
-		LOG.info("addGatewayAccessGroup starting");
+		debug(LOG,"addGatewayAccessGroup starting");
 		try {
 			pcdb = DatabaseConnectionFactory.getProconsulDatabaseConnection();
 			if (pcdb != null) {
@@ -2085,7 +2378,7 @@ public class ProconsulUtils {
 				if (rs == null || ! rs.next()) {
 					return u;  // no change
 				} else {
-					LOG.info("Adding gateway access group");
+					debug(LOG,"Adding gateway access group");
 					String groupToAdd = rs.getString("groupdn");
 					return addGroupToADUser(groupToAdd,u);
 				}
@@ -2122,38 +2415,38 @@ public class ProconsulUtils {
 		PreparedStatement ps2 = null;
 		ResultSet rs = null;
 		ResultSet rs2 = null;
-		LOG.info("addHostAccessGroup starting");
+		debug(LOG,"addHostAccessGroup starting");
 		try {
 			pcdb = DatabaseConnectionFactory.getProconsulDatabaseConnection();
 			if (pcdb != null) {
 				ps = pcdb.prepareStatement("select groupdn from host_access_group where upper(fqdn) = upper(?)");
 				ps.setString(1,  fqdn);
 				rs = ps.executeQuery();
-				LOG.info("First addHostAccessGroup query done");
+				debug(LOG,"First addHostAccessGroup query done");
 				if (rs == null || ! rs.next()) {
 					ps2 = pcdb.prepareStatement("select groupdn from host_access_group where upper(?) like concat('%',upper(ou))");
 					String tou = ouForFqdn(fqdn);
 					if (tou != null) {
 						ps2.setString(1, tou);
 						rs2 = ps2.executeQuery();
-						LOG.info("Second addHostAccessGroup query done");
+						debug(LOG,"Second addHostAccessGroup query done");
 					} 
 					if (rs2 == null || ! rs2.next()) {
 						// Just return the incoming user
-						LOG.info("Returning without adding host access group");
+						debug(LOG,"Returning without adding host access group");
 						return u;
 					} else {
 						// Add the group
-						LOG.info("Adding host access group (2)");
+						debug(LOG,"Adding host access group (2)");
 						String groupToAdd = rs2.getString("groupdn");
-						LOG.info("Host access group(2) added");
+						debug(LOG,"Host access group(2) added");
 						return addGroupToADUser(groupToAdd,u);
 					}
 				} else {
 					// Add the group
-					LOG.info("Adding host access group");
+					debug(LOG,"Adding host access group");
 					String addGroup = rs.getString("groupdn");
-					LOG.info("Host access group added");
+					debug(LOG,"Host access group added");
 					return addGroupToADUser(addGroup,u);
 				}
 			} else {
@@ -2304,15 +2597,15 @@ public class ProconsulUtils {
 		DirContext dc = null;
 		PCConfig config = PCConfig.getInstance();
 		NamingEnumeration<SearchResult> rs = null;
-		LOG.info("ouForFQDN starting");
+		debug(LOG,"ouForFQDN starting");
 		try {
 			dc = LDAPConnectionFactory.getAdminConnection();
 			SearchControls sc = new SearchControls();
 			sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
 			String basedn = config.getProperty("ldap.searchbase", true);
-			LOG.info("Querying for dnshostname");
+			debug(LOG,"Querying for dnshostname");
 			rs = dc.search(basedn,"(&(objectcategory=computer)(dnshostname="+fqdn+"))",sc);
-			LOG.info("Query for dnshostname complete");
+			debug(LOG,"Query for dnshostname complete");
 			while (rs != null && rs.hasMore()) {
 				String dn = rs.next().getNameInNamespace();
 				retval = dn.replaceFirst("[^,]*,", "");
@@ -2345,10 +2638,10 @@ public class ProconsulUtils {
 					retval.add(((String) dh.get()).toLowerCase());
 				}
 			}
-			LOG.info("fqdnsForOu found " + retval.size() + "values");
+			debug(LOG,"fqdnsForOu found " + retval.size() + "values");
 			return retval;
 		} catch (Exception e) {
-			LOG.info("Exception: " + e.getMessage() + " during fqdnsforou");
+			error(LOG,"Exception: " + e.getMessage() + " during fqdnsforou");
 			return retval;
 		}
 	}
@@ -2431,7 +2724,7 @@ public class ProconsulUtils {
 					}
 				}
 			}
-			LOG.info("fqdnsForStatic found " + retval.size() + " values");
+			debug(LOG,"fqdnsForStatic found " + retval.size() + " values");
 			return retval;
 		} catch (Exception e) {
 			return retval;
@@ -2487,7 +2780,7 @@ public class ProconsulUtils {
 					}
 				}
 			}
-			LOG.info("fqdnsForEppn found " + retval.size() + " values");
+			debug(LOG,"fqdnsForEppn found " + retval.size() + " values");
 			return retval;
 		} catch (Exception e) {
 			return retval;
@@ -2567,6 +2860,9 @@ public class ProconsulUtils {
 		}
 	}
 	public static boolean makeUserAuthorizedDA(ADUser au) {
+		return makeUserAuthorizedDA(au, null, null);
+	}
+	public static boolean makeUserAuthorizedDA(ADUser au, AuthUser authu, String clientip) {
 		// Add the specified user to the database's active_domain_admins table
 		Connection pcdb = null;
 		PreparedStatement ps = null;
@@ -2580,15 +2876,22 @@ public class ProconsulUtils {
 					ps.setInt(2,(int) (System.currentTimeMillis()/1000));
 					ps.setInt(3, 0);
 					ps.executeUpdate();
+					if (authu != null)
+						audit(LOG,"makeActiveDA",authu.getUid(),null,au.getsAMAccountName(),null,clientip);
+					else
+						audit(LOG,"makeActiveDA",null,null,au.getsAMAccountName(),null,null);
 					return true;
 				} else {
+					error(LOG,"Failed inserting " + au.getsAMAccountName() + " into active domain admins table");
 					return false;
 				}
 			} else {
+				error(LOG,"Failed inserting " + au.getsAMAccountName() + " into active_domain_admins table");
 				return false;
 			}
 			
 		} catch (Exception e) {
+			error(LOG,"Caught exception " + e.getMessage() + " during attempt to write to active_domain_admins table");
 			return false;
 		} finally {
 			if (ps != null) {
@@ -2608,6 +2911,9 @@ public class ProconsulUtils {
 		}
 	}
 	public static boolean removeAuthorizedDA(ADUser au) {
+		return removeAuthorizedDA(au,null,null);
+	}
+	public static boolean removeAuthorizedDA(ADUser au, AuthUser authu, String clientip) {
 		// Remove the specified samaccountname from the database for active ad's
 		Connection pcdb=null;
 		PreparedStatement ps=null;
@@ -2620,14 +2926,21 @@ public class ProconsulUtils {
 					ps.setInt(1,(int) (System.currentTimeMillis()/1000));
 					ps.setString(2, au.getsAMAccountName());
 					ps.executeUpdate();
+					if (authu != null)
+						audit(LOG, "removeActiveDA",authu.getUid(),null,au.getsAMAccountName(),null,clientip);
+					else
+						audit(LOG,"removeActiveDA",null,null,au.getsAMAccountName(),null,null);
 					return true;
 				} else {
+					error(LOG,"failed to remove " + au.getsAMAccountName() + " from active_domain_admins table");
 					return false;
 				}
 			} else {
+				error(LOG,"Failed to remove " + au.getsAMAccountName() + " from active_domain_admins table");
 				return false;
 			}
 		} catch (Exception e) {
+			error(LOG,"Caught exception " + e.getMessage() + " while removing " + au.getsAMAccountName() + " from active_domain_admins table");
 			return false;
 		} finally {
 			if (ps != null) {
@@ -2652,7 +2965,7 @@ public class ProconsulUtils {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		ArrayList<String> retval = new ArrayList<String>();
-		LOG.info("Getting DomAdmin FQDN values");
+		debug(LOG,"Getting DomAdmin FQDN values");
 		try {
 			pcdb = DatabaseConnectionFactory.getProconsulDatabaseConnection();
 			if (pcdb != null) {
@@ -2701,7 +3014,7 @@ public class ProconsulUtils {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		ArrayList<DisplayFQDN> retval = new ArrayList<DisplayFQDN>();
-		LOG.info("Getting Session FQDN values");
+		debug(LOG,"Getting Session FQDN values");
 		try {
 			pcdb = DatabaseConnectionFactory.getProconsulDatabaseConnection();
 			if (pcdb != null) {
@@ -2760,7 +3073,7 @@ public class ProconsulUtils {
 	public static void writeAuditLog(String eppn, String event, String targetuser, String targethost, String targetgroup, String clientip) {
 		Connection pcdb = null;
 		PreparedStatement ps = null;
-		LOG.info("Called writeAuditLog");
+		debug(LOG,"Called writeAuditLog");
 		try {
 			pcdb = DatabaseConnectionFactory.getProconsulDatabaseConnection();
 			if (pcdb != null) {
@@ -2802,8 +3115,70 @@ public class ProconsulUtils {
 			}
 		} catch (Exception e) {
 			// ignore but log
-			LOG.info("Creating AD user threw exception: " + e.getMessage());
+			error(LOG,"Audit logging threw exception: " + e.getMessage());
 		} finally {
+			if (ps != null) {
+				try {
+					ps.close();
+				} catch (Exception ign) {
+					// ignore
+				}
+			}
+			if (pcdb != null) {
+				try {
+					pcdb.close();
+				} catch (Exception ign) {
+					// ignore
+				}
+			}
+		}
+	}
+	
+	public static ArrayList<CheckedOutCred> getAvailableCheckedOutUsers(AuthUser au) {
+		String myUser = au.getUid();
+		Connection pcdb = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		ArrayList<CheckedOutCred> retval = new ArrayList<CheckedOutCred>();
+		try {
+			pcdb = DatabaseConnectionFactory.getProconsulDatabaseConnection();
+			if (pcdb != null) {
+				ps = pcdb.prepareStatement("select * from checkout where upper(owner) = upper(?) and expiretime >= ?");
+				if (ps != null) {
+					ps.setString(1, myUser);
+					ps.setLong(2, System.currentTimeMillis());
+					rs = ps.executeQuery();
+					while (rs != null && rs.next()) {
+						CheckedOutCred cc = new CheckedOutCred();
+						AuthUser cauth = new AuthUser();
+						cauth.setUid(rs.getString("owner"));
+						cc.setAuthUser(cauth);
+						cc.setStartTime(new Date(rs.getLong("starttime")));
+						cc.setStatus("active");
+						cc.setExpirationTime(rs.getLong("expiretime"));
+						cc.setLifetime((int) (cc.getExpirationTime() - cc.getStartTime().getTime()) / (60*60*1000));
+						cc.setExpirationDate((new Date(cc.getExpirationTime())).toLocaleString());
+						cc.setReason(rs.getString("reason"));
+						cc.setTargetHost(rs.getString("targethost"));
+						ADUser cad = new ADUser();
+						cad.setsAMAccountName(rs.getString("aduser"));
+						cc.setTargetUser(cad);
+						retval.add(cc);
+					}
+				}
+			}
+			return retval;
+		} catch (Exception e) {
+			error(LOG,"Threw exception: " + e.getMessage() + "geting list of avaialble checked out creds");
+			return retval;
+		} finally {
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (Exception ign) {
+					// ignore
+				}
+			}
 			if (ps != null) {
 				try {
 					ps.close();
@@ -2853,7 +3228,7 @@ public class ProconsulUtils {
 			}
 			return retval;
 		} catch (Exception e) {
-			LOG.info("Threw exception: " + e.getMessage());
+			error(LOG,"Threw exception: " + e.getMessage() + " getting list of available sesssions");
 			return retval;
 		} finally {
 			if (rs != null) {
@@ -2891,5 +3266,147 @@ public class ProconsulUtils {
 		String retval = null;
 		retval = config.getProperty("ldap.dagroup", true);
 		return retval;
+	}
+	
+	public static boolean extendCheckedOutUser(CheckedOutCred co) {
+		return extendCheckedOutUser(co, null);
+	}
+	public static boolean extendCheckedOutUser(CheckedOutCred co, String clientip) {
+		Connection pcdb = null;
+		PreparedStatement ps = null;
+		
+		try {
+			pcdb = DatabaseConnectionFactory.getProconsulDatabaseConnection();
+			if (pcdb != null) {
+				ps = pcdb.prepareStatement("update checkout set expiretime = expiretime + ? where owner = ? and aduser = ? and expiretime >= ?");
+				if (ps != null) {
+					ps.setLong(1, 2*60*60*1000);
+					ps.setString(2, co.getAuthUser().getUid());
+					ps.setString(3, co.getTargetUser().getsAMAccountName());
+					ps.setLong(4, System.currentTimeMillis());
+					ps.executeUpdate();
+					audit(LOG,"extendCheckedOutCredLifetime",co.getAuthUser().getUid(),co.getTargetHost(),co.getTargetUser().getsAMAccountName(),null,clientip);
+					return true;
+				} else {
+					error(LOG,"Failed to extend lifetime of checked out credential " + co.getTargetUser().getsAMAccountName() + " for " + co.getAuthUser().getUid());
+					return false;
+				}
+			} else {
+				error(LOG,"Failed to extend lifetime of checked out credential " + co.getTargetUser().getsAMAccountName() + " for " + co.getAuthUser().getUid());
+				return false;
+			}
+		} catch (Exception e) {
+			error(LOG,"Caught exception " + e.getMessage() + " when extending lifetime of " + co.getTargetUser().getsAMAccountName() + " for " + co.getAuthUser().getUid());
+			return false;
+		} finally {
+			if (ps != null) {
+				try {
+					ps.close();
+				} catch (Exception ign) {
+					//ignore
+				}
+			}
+			if (pcdb != null) {
+				try {
+					pcdb.close();
+				} catch (Exception ign) {
+					//ignore
+				}
+			}
+		}
+	}
+	
+	public static boolean expireCheckedOutUser(CheckedOutCred co) {
+		return expireCheckedOutUser(co, null);
+	}
+	public static boolean expireCheckedOutUser(CheckedOutCred co, String clientip) {
+		Connection pcdb = null;
+		PreparedStatement ps = null;
+		
+		try {
+			pcdb = DatabaseConnectionFactory.getProconsulDatabaseConnection();
+			if (pcdb != null) {
+				ps = pcdb.prepareStatement("update checkout set expiretime = ? where owner = ? and aduser = ? and expiretime >= ?");
+				if (ps != null) {
+					ps.setLong(1, System.currentTimeMillis());
+					ps.setString(2, co.getAuthUser().getUid());
+					ps.setString(3, co.getTargetUser().getsAMAccountName());
+					ps.setLong(4, System.currentTimeMillis());
+					ps.executeUpdate();
+					audit(LOG,"expireCheckedOutCred",co.getAuthUser().getUid(),co.getTargetHost(),co.getTargetUser().getsAMAccountName(),null,clientip);
+					return true;
+				} else {
+					error(LOG,"Failed to early-expire checked out user " + co.getTargetUser().getsAMAccountName());
+					return false;
+				}
+			} else {
+				error(LOG,"Failed to early-expire checked out user " + co.getTargetUser().getsAMAccountName());
+				return false;
+			}
+		} catch (Exception e) {
+			error(LOG,"Caught exception " + e.getMessage() + " while early-expiring " + co.getTargetUser().getsAMAccountName());
+			return false;
+		} finally {
+			if (ps != null) {
+				try {
+					ps.close();
+				} catch (Exception ign) {
+					//ignore
+				}
+			}
+			if (pcdb != null) {
+				try {
+					pcdb.close();
+				} catch (Exception ign) {
+					//ignore
+				}
+			}
+		}
+	}
+	
+	public static boolean storeCheckedOutUser(CheckedOutCred co) {
+		Connection pcdb = null;
+		PreparedStatement ps = null;
+		
+		try {
+			pcdb = DatabaseConnectionFactory.getProconsulDatabaseConnection();
+			if (pcdb != null) {
+				ps = pcdb.prepareStatement("insert into checkout values(?,?,?,?,?,?,?)");
+				if (ps != null) {
+					ps.setString(1,co.getAuthUser().getUid()); 
+					ps.setLong(2,co.getStartTime().getTime());
+					ps.setLong(3, co.getExpirationTime());
+					ps.setString(4, co.getTargetHost());
+					ps.setString(5, co.getReason());
+					ps.setString(6, co.getTargetUser().getsAMAccountName());
+					ps.setString(7,  "active"); // creation state -- only become inactive after deletion from the AD
+					
+					ps.executeUpdate();
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
+			
+		} catch (Exception e) {
+			return false;
+		} finally {
+			if (ps != null) {
+				try {
+					ps.close();
+				} catch (Exception ign) {
+					//ignore
+				}
+			}
+			if (pcdb != null) {
+				try {
+					pcdb.close();
+				} catch (Exception ign) {
+					//ignore
+				}
+			}
+		}	
 	}
 }
