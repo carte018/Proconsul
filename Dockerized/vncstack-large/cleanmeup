@@ -1,6 +1,0 @@
-#
-# Cleanup routine for the mysql database for logged out user.
-#
-
-# Cleanup is now accomplished via docker-gen -- no internal cleanup routine required.
-

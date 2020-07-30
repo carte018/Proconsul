@@ -95,7 +95,6 @@ RUN cmake --build . --target install
 WORKDIR /var/www/html/vnc-home
 ADD self.pem /var/www/html/vnc-home/self.pem
 RUN yum install -y mariadb
-ADD cleanmeup /tmp/cleanmeup
 RUN yum install -y net-tools
 VOLUME "/var/spool/docker"
 CMD ["/usr/bin/supervisord","-c","/etc/supervisord.conf"]
