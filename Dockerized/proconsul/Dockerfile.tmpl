@@ -55,7 +55,8 @@ RUN apt-get -y install libapache2-mod-shib2 && apt-get -y install supervisor
 #
 # Add a block to the supervisord config
 #
-ADD supervisord.conf /etc/supervisor/conf.d/99local.conf && ln -s /etc/supervisor/supervisord.conf /etc/supervisord.conf
+ADD supervisord.conf /etc/supervisor/conf.d/99local.conf 
+RUN ln -s /etc/supervisor/supervisord.conf /etc/supervisord.conf
 
 #
 # Expose ports
