@@ -358,7 +358,7 @@ docker volume create proconsul-spool-data
 docker volume rm proconsul-log-data 2>/dev/null
 docker volume create proconsul-log-data
 
-# Data container to use for /var/lib/tomcat7/webapps (WAR and unpacked WAR) -- add options here as needed
+# Data container to use for /var/lib/tomcat9/webapps (WAR and unpacked WAR) -- add options here as needed
 docker volume rm proconsul-webapps-data 2>/dev/null
 docker volume create proconsul-webapps-data
 
@@ -757,8 +757,8 @@ fi
 #
 
 docker run -v proconsul-log-data:/var/log carte018/proconsul mkdir -p /var/log/supervisor
-docker run -v proconsul-log-data:/var/log carte018/proconsul mkdir -p /var/log/tomcat7
-docker run -v proconsul-log-data:/var/log carte018/proconsul chown tomcat7 /var/log/tomcat7
+docker run -v proconsul-log-data:/var/log carte018/proconsul mkdir -p /var/log/tomcat9
+docker run -v proconsul-log-data:/var/log carte018/proconsul chown tomcat /var/log/tomcat9
 docker run -v proconsul-log-data:/var/log carte018/proconsul mkdir -p /var/log/apache2
 docker run -v proconsul-log-data:/var/log carte018/proconsul mkdir -p /var/log/httpd
 docker run -v proconsul-log-data:/var/log carte018/proconsul mkdir -p /var/log/shibboleth
@@ -779,13 +779,13 @@ fi
 # Drop in the proconsul war file
 #
 
-  docker run -v proconsul-webapps-data:/var/lib/tomcat7/webapps carte018/proconsul /bin/bash -c "cp /mnt/proconsul.war /var/lib/tomcat7/webapps/proconsul.war"
+  docker run -v proconsul-webapps-data:/var/lib/tomcat9/webapps carte018/proconsul /bin/bash -c "cp /mnt/proconsul.war /var/lib/tomcat9/webapps/proconsul.war"
 
 #
 # And the proconsuladmin war file
 #
 
-  docker run -v proconsul-webapps-data:/var/lib/tomcat7/webapps carte018/proconsul /bin/bash -c "cp /mnt/proconsuladmin.war /var/lib/tomcat7/webapps/proconsuladmin.war"
+  docker run -v proconsul-webapps-data:/var/lib/tomcat9/webapps carte018/proconsul /bin/bash -c "cp /mnt/proconsuladmin.war /var/lib/tomcat9/webapps/proconsuladmin.war"
 
 
 #

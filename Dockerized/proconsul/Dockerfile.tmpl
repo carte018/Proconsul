@@ -1,10 +1,12 @@
 #
 # From the demo sshd docker from docker.io
-#
+# Updated for Ubuntu 20.04 base
 
-FROM ubuntu:14.04
+FROM ubuntu:20.04
 
 MAINTAINER Rob Carter "rob@duke.edu"
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 #
 # Misc
@@ -13,24 +15,21 @@ RUN apt-get -y update
 #
 # Apache
 #
-RUN apt-get -y install apache2
-RUN a2enmod ssl
-RUN a2enmod proxy_ajp
+RUN apt-get -y install apache2 && a2enmod ssl && a2enmod proxy_ajp
+
 ADD custom.conf /etc/apache2/sites-enabled/custom.conf
 ADD ssl.conf /etc/apache2/sites-enabled/ssl.conf
 ADD proxy_ajp.conf /etc/apache2/sites-enabled/proxy_ajp.conf
 ADD %CERTFILE% /etc/ssl/certs/%SERVERNAME%.pem
 ADD %KEYFILE% /etc/ssl/private/%SERVERNAME%.key
-# ADD signers.crt /etc/ssl/certs/signers.crt
-# ADD signing-chain.crt /etc/ssl/certs/signing-chain.crt
 
 #
-# Tomcat
+# Tomcat (now v 9 w/ jvm17)
 #
-RUN apt-get -y install openjdk-7-jdk
-RUN apt-get -y install tomcat7
+RUN apt-get -y install openjdk-17-jdk && apt-get -y install tomcat9
+
 ADD server.xml /etc/tomcat7/server.xml
-ADD cacerts /usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/cacerts
+ADD cacerts /usr/lib/jvm/java-17-openjdk-amd64/lib/security/cacerts
 
 #
 # wget (for retrieving docker-gen)
@@ -40,9 +39,7 @@ RUN apt-get -y install wget
 #
 # docker.io (for running docker commands from docker-gen inside docker)
 #
-RUN apt -y update
 RUN apt-get -y install docker.io
-
 
 #
 # Timezone fix
@@ -51,13 +48,14 @@ RUN cp /usr/share/zoneinfo/America/New_York /etc/localtime
 
 #
 # Shibboleth SP (for car/carma/selfservice, etc.)
-#
-RUN apt-get -y install libapache2-mod-shib2
+# Supervisor
+
+RUN apt-get -y install libapache2-mod-shib2 && apt-get -y install supervisor
 
 #
 # Add a block to the supervisord config
 #
-ADD supervisord.conf /etc/supervisor/conf.d/99local.conf
+ADD supervisord.conf /etc/supervisor/conf.d/99local.conf && ln -s /etc/supervisor/supervisord.conf /etc/supervisord.conf
 
 #
 # Expose ports
@@ -68,8 +66,8 @@ EXPOSE 3306
 #
 # Volumes
 #
-VOLUME ["/var/log/tomcat7"]
-VOLUME ["/var/lib/tomcat7/webapps"]
+VOLUME ["/var/log/tomcat9"]
+VOLUME ["/var/lib/tomcat9/webapps"]
 VOLUME ["var/log/httpd"]
 VOLUME ["/var/www"]
 VOLUME ["/var/log/supervisor"]
@@ -77,12 +75,8 @@ VOLUME ["/etc/proconsul"]
 VOLUME ["/etc/shibboleth"]
 VOLUME ["/opt/docker-gen"]
 
-RUN apt-get -y install supervisor
-RUN ln -s /etc/supervisor/supervisord.conf /etc/supervisord.conf
-
-ADD tomcat7.init /tmp/tomcat7.init
-RUN mv /tmp/tomcat7.init /etc/init.d/tomcat7
-RUN chmod 755 /etc/init.d/tomcat7
+ADD tomcat7.init /tmp/tomcat9.init
+RUN mv /tmp/tomcat9.init /etc/init.d/tomcat9 && chmod 755 /etc/init.d/tomcat9
 
 CMD ["/usr/bin/supervisord"]
 

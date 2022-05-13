@@ -24,10 +24,10 @@
 set -e
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
-NAME=tomcat7
+NAME=tomcat9
 DESC="Tomcat servlet engine"
 DEFAULT=/etc/default/$NAME
-JVM_TMP=/tmp/tomcat7-$NAME-tmp
+JVM_TMP=/tmp/tomcat9-$NAME-tmp
 
 if [ `id -u` -ne 0 ]; then
 	echo "You need root privileges to run this script"
@@ -50,15 +50,15 @@ fi
 # The following variables can be overwritten in $DEFAULT
 
 # Run Tomcat 7 as this user ID and group ID
-TOMCAT7_USER=tomcat7
-TOMCAT7_GROUP=tomcat7
+TOMCAT7_USER=tomcat
+TOMCAT7_GROUP=tomcat
 
 # this is a work-around until there is a suitable runtime replacement 
 # for dpkg-architecture for arch:all packages
 # this function sets the variable OPENJDKS
 find_openjdks()
 {
-        for jvmdir in /usr/lib/jvm/java-7-openjdk-*
+        for jvmdir in /usr/lib/jvm/java-17-openjdk-*
         do
                 if [ -d "${jvmdir}" -a "${jvmdir}" != "/usr/lib/jvm/java-7-openjdk-common" ]
                 then
