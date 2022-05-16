@@ -28,7 +28,7 @@ ADD %KEYFILE% /etc/ssl/private/%SERVERNAME%.key
 #
 RUN apt-get -y install openjdk-17-jdk && apt-get -y install tomcat9
 
-ADD server.xml /etc/tomcat7/server.xml
+ADD server.xml /etc/tomcat9/server.xml
 ADD cacerts /usr/lib/jvm/java-17-openjdk-amd64/lib/security/cacerts
 
 #
