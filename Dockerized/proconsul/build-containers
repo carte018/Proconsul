@@ -642,7 +642,7 @@ adbindcred=`echo "$adbindcred" | sed 's/&/\\\\&/g'`
 
 dockergenpw=`echo "$dockergenpw" | sed 's/\//\\\\\//g'`
 dockergenpw=`echo "$dockergenpw" | sed 's/\\$/\\\\$/g'`
-dockergenpw=`echo "$dockergenpw" | sed 's/&/\\\\&/g' | sed 's/\\$/\\\\$/g'`
+dockergenpw=`echo "$dockergenpw" | sed 's/&/\\\\&/g'`
 
 adldapdcs=`echo "$adldapdcs" | sed 's/\//\\\\\//g'`
 rdpdockerimage=`echo "$rdpdockerimage" | sed 's/\//\\\\\//g'`
