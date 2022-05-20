@@ -179,7 +179,7 @@ echo "idpentityid=\"$idpentityid\"" >> proconsul/config.in
 echo "federationmdurl=\"$federationmdurl\"" >> proconsul/config.in
 echo "mdsigningkey=\"$mdsigningkey\"" >> proconsul/config.in
 echo "dockergenuser=\"$dockergenuser\"" >> proconsul/config.in
-echo "dockergenpw=\"$dockergenpw\"" >> proconsul/config.in
+echo "dockergenpw='$dockergenpw'" >> proconsul/config.in
 
 # And run the proconsul build
 cd proconsul
