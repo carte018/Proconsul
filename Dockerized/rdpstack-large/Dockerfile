@@ -6,7 +6,7 @@ FROM carte018/rdpstack
 
 MAINTAINER "rob@duke.edu"
 
-DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 # This sets the default time zone to EST - YMMV
 RUN rm /etc/localtime
