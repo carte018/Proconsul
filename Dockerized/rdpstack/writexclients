@@ -18,8 +18,19 @@ echo "else" >> /var/www/html/vnc-home/.Xclients
 echo "  retval=2 export retval" >> /var/www/html/vnc-home/.Xclients
 echo "fi" >> /var/www/html/vnc-home/.Xclients
 echo "echo \$retval > /tmp/retval" >> /var/www/html/vnc-home/.Xclients
-echo "if [ \$retval == 2 -o \$retval == 12 ]; then /tmp/cleanmeup; fi" >> /var/www/html/vnc-home/.Xclients
-echo "if [ \$retval == 2 -o \$retval == 12 -o \$retval == 1 -o \$retval == 11 ]; then pkill -9 websockify; pkill -9 runwebsockify; pkill -9 Xvnc; pkill  -9 xstartup; pkill -9 xinitirc; kill -TERM \`cat /run/supervisord.pid\`; else echo retval is \$retval > /tmp/incheck; fi" >> /var/www/html/vnc-home/.Xclients
+#echo "if [ \$retval == 2 -o \$retval == 12 ]; then /tmp/cleanmeup; fi" >> /var/www/html/vnc-home/.Xclients
+
+# individual kills
+echo "pkill -9 websockify" >> /var/www/html/vnc-home/.Xclients
+echo "pkill -9 runwebsockify" >> /var/www/html/vnc-home/.Xclients
+echo "pkill -9 Xtigervnc" >> /var/www/html/vnc-home/.Xclients
+echo "pkill -9 Xvnc-session" >> /var/www/html/vnc-home/.Xclients
+echo "pkill -9 vncconfig" >>  /var/www/html/vnc-home/.Xclients
+echo "pkill -TERM supervisord" >> /var/www/html/vnc-home/.Xclients
+echo "kill -TERM \`cat /run/supervisord.pid\`" >> /var/www/html/vnc-home/.Xclients
+
+#echo "if [ \$retval == 2 -o \$retval == 12 -o \$retval == 1 -o \$retval == 11 ]; then pkill -9 websockify; pkill -9 runwebsockify; pkill -9 Xtigervnc; pkill -9 Xvnc-session; pkill -9 vncconfig; kill -TERM \`cat /run/supervisord.pid\`; pkill -TERM supervisord; else echo retval is \$retval > /tmp/incheck; fi" >> /var/www/html/vnc-home/.Xclients
+#echo "if [ \$retval == 2 -o \$retval == 12 -o \$retval == 1 -o \$retval == 11 ]; then pkill -9 websockify; pkill -9 runwebsockify; pkill -9 Xvnc; pkill  -9 xstartup; pkill -9 xinitirc; kill -TERM \`cat /run/supervisord.pid\`; else echo retval is \$retval > /tmp/incheck; fi" >> /var/www/html/vnc-home/.Xclients
 #echo "if [ \$? == 2 ]; then pkill websockify; pkill runwebsockify; pkill Xvnc; pkill xstartup; kill -TERM \`cat /run/supervisord.pid\`; /tmp/cleanmeup; fi" >> /var/www/html/vnc-home/.Xclients
 #echo "if [ \$? == 1 -o \$? == 11 ]; then  kill -TERM \`cat /run/supervisor.pid\`; fi" >> /var/www/html/vnc-home/.Xclients
 
