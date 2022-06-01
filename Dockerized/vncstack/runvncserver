@@ -6,7 +6,7 @@ HOME=/var/www/html/vnc-home export HOME
 #
 # Wait until the writexclients has completed
 #
-until grep incheck /var/www/html/vnc-home/.Xclients
+until grep TERM /var/www/html/vnc-home/.Xclients
 do
   : > /dev/null
 done 
