@@ -5,9 +5,9 @@
 
 echo "if [ -z \$GATEWAY ]" > /var/www/html/vnc-home/.Xclients
 echo "then" >> /var/www/html/vnc-home/.Xclients
-echo "xfreerdp /cert-ignore /u:$WINUSER /d:$DOMAIN /p:$WINPASS /network:lan /gdi:sw /gfx /frame-ack:0 /v:$RHOSTNAME " >> /var/www/html/vnc-home/.Xclients
+echo "xfreerdp /cert:ignore /u:$WINUSER /d:$DOMAIN /p:$WINPASS /network:auto /gdi:hw /rfx /gfx:avc444 /f /frame-ack:0 /v:$RHOSTNAME " >> /var/www/html/vnc-home/.Xclients
 echo "else" >> /var/www/html/vnc-home/.Xclients
-echo "xfreerdp /cert-ignore /u:$WINUSER /d:$DOMAIN /p:$WINPASS /v:$RHOSTNAME /g:$GATEWAY " >> /var/www/html/vnc-home/.Xclients
+echo "xfreerdp /cert:ignore /u:$WINUSER /d:$DOMAIN /p:$WINPASS /v:$RHOSTNAME /network:auto /gdi:hw /rfx /gfx:avc444 /f /g:$GATEWAY " >> /var/www/html/vnc-home/.Xclients
 echo "fi" >> /var/www/html/vnc-home/.Xclients
 
 echo "retval=\$? export retval" >> /var/www/html/vnc-home/.Xclients

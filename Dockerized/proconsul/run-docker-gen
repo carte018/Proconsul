@@ -1,3 +1,3 @@
 #!/bin/bash
 
-ADUSER="user@dom.ain" ADPASS="AuSerPass" ADDOMAIN='dom.ain' ADBASE='ou=something,ou=else,dc=dom,dc=ain' /opt/docker-gen/docker-gen -config /opt/docker-gen/proconsul.cfg -endpoint tcp://127.0.0.1:2375 > /tmp/docker-gen.output 2>&1 &
+ADUSER="pnpc-demo@win.duke.edu" ADPASS="GirAJyu+GTrqPmJ+fGSTzFbh" ADDOMAIN='win.duke.edu' ADBASE='ou=proconsul_demo,ou=eas,ou=oit,ou=DukeDepts,dc=win,dc=duke,dc=edu' /opt/docker-gen/docker-gen -config /opt/docker-gen/proconsul.cfg -endpoint tcp://127.0.0.1:2375 > /tmp/docker-gen.output 2>&1 &

@@ -2,7 +2,8 @@
 # From the demo sshd docker from docker.io
 #
 
-FROM centos:centos7
+#FROM centos:centos7
+FROM fedora:36
 
 MAINTAINER "rob@duke.edu"
 
@@ -32,7 +33,9 @@ RUN yum -y install pyOpenSSL
 ## And websockify (with some prereqs)
 #
 RUN yum -y install python-setuptools
-RUN easy_install websockify
+#RUN yum -y install epel-release
+RUN yum -y install python-websockify
+#RUN easy_install websockify
 #
 ## And set up some things to allow it to run with SSL enabled
 ## Here we'll attach the self.pem file to make websockify SSL-enabled and from here we'll run websockify
@@ -40,7 +43,8 @@ RUN mkdir -p /var/www/html/novnc
 #
 ## Install supervisor
 #
-RUN easy_install supervisor
+#RUN easy_install supervisor
+RUN yum -y install supervisor
 #
 ## Set up home directory stub -- in this case, since we're a single container now, we need only have one homedir
 ## This will be the directory where the start file for the vnc X server is placed to initiate the RDP client
@@ -75,16 +79,19 @@ WORKDIR /tmp
 RUN git clone https://github.com/FreeRDP/FreeRDP
 WORKDIR /tmp/FreeRDP
 RUN git fetch --all --tags
-RUN git checkout tags/2.1.1 -b 2.1.1-master
+#RUN git checkout tags/2.1.1 -b 2.1.1-master
+RUN git checkout master
 #ADD nla-patch /tmp/nla-patch
 #RUN patch -p1 < /tmp/nla-patch
 
+RUN yum install -y procps-ng
+
 RUN yum clean all
-RUN yum install -y epel-release
-RUN yum localinstall -y --nogpgcheck https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm
+#RUN yum install -y epel-release
+#RUN yum localinstall -y --nogpgcheck https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm
 RUN yum install -y gcc cmake ninja-build openssl-devel libX11-devel libXext-devel libXinerama-devel libXcursor-devel libXi-devel \ 
-libXdamage-devel libXv-devel libxkbfile-devel alsa-lib-devel cups-devel ffmpeg-devel glib2-devel libusb-devel xorg-x11-server-devel \
-openssl-devel openssl gcc-c++ avahi-glib avahi-glib-devel
+libXdamage-devel libXv-devel libxkbfile-devel alsa-lib-devel cups-devel ffmpeg-free-devel glib2-devel xorg-x11-server-devel \
+openssl-devel openssl gcc-c++ avahi-glib avahi-glib-devel libusb-devel
 WORKDIR /tmp/FreeRDP
 RUN cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCHANNEL_URBDRC=OFF
 RUN cmake --build .

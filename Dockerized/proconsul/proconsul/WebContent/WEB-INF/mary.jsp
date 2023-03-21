@@ -115,8 +115,8 @@ $(document).ready(
         		<tr>
         			<td>${staticSession.fqdn}</td>
         			<td>${staticSession.displayname}<br>
-        			<div class="session-option" style="display:inline"><form:radiobutton path="rresolution" value="default"/>Default (1024x768)</div><div class="session-option" style="display:inline"><form:radiobutton path="rresolution" value="large"/>Large (1920x1200)</div><br>
-        			<div class="session-option" style="display:inline"><form:radiobutton path="rresolution" value="vncdefault"/>VNC small (1024x768)</div><div class="session-option" style="display:inline"><form:radiobutton path="rresolution" value="vnclarge"/>VNC large (1920x1200)</div></td>
+					<div class="session-option" style="display:inline"><form:radiobutton path="rresolution" value="default"/>Default (1024x768)</div><div class="session-option" style="display:inline"><form:radiobutton path="rresolution" value="large"/>Large (1920x1200)</div><!--<br>-->
+						<!--<div class="session-option" style="display:inline"><form:radiobutton path="rresolution" value="vncdefault"/>VNC small (1024x768)</div><div class="session-option" style="display:inline"><form:radiobutton path="rresolution" value="vnclarge"/>VNC large (1920x1200)</div>--></td>
         			<td colspan="4"><button class="actionButton" type="submit">Reconnect</button></td>
         		</tr>
         		</form:form>
@@ -124,8 +124,8 @@ $(document).ready(
         	<form:form id="statiConnectForm" method="POST" commandName="staticsession" action="/proconsul/staticsession">
         	<tr>
         		<td><div class="session-option"><label>Host Name:</label><form:select path="targetFQDN" items="${statichosts}"></form:select></div><br>
-        			<div class="session-option" style="display:inline"><form:radiobutton path="resolution" value="default"/>Default (1024x768)</div><div class="session-option" style="display:inline"><form:radiobutton path="resolution" value="large"/>Large (1920x1200)</div><br>
-        			<div class="session-option" style="display:inline"><form:radiobutton path="resolution" value="vncdefault"/>VNC small (1024x768)</div><div class="session-option" style="display:inline"><form:radiobutton path="resolution" value="vnclarge"/>VNC large (1920x1200)</div></td>
+				<div class="session-option" style="display:inline"><form:radiobutton path="resolution" value="default"/>Default (1024x768)</div><div class="session-option" style="display:inline"><form:radiobutton path="resolution" value="large"/>Large (1920x1200)</div><!--<br>-->
+						<!--<div class="session-option" style="display:inline"><form:radiobutton path="resolution" value="vncdefault"/>VNC small (1024x768)</div><div class="session-option" style="display:inline"><form:radiobutton path="resolution" value="vnclarge"/>VNC large (1920x1200)</div>--></td>
         		<td><div class="session-option"><label>Session Display Name:</label><form:input path="displayName" maxLength="20"></form:input></div></td>
         		<td colspan="5"><div class="session-option"><label>&nbsp;</label><button class="actionButton" type="submit">Connect</button></div></td>
         	</tr>

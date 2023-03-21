@@ -91,6 +91,22 @@ public class MainController {
 		}
 		return isAdmin(request);
 	}
+
+	private boolean isStaticAdmin(HttpServletRequest request) {
+		// Static user mapping manager
+		PCAdminConfig config = PCAdminConfig.getInstance();
+		String alist = config.getProperty("staticadmins",false);
+		if (alist != null) {
+			String[] aa = alist.split(",");
+			for (String u : aa) {
+				if (request.getRemoteUser().equalsIgnoreCase(u)) {
+					return true;
+				}
+			}
+		}
+		// override for now
+		return isAdmin(request);
+	}
 	
 	private boolean isGroupAdmin(HttpServletRequest request) {
 		// Only general admins can manage group memberships for dynamic user (since DA is just another group
@@ -221,6 +237,76 @@ public class MainController {
 			
 		return retval;
 	}
+
+	@RequestMapping(value="/static_users",method=RequestMethod.POST)
+	public ModelAndView handlePostOfStaticUsers(HttpServletRequest request) {
+		ModelAndView retval = new ModelAndView("redirect:https://" + request.getLocalName()+"/admin/static_users");
+
+		PCAdminConfig config = PCAdminConfig.getInstance();
+
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		if (! isStaticAdmin(request)) {
+			return(new ModelAndView("test").addObject("messsage","You are not authorized to perform that operation"));
+		}
+
+		try {
+			try {
+				conn = DatabaseConnectionFactory.getPCAdminDBConnection();
+			} catch (Exception e) {
+				throw new RuntimeException("Failed connecting to database: " + e.getMessage());
+			}
+			if (conn == null) {
+				throw new RuntimeException("Failed getting database connection");
+			}
+			if (request.getParameter("stformsubmitted") != null && request.getParameter("stformsubmitted").equals("1")) {
+				// This is a delete request
+				   Enumeration<String> pnames = request.getParameterNames();
+                                while (pnames != null && pnames.hasMoreElements()) {
+                                        String t = pnames.nextElement();
+                                        if (t.matches("^targetuser[0-9]*") && request.getParameter(t).equals("")) {
+                                                // delete this one
+                                                String num = t.replace("targetuser", "");
+                                                String eppn = request.getParameter("uname"+num);
+						String fqdn = request.getParameter("targetfqdn"+num);
+                                                ps = conn.prepareStatement("delete from static_host where eppn  = ? and fqdn = ?");
+                                                ps.setString(1, eppn);
+						ps.setString(2, fqdn);
+                                                ps.executeUpdate();
+                                        }
+                                }
+			} else {
+				// This is an add request
+				ps = conn.prepareStatement("insert into static_host values (?,?,?)");
+				ps.setString(1,request.getParameter("user"));
+				ps.setString(2,request.getParameter("targetfqdn"));
+				ps.setString(3,request.getParameter("targetuser"));
+
+				ps.executeUpdate();
+			}
+		} catch (Exception e) {
+			return(new ModelAndView("test").addObject("message","Failed updating database: " + e.getMessage()));
+                } finally {
+                        if (ps != null) {
+                                try {
+                                        ps.close();
+                                } catch (Exception ign) {
+                                        // ignore
+                                }
+                        }
+                        if (conn != null) {
+                                try {
+                                        conn.close();
+                                } catch (Exception ign) {
+                                        // ignore
+                                }
+                        }
+                }
+                return retval;
+        }
+
 	
 	@RequestMapping(value="/posix_users",method=RequestMethod.POST)
 	public ModelAndView handlePostOfPosixUsers(HttpServletRequest request) {
@@ -821,6 +907,76 @@ public class MainController {
 	
 		return retval;
 	}
+
+
+	@RequestMapping(value="/static_users", method=RequestMethod.GET)
+	public ModelAndView generateStaticUser(HttpServletRequest request) {
+		ModelAndView retval = new ModelAndView("static_user");
+		if (! isStaticAdmin(request)) {
+			ModelAndView eret = new ModelAndView("test");
+			eret.addObject("message","You are not authorized to perform that operation.");
+			return eret;
+		}
+		PCAdminConfig config = PCAdminConfig.getInstance();
+		Connection conn = null; 
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		ArrayList<StaticUser> ap = new ArrayList<StaticUser>();
+		try {
+			try {
+				conn = DatabaseConnectionFactory.getPCAdminDBConnection();
+			} catch (Exception e) {
+				throw new RuntimeException("Failed getting DB connection: " + e.getMessage());
+			}
+			if (conn != null) {
+				ps = conn.prepareStatement("select eppn,fqdn,targetuser from static_host");
+				if (ps == null) {
+					throw new RuntimeException("Failed to perform select");
+				} else {
+					rs = ps.executeQuery();
+					while (rs!=null && rs.next()) {
+						StaticUser pu = new StaticUser();
+						pu.setEppn(rs.getString("eppn"));
+						pu.setFqdn(rs.getString("fqdn"));
+						pu.setTargetuser(rs.getString("targetuser"));
+						ap.add(pu);
+					}
+				}
+				ps.close();
+				if (rs != null)
+					rs.close();
+			}
+		} catch (Exception e) {
+			ModelAndView ev = new ModelAndView("test");
+			ev.addObject("message","Failed retrieving static mappings: " + e.getMessage());
+			return ev;
+		} finally {
+			if (rs != null) {
+				try {
+					rs.close();
+				} catch (Exception e) {
+					//ignore
+				}
+			}
+			if (ps != null) {
+				try {
+					ps.close();
+				} catch (Exception e) {
+					//ignore
+				}
+			}
+			if (conn != null) {
+				try {
+					conn.close();
+				} catch (Exception e) {
+					// ignore
+				}
+			}
+		}
+		
+		retval.addObject("staticusers",ap);
+		return retval;
+	}
 	
 	@RequestMapping(value="/posix_users", method=RequestMethod.GET)
 	public ModelAndView generatePosixUser(HttpServletRequest request) {
@@ -1352,6 +1508,7 @@ public class MainController {
 		retval.addObject("isPosixAdmin",isPosixAdmin(request));
 		retval.addObject("isGroupAdmin",isGroupAdmin(request));
 		retval.addObject("isTargetProvisioningAdmin",isTargetProvisioningAdmin(request));
+		retval.addObject("isStaticAdmin",isStaticAdmin(request));
 		
 		return retval;
 	}

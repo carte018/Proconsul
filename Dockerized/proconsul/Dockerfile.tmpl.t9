@@ -1,0 +1,142 @@
+#
+# From the demo sshd docker from docker.io
+#
+
+FROM ubuntu:20.04
+
+MAINTAINER Rob Carter "rob@duke.edu"
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+#
+# Misc
+#
+RUN apt-get -y update
+#
+# Apache
+#
+RUN apt-get -y install apache2
+RUN a2enmod ssl
+RUN a2enmod proxy_ajp
+ADD custom.conf /etc/apache2/sites-enabled/custom.conf
+ADD ssl.conf /etc/apache2/sites-enabled/ssl.conf
+ADD proxy_ajp.conf.t9 /etc/apache2/sites-enabled/proxy_ajp.conf
+ADD %CERTFILE% /etc/ssl/certs/%SERVERNAME%.pem
+ADD %KEYFILE% /etc/ssl/private/%SERVERNAME%.key
+# ADD signers.crt /etc/ssl/certs/signers.crt
+# ADD signing-chain.crt /etc/ssl/certs/signing-chain.crt
+
+#
+# Tomcat
+#
+RUN apt-get -y install openjdk-11-jdk
+RUN apt-get -y install tomcat9
+ADD server.xml.t9 /etc/tomcat9/server.xml
+RUN cp /etc/tomcat9/server.xml /usr/share/tomcat9/etc/server.xml
+RUN mkdir -p /usr/share/tomcat9/logs
+ADD tomcat9.default /etc/default/tomcat9
+ADD cacerts /usr/lib/jvm/java-11-openjdk-amd64/jre/lib/security/cacerts
+ADD cacerts /etc/ssl/java/cacerts
+
+#
+# wget (for retrieving docker-gen)
+#
+RUN apt-get -y install wget
+
+#
+# docker.io (for running docker commands from docker-gen inside docker)
+#
+RUN apt -y update
+RUN apt-get -y install docker.io
+
+
+#
+# Timezone fix
+#
+#RUN cp /usr/share/zoneinfo/America/New_York /etc/localtime
+
+#
+# Shibboleth SP (for car/carma/selfservice, etc.)
+#
+RUN apt-get -y install libapache2-mod-shib2
+
+#
+# Add a block to the supervisord config
+#
+ADD supervisord.conf.t9 /etc/supervisor/conf.d/99local.conf
+
+RUN ln -s /usr/share/tomcat9/etc /usr/share/tomcat9/conf
+
+#
+# Expose ports
+#
+EXPOSE 443
+EXPOSE 3306
+
+#
+# Volumes
+#
+VOLUME ["/var/log/tomcat9"]
+VOLUME ["/var/lib/tomcat9/webapps"]
+VOLUME ["var/log/httpd"]
+VOLUME ["/var/www"]
+VOLUME ["/var/log/supervisor"]
+VOLUME ["/etc/proconsul"]
+VOLUME ["/etc/shibboleth"]
+VOLUME ["/opt/docker-gen"]
+
+RUN apt-get -y install supervisor
+RUN ln -s /etc/supervisor/supervisord.conf /etc/supervisord.conf
+
+ADD tomcat7.init /tmp/tomcat9.init
+RUN mv /tmp/tomcat9.init /etc/init.d/tomcat9
+RUN chmod 755 /etc/init.d/tomcat9
+
+CMD ["/usr/bin/supervisord"]
+
+VOLUME ["/mnt"]
+ADD makespconfig /tmp/makespconfig
+RUN chmod 755 /tmp/makespconfig
+ADD shib.conf /etc/apache2/sites-enabled/shib.conf
+ADD attribute-map.xml /etc/shibboleth/attribute-map.xml
+ADD md_signer.pem /etc/shibboleth/md_signer.pem
+ADD shibboleth2.xml /etc/shibboleth/shibboleth2.xml
+
+ADD run-docker-gen /opt/docker-gen/run-docker-gen
+ADD proconsul.cfg /opt/docker-gen/proconsul.cfg
+ADD base.tmpl /opt/docker-gen/base.tmpl
+
+VOLUME ["/var/lib/mysql"]
+VOLUME ["/var/spool/docker"]
+VOLUME ["/var/www/html"]
+VOLUME ["/etc/proconsul"]
+
+RUN apt-get -y install mariadb-server
+
+ADD proconsul.db.schema /tmp/proconsul.db.schema
+RUN mkdir -p /var/www
+ADD www /var/www/
+
+#
+# Insert the proconsul WAR file
+#
+
+ADD proconsul.war /mnt/proconsul.war
+
+#
+# And the proconsuladmin WAR file
+#
+
+ADD proconsuladmin.war /mnt/proconsuladmin.war
+
+#
+# And the config files
+#
+
+ADD proconsul.properties /mnt/proconsul.properties
+ADD proconsuladmin.properties /mnt/proconsuladmin.properties
+ 
+#
+# And load the ldap client for updating the AD out of docker-gen
+
+RUN apt-get -y install ldap-utils

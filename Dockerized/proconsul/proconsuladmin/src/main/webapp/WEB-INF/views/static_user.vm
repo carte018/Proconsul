@@ -1,0 +1,86 @@
+<div id="posix_user">
+	<h1>Proconsul Static User Session Management</h1>
+
+	<div class="subheading">The following static users will be used when the users listed below interact with the systems noted in static session mode.  Users not listed below will not be offered static session options.</div>
+	
+	<div style="width: 250px">
+		<button name="additem" class="additem action" id="additem">Add Static User Mapping</button>
+	</div>
+	
+	<form name="staticform" id="staticform" method="POST" action="#">
+		<input type="hidden" id="stformsubmited" name="stformsubmitted" value="1"/>
+		<table class="displaytable">
+			#set($pct=0)
+			#foreach ($stuser in $staticusers )
+				<tr>
+					<th>UserName (ePPN)</th>
+					<th>Target FQDN</th>
+					<th>Target Username</th>
+				</tr>
+				<tr>
+					<td>
+						<input type="hidden" id="uname$pct" name="uname$pct" value="$stuser.getEppn()"/>
+						<span class="populated-value">$stuser.getEppn()</span>
+					</td>
+					<td>
+						<input type="hidden" id="targetfqdn$pct" name="targetfqdn$pct" value="$stuser.getFqdn()"/>
+						<span class="populated-value">$stuser.getFqdn()</span>
+					</td>
+					<td> 
+						<input type="hidden" id="targetuser$pct" name="targetuser$pct" value="$stuser.getTargetuser()"/>
+						<span class="populated-value">$stuser.getTargetuser()</span>
+					</td>
+					<td>
+						<button id="rug$pct" name="rug$pct" class="rugclass action">remove</button>
+					</td>
+				</tr>
+				#set($pct=$pct+1)
+			#end
+		</table>
+	</form>
+</div>
+
+<div id="addstaticdiv" name="addstaticdiv" title="Add a Static User Mapping">
+	<form name="addstaticform" id="addstaticform" method="POST" action="#">
+		<input type="hidden" name="addformsubmitted" id="addformsubmitted" value="1"/>
+		<table>
+			<tr>
+				<th>UserName (ePPN)</th>
+				<th>Target FQDN</th>
+				<th>Target Username</th>
+			</tr>
+			<tr>
+				<td><input type="text" name="user" id="user"/></td>
+				<td><input type="text" name="targetfqdn" id="targetfqdn"/></td>
+				<td><input type="text" name="targetuser" id="targetuser"/></td>
+			</tr>
+			<tr><td span=4><button name="submit" value="submit" id="addposixformsubmit">Submit</button></td></tr>
+		</table>
+	</form>
+</div>
+
+<script type="text/javascript">
+	$( document ).ready(function() {
+		$("#addstaticdiv").hide();
+		$("#additem").click(function(e) {
+			e.preventDefault();
+			$("#addstaticdiv").dialog({modal: true, width: 600});
+		});
+		rug = $("#staticform").find(".rugclass");
+		rug.each(function(button) {
+			var num = rug[button].name.replace("rug","");
+			$(rug[button]).click(function(e) {
+				e.preventDefault();
+				if (document.getElementById("uname"+num) && document.getElementById("targetfqdn"+num)) {
+					$("#targetuser"+num).val('');
+					alert("Removing " + $("#uname"+num).val() + " mapping for " + $("#targetfqdn"+num).val() + " targetuser is now " + $("#targetuser"+num).val());
+					$("#staticform").submit();
+				} else {
+					alert("Removal failed for " + num);
+				}
+			});
+		});
+	});
+</script>
+
+					

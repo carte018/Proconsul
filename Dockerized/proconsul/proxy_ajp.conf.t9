@@ -1,0 +1,11 @@
+LoadModule proxy_ajp_module modules/mod_proxy_ajp.so
+
+ProxyIOBufferSize 65536
+
+
+ProxyPass /proconsul/ ajp://localhost:8009/proconsul/
+ProxyPass /proconsul ajp://localhost:8009/proconsul/
+ProxyPass /admin/ ajp://localhost:8009/proconsuladmin/
+ProxyPass /admin ajp://localhost:8009/proconsuladmin/
+ProxyPass /api/v1/ ajp://localhost:8009/proconsulapi/
+ProxyPass /api/v1 ajp://localhost:8009/proconsulapi/

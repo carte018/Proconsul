@@ -864,7 +864,84 @@ public class ProconsulController {
 		return new ModelAndView("redirect:" + redirectUrl);
 	
 	}
-		
+
+    // GET handler for /directsession (static session direct)
+    @RequestMapping(value="/directsession/{target}",method=RequestMethod.GET)
+    public ModelAndView handleDirectSessionGet(@PathVariable("target") String target, HttpServletRequest request) {
+	AuthUser au = new AuthUser(request);
+	ProconsulUtils.log(LOG,"authuser uid is " + au.getUid() + " using client address " + request.getRemoteAddr());
+	if (au.getUid() == null || (! au.getUid().equals("") && ! ProconsulUtils.fqdnsForStatic(au.getUid()).contains(target))) {
+	    // not authorized
+	    return new ModelAndView("/authzError").addObject("message","Access to " + target + " by " + au.getUid() + " is forbidden.");
+	}
+
+	String vncPassword = ProconsulUtils.getVncPassword();
+	ProconsulUtils.debug(LOG,"Created new vnc password for " + au.getUid() + " using client address " + request.getRemoteAddr());
+
+	ADUser targetUser = ProconsulUtils.getStaticADUser(au,target);
+	String displayName = "";
+
+	String targetFQDN = target;
+	targetFQDN = targetFQDN.replaceAll("[^A-za-z0-9._-]","");
+
+	ProconsulSession session = new ProconsulSession(au,targetFQDN,vncPassword,targetUser,displayName,"static");
+	ProconsulUtils.debug(LOG,"Created new session (" + au.getUid() + "," + targetFQDN + "," + targetUser.getsAMAccountName() + "," + displayName + ",static)");
+
+	session.setNovncPort(ProconsulUtils.getVncPortNumber(session));
+	session.setStatus(Status.STARTING);
+	session.setStartTime(new Date());
+
+	session = ProconsulUtils.addGatewayToSession(session);
+
+	ProconsulUtils.writeSessionToDB(session,request.getRemoteAddr());
+
+	ProconsulUtils.debug(LOG,"Wrote new session to db for " + au.getUid() + " using client address " + request.getRemoteAddr());
+
+	DockerContainer container = new DockerContainer(session);
+	ProconsulUtils.debug(LOG,"Created new container for " + au.getUid() + " using client address " + request.getRemoteAddr());
+
+	container.start();   // always start with default size for now
+
+	ProconsulUtils.debug(LOG,"Started new container");
+	session.setStatus(Status.CONNECTED);
+
+	ProconsulUtils.writeSessionToDB(session,request.getRemoteAddr());
+	ProconsulUtils.debug(LOG,"Wrote session out final time");
+
+	File fcheck = null;
+	File dcheck = null;
+	try {
+	    int pnum = session.getNovncPort() + 5901;
+	    dcheck = new File("/var/spool/docker");
+	    if (dcheck.exists()) {
+		fcheck = new File("/var/spool/docker/" + pnum);
+		do {
+		    Thread.sleep(1000);;
+		    System.out.println("File " + fcheck.getPath() + " still not there");
+		} while (! fcheck.exists());
+		Thread.sleep(1000);
+	    } else {
+		ProconsulUtils.debug(LOG,"Sleeping for 5 secs");
+		Thread.sleep(5000);
+	    }
+	} catch (Exception ign) {
+	    // ignore
+	} finally {
+	    if (fcheck.exists()) {
+		try {
+		    fcheck.delete();
+		} catch (Exception ign) {
+		    // ignore
+		}
+	    }
+	}
+	ProconsulUtils.debug(LOG,"Wait complete");
+
+	String redirectUrl = session.getRedirectUrl();
+	ProconsulUtils.debug(LOG,"Sending redirect URL for " + au.getUid() + " using client address " + request.getRemoteAddr());
+
+	return new ModelAndView("redirect:" + redirectUrl);
+    }
 	//POST handler for /usersession
 	@RequestMapping(value="/usersession",method=RequestMethod.POST)
 	public ModelAndView handleUserSessionPost(@ModelAttribute UserSessionRequest usersession, HttpServletRequest request) {

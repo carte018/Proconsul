@@ -27,7 +27,9 @@ RUN yum -y install pyOpenSSL
 ## And websockify (with some prereqs)
 #
 RUN yum -y install python-setuptools
-RUN easy_install websockify
+#RUN easy_install websockify
+RUN yum -y install epel-release
+RUN yum -y install python-websockify
 #
 ## And set up some things to allow it to run with SSL enabled
 ## Here we'll attach the self.pem file to make websockify SSL-enabled and from here we'll run websockify
@@ -35,7 +37,8 @@ RUN mkdir -p /var/www/html/novnc
 #
 ## Install supervisor
 #
-RUN easy_install supervisor
+#RUN easy_install supervisor
+RUN yum -y install supervisor
 #
 ## Set up home directory stub -- in this case, since we're a single container now, we need only have one homedir
 ## This will be the directory where the start file for the vnc X server is placed to initiate the RDP client
